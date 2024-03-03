@@ -1,0 +1,38 @@
+{
+    "menus": {
+        "InitalScreen": {
+            "type": "inital_screen",
+            "next_screen": "MainScreen"
+        },
+        "MainScreen": {
+            "type": "main_screen",
+            "next_screen": "DefaultNoneScreen",
+            "menu_items": {
+                "AccountNumberMenu": {
+                    "type": "menu_item",
+                    "next_screen": "AccountNumberScreen"
+                },
+                "PhoneNumberMenu": {
+                    "type": "menu_item",
+                    "next_screen": "PhoneNumberScreen"
+                }
+            }
+        },
+        "DefaultNoneScreen": {
+            "type": "default_none_screen",
+            "next_screen": "MainScreen"
+        },
+        "AccountNumberScreen": {
+            "type": "input_screen",
+            "next_screen": "MainScreen",
+            "input_type": "account_number",
+            "input_identifier": "account_number"
+        },
+        "PhoneNumberScreen": {
+            "type": "input_screen",
+            "next_screen": "MainScreen",
+            "input_type": "phone_number",
+            "input_identifier": "phone_number"
+        }
+    }
+}
