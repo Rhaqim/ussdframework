@@ -167,12 +167,12 @@ impl UssdAction for UssdScreen {
         }
 
         match self {
-            UssdScreen::Initial { title, defualt_next_screen } => {
+            UssdScreen::Initial { title: _, defualt_next_screen } => {
                 // Handle initial screen
                 session.current_screen = defualt_next_screen.clone();
                 Some(defualt_next_screen.clone())
             }
-            UssdScreen::Menu { title, defualt_next_screen, menu_items } => {
+            UssdScreen::Menu { title: _, defualt_next_screen, menu_items } => {
                 // Handle menu input
                 if let Some(next_screen) = menu_items.get(input) {
                     session.current_screen = next_screen.clone();
@@ -182,20 +182,20 @@ impl UssdAction for UssdScreen {
                     Some(defualt_next_screen.clone())
                 }
             }
-            UssdScreen::Input { title, defualt_next_screen, input_type, input_identifier } => {
+            UssdScreen::Input { title: _, defualt_next_screen, input_type: _, input_identifier: _ } => {
                 // Handle input screen
                 // Process input and return the next screen
                 session.current_screen = defualt_next_screen.clone();
                 Some(defualt_next_screen.clone())
             }
-            UssdScreen::Function { title, defualt_next_screen, function_name } => {
+            UssdScreen::Function { title: _, defualt_next_screen, function_name: _ } => {
                 // Call the corresponding function
                 // Update session state based on function result
                 // Return the next screen
                 session.current_screen = defualt_next_screen.clone();
                 Some(defualt_next_screen.clone())
             }
-            UssdScreen::Router { title, defualt_next_screen, router_name } => {
+            UssdScreen::Router { title: _, defualt_next_screen, router_name: _ } => {
                 // Call the corresponding router
                 // Update session state based on router result
                 // Return the next screen

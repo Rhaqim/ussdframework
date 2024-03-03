@@ -45,7 +45,7 @@ impl USSDHandlerTrait for USSDHandler {
         }
     }
 
-    fn get_by_name(&self, name: String) -> USSDHandler {
+    fn get_by_name(&self, _name: String) -> USSDHandler {
         USSDHandler {
             ussd_request: self.ussd_request.clone(),
             handler: self.handler.clone(),
@@ -83,11 +83,11 @@ impl USSDHandlerTrait for USSDHandler {
         statement
     }
 
-    fn evalute_expression(&self, items: Vec<String>, session: &USSDSession) -> Option<Vec<i32>> {
+    fn evalute_expression(&self, items: Vec<String>, _session: &USSDSession) -> Option<Vec<i32>> {
         let mut evaluated_items: Vec<i32> = vec![];
 
-        for item in items {
-            let mut evaluated_item = 0;
+        for _item in items {
+            let evaluated_item = 0;
 
             // if item.contains("session.") {
             //     let session_key = item.replace("session.", "");

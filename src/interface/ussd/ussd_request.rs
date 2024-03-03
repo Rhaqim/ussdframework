@@ -34,7 +34,7 @@ pub trait USSDRequestTrait {
 
 impl USSDRequestTrait for USSDRequest {
     fn new(msisdn: String,
-        session_id: String,
+        _session_id: String,
         input: String,
         default_language: String,
         use_built_in_session: bool,) -> Self {
