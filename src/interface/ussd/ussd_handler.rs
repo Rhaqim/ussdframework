@@ -1,10 +1,12 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, env};
+
+use chrono::Utc;
 
 use crate::types::{HashStrAny, RouterOptions};
 
 use super::{
     ussd_request::{USSDRequest, USSDRequestTrait},
-    ussd_session::USSDSession,
+    ussd_session::{USSDSession, USSDSessionTrait},
 };
 
 pub struct USSDHandler {
@@ -25,6 +27,7 @@ pub trait USSDHandlerTrait {
     fn handle(&self);
     fn route_options(&self, options: Option<RouterOptions>) -> (USSDRequest, String);
     fn evalute_expression(&self, items: Vec<String>, session: &USSDSession) -> Option<Vec<i32>>;
+    fn context(&self, session: &USSDSession, extra_content: Option<HashMap<String, String>>) -> HashMap<String, String>;
 }
 
 impl USSDHandlerTrait for USSDHandler {
@@ -86,23 +89,43 @@ impl USSDHandlerTrait for USSDHandler {
         for item in items {
             let mut evaluated_item = 0;
 
-            if item.contains("session.") {
-                let session_key = item.replace("session.", "");
-                // let session_value = session.session_data.get(&session_key).unwrap();
-                let session_value = session.session_data.clone();
+            // if item.contains("session.") {
+            //     let session_key = item.replace("session.", "");
+            //     // let session_value = session.session_data.get(&session_key).unwrap();
+            //     let session_value = session.session_data.clone();
 
-                if let Ok(value) = session_value.parse::<i32>() {
-                    evaluated_item = value;
-                }
-            } else {
-                if let Ok(value) = item.parse::<i32>() {
-                    evaluated_item = value;
-                }
-            }
+            //     if let Ok(value) = session_value.parse::<i32>() {
+            //         evaluated_item = value;
+            //     }
+            // } else {
+            //     if let Ok(value) = item.parse::<i32>() {
+            //         evaluated_item = value;
+            //     }
+            // }
 
             evaluated_items.push(evaluated_item);
         }
 
         Some(evaluated_items)
     }
+
+    fn context(&self, session: &USSDSession, extra_content: Option<HashMap<String, String>>) -> HashMap<String, String> {
+        let mut context = session.get_session_data();
+
+        for (key, val) in env::vars() {
+            context.insert(key, val);
+        }
+
+        if let Some(extra_content) = extra_content {
+            for (key, value) in extra_content {
+                context.insert(key, value);
+            }
+        }
+
+        let now = Utc::now().to_rfc3339();
+        context.insert("now".to_string(), now);
+
+        context
+    }
+
 }

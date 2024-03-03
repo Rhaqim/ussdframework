@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 # Templating library
 askama = "0.12.1"
+chrono = { version = "0.4", features = ["serde"] }
 config = "0.14.0"
 # HTTP server library
 hyper = "1.2.0"
