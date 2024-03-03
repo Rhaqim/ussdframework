@@ -1,0 +1,18 @@
+[package]
+name = "ussdframework"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# Templating library
+askama = "0.12.1"
+config = "0.14.0"
+# HTTP server library
+hyper = "1.2.0"
+# Routing library
+routerify = "3.0.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
