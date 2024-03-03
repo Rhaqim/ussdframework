@@ -1,4 +1,2 @@
-pub mod ussd_request;
-pub mod ussd_response;
-pub mod ussd_service;
-pub mod ussd_session;
+pub mod ussd;
+pub mod screen;
