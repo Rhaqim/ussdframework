@@ -7,15 +7,13 @@ mod interface;
 mod model;
 mod types;
 
-use core::{USSDRequest, UssdMenu};
+use interface::{USSDRequest, UssdMenu, UssdAction};
 use std::{io::{self, prelude::*}, time::Duration};
-
-use crate::core::UssdAction;
 
 #[tokio::main]
 async fn main() {
     // Load menu from JSON, YAML, or database
-    let menu = UssdMenu::load_from_json("/data/menu.json").unwrap();
+    let menu = UssdMenu::load_from_json("menu.json").unwrap();
 
     // Define session timeout duration
     let timeout_duration = Duration::from_secs(60); // Example: 60 seconds

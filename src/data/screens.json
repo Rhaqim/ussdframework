@@ -1,0 +1,10 @@
+{
+    "menus" : {
+
+        "InitialScreen": {
+            "title": "Welcome to the App",
+            "type": "Initial",
+            "default_next_screen": "MainScreen"
+        }
+    }
+}
