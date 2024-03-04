@@ -26,21 +26,21 @@ impl Display for RouterOptions {
 }
 
 // add to_string method to RouterOptions for String
-impl RouterOptions {
-    pub fn to_string(&self) -> String {
-        match self {
-            RouterOptions::List(options) => {
-                format!("{:?}", options)
-            }
-            RouterOptions::ListStr(options) => {
-                format!("{:?}", options)
-            }
-            RouterOptions::String(option) => {
-                option.to_string()
-            }
-        }
-    }
-}
+// impl RouterOptions {
+//     pub fn to_string(&self) -> String {
+//         match self {
+//             RouterOptions::List(options) => {
+//                 format!("{:?}", options)
+//             }
+//             RouterOptions::ListStr(options) => {
+//                 format!("{:?}", options)
+//             }
+//             RouterOptions::String(option) => {
+//                 option.to_string()
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum HashStrAny {
