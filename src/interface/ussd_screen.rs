@@ -5,11 +5,33 @@ use crate::info;
 
 use super::ussd_session::UssdSession;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct MenuItems {
     pub option: String,
     pub display_name: String,
     pub default_next_screen: String,
+}
+
+impl<'de> Deserialize<'de> for MenuItems {
+    fn deserialize<D>(deserializer: D) -> Result<MenuItems, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Debug, Deserialize)]
+        struct RawMenuItems {
+            option: String,
+            display_name: String,
+            default_next_screen: String,
+        }
+
+        let raw_menu_items = RawMenuItems::deserialize(deserializer)?;
+
+        Ok(MenuItems {
+            option: raw_menu_items.option,
+            display_name: raw_menu_items.display_name,
+            default_next_screen: raw_menu_items.default_next_screen,
+        })
+    }
 }
 
 // Define an enum to represent different types of USSD screens
@@ -168,25 +190,22 @@ impl UssdAction for UssdScreen {
                 Some(default_next_screen.clone())
             }
             UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
-                // // Handle menu input
-                // Parse input as a number
-
                 // iterate over the menu_items and give each item an index within the bounds of the menu_items_len
-                for (index, (_key, _value)) in menu_items.iter().enumerate() {
-                    let option_idx = index + 1;
-                    let option = option_idx.to_string();
-                    let default_next_screen = &_value.default_next_screen;
+                let menu_items_len = menu_items.len();
 
-                    // if the input matches the option, go to the default_next_screen
-                    if input == option {
-                        session.current_screen = default_next_screen.clone();
-                        return Some(default_next_screen.clone());
+                // if input is within the bounds of the menu_items_len, return the next screen
+                if let Ok(input) = input.parse::<usize>() {
+                    if input > 0 && input <= menu_items_len {
+                        let next_screen = menu_items.values().nth(input - 1).unwrap().default_next_screen.clone();
+                        session.current_screen = next_screen.clone();
+                        return Some(next_screen);
                     }
                 }
 
-                // If input is invalid, go to default next screen
+                // if input is not within the bounds of the menu_items_len, return the current screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
+                
             }
             UssdScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
                 // Handle input screen
