@@ -137,14 +137,6 @@ impl UssdAction for UssdScreen {
             }
             UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
                 // // Handle menu input
-                // if let Some(next_screen) = menu_items.get(input) {
-                //     session.current_screen = next_screen.default_next_screen.clone();
-                //     Some(next_screen.default_next_screen.clone())
-                // } else {
-                //     session.current_screen = default_next_screen.clone();
-                //     Some(default_next_screen.clone())
-                // }
-
                 // Parse input as a number
                 if let Ok(index) = input.parse::<usize>() {
                     // Check if the index exists in the menu_items
@@ -188,8 +180,13 @@ impl UssdAction for UssdScreen {
         match self {
             UssdScreen::Menu { title, menu_items, .. } => {
                 println!("Title: {} \n", title);
-                for (index, item) in menu_items.iter() {
-                    println!("{}. {}", item.option, item.display_name);
+                for (_screen, item) in menu_items.iter() {
+                    // println!("{}. {}", item.option, item.display_name);
+                    let option_idx = item.option.parse::<usize>().unwrap();
+                    let display_name = &item.display_name;
+
+                    // print in order, starting from 1
+                    println!("{}. {}", option_idx, display_name);
                 }
             }
             UssdScreen::Input { title, .. } => {

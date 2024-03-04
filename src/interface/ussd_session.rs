@@ -2,11 +2,13 @@ use serde::{Deserialize, Serialize};
 
 use std::time::{Duration, SystemTime};
 
+use crate::helper::stack::Stack;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UssdSession {
     pub session_id: String,
     pub current_screen: String,
-    pub visited_screens: Vec<String>,
+    pub visited_screens: Stack<String>,
     pub last_interaction_time: SystemTime,
     // Add any other session-related data here
 }

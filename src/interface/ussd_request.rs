@@ -1,5 +1,7 @@
 use std::time::{Duration, SystemTime};
 
+use crate::helper::stack::Stack;
+
 use super::{ussd_menu::UssdMenu, ussd_session::UssdSession, ussd_screen::UssdAction};
 
 // Define the USSDRequest struct
@@ -16,7 +18,7 @@ impl USSDRequest {
             session: UssdSession {
                 session_id,
                 current_screen: initial_screen,
-                visited_screens: Vec::new(),
+                visited_screens: Stack::new(),
                 last_interaction_time: SystemTime::now(),
             },
             menu,
