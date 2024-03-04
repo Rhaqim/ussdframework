@@ -6,6 +6,7 @@ use super::ussd_session::UssdSession;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct MenuItems {
     pub option: String,
+    pub display_name: String,
     pub default_next_screen: String,
 }
 
@@ -13,7 +14,6 @@ pub struct MenuItems {
 #[derive(Debug, Serialize)]
 pub enum UssdScreen {
     Initial {
-        title: String,
         default_next_screen: String,
     },
     Menu {
@@ -64,7 +64,6 @@ impl<'de> Deserialize<'de> for UssdScreen {
 
         match raw_screen.screen_type.as_str() {
             "Initial" => Ok(UssdScreen::Initial {
-                title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
             
             }),
@@ -109,14 +108,15 @@ impl UssdAction for UssdScreen {
     fn validate_input(&self, input: &str) -> bool {
         match self {
             UssdScreen::Initial { .. } |
-            UssdScreen::Menu { .. } |
-            UssdScreen::Input { .. } |
-            UssdScreen::Function { .. } |
-            UssdScreen::Router { .. } => {
+            UssdScreen::Menu { .. } => {
                 // Perform input validation logic here
                 // For example, check if input is numeric
+                // Validate input based on menu items
                 input.chars().all(|c| c.is_digit(10))
             }
+            UssdScreen::Input { .. } |
+            UssdScreen::Function { .. } |
+            UssdScreen::Router { .. } |
             UssdScreen::Quit => true, // No input to validate
         }
     }
@@ -127,7 +127,7 @@ impl UssdAction for UssdScreen {
         }
 
         match self {
-            UssdScreen::Initial { title: _, default_next_screen } => {
+            UssdScreen::Initial { default_next_screen } => {
                 // Handle initial screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
@@ -173,8 +173,8 @@ impl UssdAction for UssdScreen {
         match self {
             UssdScreen::Menu { title, menu_items, .. } => {
                 println!("Title: {}", title);
-                for (index, item) in menu_items.iter() {
-                    println!("{}. {}", index, item.option);
+                for (_, item) in menu_items.iter() {
+                    println!("{}. {}", item.option, item.display_name);
                 }
             }
             UssdScreen::Input { title, .. } => {

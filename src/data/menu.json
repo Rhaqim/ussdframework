@@ -12,11 +12,18 @@
             "menu_items": {
                 "AccountNumberMenu": {
                     "option": "1",
+                    "display_name": "Account Number",
                     "default_next_screen": "AccountNumberScreen"
                 },
                 "PhoneNumberMenu": {
                     "option": "2",
+                    "display_name": "Phone Number",
                     "default_next_screen": "PhoneNumberScreen"
+                },
+                "EmailMenu": {
+                    "option": "3",
+                    "display_name": "Email",
+                    "default_next_screen": "EmailScreen"
                 }
             }
         },
