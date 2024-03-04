@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::info;
+
 use super::ussd_session::UssdSession;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -99,6 +101,8 @@ impl<'de> Deserialize<'de> for UssdScreen {
 // Define a trait to represent actions that can be performed in a USSD session
 pub trait UssdAction {
     fn validate_input(&self, input: &str) -> bool;
+    fn back(&self, session: &mut UssdSession);
+    fn home(&self, session: &mut UssdSession);
     fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String>;
     fn display(&self);
 }
@@ -120,10 +124,38 @@ impl UssdAction for UssdScreen {
             UssdScreen::Quit => true, // No input to validate
         }
     }
+
+    fn back(&self, session: &mut UssdSession) {
+        // switch to the previous screen
+        if let Some(prev_screen) = session.visited_screens.pop() {
+            session.current_screen = prev_screen;
+        }
+    }
+
+    fn home(&self, session: &mut UssdSession) {
+        // Switch to the initial screen
+        session.current_screen = "InitialScreen".to_string();
+    }
+
     fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String> {
+        // logging
+        info!("\nCurrent screen:\n    {:?} \n\nInput received:\n    {:?} \n", self, input);
+
         if !self.validate_input(input) {
             println!("Invalid input!");
             return None;
+        }
+
+        // if input is 0, go back
+        if input == "0" {
+            self.back(session);
+            return Some(session.current_screen.clone());
+        }
+
+        // if input is 00, go home
+        if input == "00" {
+            self.home(session);
+            return Some(session.current_screen.clone());
         }
 
         // track visited screens
@@ -138,13 +170,20 @@ impl UssdAction for UssdScreen {
             UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
                 // // Handle menu input
                 // Parse input as a number
-                if let Ok(index) = input.parse::<usize>() {
-                    // Check if the index exists in the menu_items
-                    if let Some((_key, next_screen)) = menu_items.iter().nth(index - 1) {
-                        session.current_screen = next_screen.default_next_screen.clone();
-                        return Some(next_screen.default_next_screen.clone());
+
+                // iterate over the menu_items and give each item an index within the bounds of the menu_items_len
+                for (index, (_key, _value)) in menu_items.iter().enumerate() {
+                    let option_idx = index + 1;
+                    let option = option_idx.to_string();
+                    let default_next_screen = &_value.default_next_screen;
+
+                    // if the input matches the option, go to the default_next_screen
+                    if input == option {
+                        session.current_screen = default_next_screen.clone();
+                        return Some(default_next_screen.clone());
                     }
                 }
+
                 // If input is invalid, go to default next screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
@@ -180,13 +219,9 @@ impl UssdAction for UssdScreen {
         match self {
             UssdScreen::Menu { title, menu_items, .. } => {
                 println!("Title: {} \n", title);
-                for (_screen, item) in menu_items.iter() {
-                    // println!("{}. {}", item.option, item.display_name);
-                    let option_idx = item.option.parse::<usize>().unwrap();
-                    let display_name = &item.display_name;
-
-                    // print in order, starting from 1
-                    println!("{}. {}", option_idx, display_name);
+                for (index, (_, value)) in menu_items.iter().enumerate() {
+                    let option_idx = index + 1;
+                    println!("{}. {} \n", option_idx, value.display_name);
                 }
             }
             UssdScreen::Input { title, .. } => {

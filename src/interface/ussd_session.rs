@@ -19,12 +19,24 @@ impl UssdSession {
         self.last_interaction_time.elapsed().unwrap_or_default() > timeout_duration
     }
 
+    // Update the session's last interaction time
+    pub fn update_last_interaction_time(&mut self) {
+        self.last_interaction_time = SystemTime::now();
+    }
+
     // Restart the session
     pub fn restart(&mut self, initial_screen: &str) {
         // clear visited screens
         self.visited_screens.clear();
         self.current_screen = initial_screen.to_string();
-        self.last_interaction_time = SystemTime::now();
+        self.update_last_interaction_time();
         // Reset any other session-related data as needed
+    }
+
+    // Display screen history with an arrow pointing to the current screen
+    pub fn display_screen_history(&self) {
+        for screen in self.visited_screens.iter() {
+            print!("{} -> ", screen);
+        }
     }
 }

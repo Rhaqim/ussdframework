@@ -4,6 +4,7 @@ extern crate tokio;
 mod core;
 mod helper;
 mod interface;
+mod log;
 mod model;
 mod types;
 

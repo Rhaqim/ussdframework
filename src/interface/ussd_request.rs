@@ -32,6 +32,8 @@ impl USSDRequest {
             self.session.restart("InitialScreen");
         }
 
+        self.session.display_screen_history();
+
         if let Some(screen) = self.menu.menus.get(&self.session.current_screen) {
             let next_screen = screen.execute(&mut self.session, input);
             self.session.last_interaction_time = SystemTime::now();

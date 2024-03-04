@@ -40,4 +40,9 @@ impl<T> Stack<T> {
     pub fn len(&self) -> usize {
         self.items.len()
     }
+
+    // Iterate over the items in the stack
+    pub fn iter(&self) -> std::slice::Iter<T> {
+        self.items.iter()
+    }
 }
