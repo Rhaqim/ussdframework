@@ -1,3 +1,5 @@
+use config::Config;
+
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -10,6 +12,7 @@ use super::ussd_screen::UssdScreen;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UssdMenu {
     pub menus: HashMap<String, UssdScreen>,
+    pub services: HashMap<String, String>,
 }
 
 impl UssdMenu {
@@ -29,5 +32,11 @@ impl UssdMenu {
         let mut file = File::create(file_path)?;
         file.write_all(json_str.as_bytes())?;
         Ok(())
+    }
+
+    // load menu from config
+    pub fn load_from_config(config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
+        let menu: UssdMenu = config.get("menu")?;
+        Ok(menu)
     }
 }

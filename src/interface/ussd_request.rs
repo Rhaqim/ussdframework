@@ -16,6 +16,7 @@ impl USSDRequest {
             session: UssdSession {
                 session_id,
                 current_screen: initial_screen,
+                visited_screens: Vec::new(),
                 last_interaction_time: SystemTime::now(),
             },
             menu,

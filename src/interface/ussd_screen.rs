@@ -126,6 +126,9 @@ impl UssdAction for UssdScreen {
             return None;
         }
 
+        // track visited screens
+        session.visited_screens.push(session.current_screen.clone());
+
         match self {
             UssdScreen::Initial { default_next_screen } => {
                 // Handle initial screen
@@ -133,14 +136,26 @@ impl UssdAction for UssdScreen {
                 Some(default_next_screen.clone())
             }
             UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
-                // Handle menu input
-                if let Some(next_screen) = menu_items.get(input) {
-                    session.current_screen = next_screen.default_next_screen.clone();
-                    Some(next_screen.default_next_screen.clone())
-                } else {
-                    session.current_screen = default_next_screen.clone();
-                    Some(default_next_screen.clone())
+                // // Handle menu input
+                // if let Some(next_screen) = menu_items.get(input) {
+                //     session.current_screen = next_screen.default_next_screen.clone();
+                //     Some(next_screen.default_next_screen.clone())
+                // } else {
+                //     session.current_screen = default_next_screen.clone();
+                //     Some(default_next_screen.clone())
+                // }
+
+                // Parse input as a number
+                if let Ok(index) = input.parse::<usize>() {
+                    // Check if the index exists in the menu_items
+                    if let Some((_key, next_screen)) = menu_items.iter().nth(index - 1) {
+                        session.current_screen = next_screen.default_next_screen.clone();
+                        return Some(next_screen.default_next_screen.clone());
+                    }
                 }
+                // If input is invalid, go to default next screen
+                session.current_screen = default_next_screen.clone();
+                Some(default_next_screen.clone())
             }
             UssdScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
                 // Handle input screen
@@ -172,21 +187,21 @@ impl UssdAction for UssdScreen {
     fn display(&self) {
         match self {
             UssdScreen::Menu { title, menu_items, .. } => {
-                println!("Title: {}", title);
-                for (_, item) in menu_items.iter() {
+                println!("Title: {} \n", title);
+                for (index, item) in menu_items.iter() {
                     println!("{}. {}", item.option, item.display_name);
                 }
             }
             UssdScreen::Input { title, .. } => {
-                println!("Title: {}", title);
+                println!("Title: {} \n", title);
                 // Additional display logic for input screen
             }
             UssdScreen::Function { title, .. } => {
-                println!("Title: {}", title);
+                println!("Title: {} \n", title);
                 // Additional display logic for function screen
             }
             UssdScreen::Router { title, .. } => {
-                println!("Title: {}", title);
+                println!("Title: {} \n", title);
                 // Additional display logic for router screen
             }
             UssdScreen::Quit => {

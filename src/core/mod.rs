@@ -82,7 +82,7 @@ pub struct UssdMenu {
 
 impl UssdMenu {
     // Load menu structure from JSON file
-    pub fn load_from_json(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load_from_json(_file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         // let mut file = File::open(file_path)?;
         // let mut contents = String::new();
         // file.read_to_string(&mut contents)?;

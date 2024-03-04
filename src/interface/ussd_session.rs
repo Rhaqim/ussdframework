@@ -6,6 +6,7 @@ use std::time::{Duration, SystemTime};
 pub struct UssdSession {
     pub session_id: String,
     pub current_screen: String,
+    pub visited_screens: Vec<String>,
     pub last_interaction_time: SystemTime,
     // Add any other session-related data here
 }
@@ -18,6 +19,8 @@ impl UssdSession {
 
     // Restart the session
     pub fn restart(&mut self, initial_screen: &str) {
+        // clear visited screens
+        self.visited_screens.clear();
         self.current_screen = initial_screen.to_string();
         self.last_interaction_time = SystemTime::now();
         // Reset any other session-related data as needed
