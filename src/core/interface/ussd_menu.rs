@@ -5,13 +5,13 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-use super::ussd_screen::UssdScreen;
+use super::{USSDService, UssdScreen};
 
 // Define a structure to hold the USSD menu data
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UssdMenu {
     pub menus: HashMap<String, UssdScreen>,
-    pub services: HashMap<String, String>,
+    pub services: HashMap<String, USSDService>,
 }
 
 impl UssdMenu {
