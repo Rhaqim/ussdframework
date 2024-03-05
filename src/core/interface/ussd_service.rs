@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
+
+use crate::types::HashStrAny;
 
 use super::UssdSession;
 
@@ -13,7 +17,7 @@ pub struct USSDService {
 pub trait USSDServiceTrait {
     fn new(functions_path: String, function_name: String, function_url: Option<String>, data_key: String) -> Self;
     fn call(&self, session: &mut UssdSession) -> String;
-    fn load_function(&self) -> Box<dyn Fn(&str) -> String>;
+    fn load_function(&self) -> Box<dyn Fn(&str) -> HashStrAny>;
 }
 
 impl USSDServiceTrait for USSDService {
@@ -41,14 +45,24 @@ impl USSDServiceTrait for USSDService {
         // Save the returned result in the session data with the data_key
         session.data.insert(self.data_key.clone(), result.clone());
 
-        result
+        // Return the result as a string
+        format!("{:?}", result)
     }
 
-    fn load_function(&self) -> Box<dyn Fn(&str) -> String> {
+    fn load_function(&self) -> Box<dyn Fn(&str) -> HashStrAny> {
+        // Load the function from the functions_path
         // Logic to load the function from the function_path (You need to implement this logic)
-        // For now, we will return a dummy function
-        Box::new(|url| {
-            format!("Function loaded with url: {}", url)
+        // This implementation currently returns a function that returns None for all function paths.
+        // You need to replace this with your actual implementation.
+    
+        Box::new(|_url| {
+            // Creating a sample HashMap for demonstration
+            let mut dict = HashMap::new();
+            dict.insert("key1".to_string(), HashStrAny::Int(42));
+            dict.insert("status".to_string(), HashStrAny::Str("success".to_string()));
+    
+            // Returning HashStrAny::Dict variant
+            HashStrAny::new_dict(dict)
         })
     }
 }

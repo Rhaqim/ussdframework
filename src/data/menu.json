@@ -99,12 +99,27 @@
             "title": "Selecting...",
             "type": "Router",
             "router": "AirtimeScreen",
-            "router_options": {
-                "OwnNumberOption": "OwnNumberAmountScreen",
-                "OtherNumberOption": "OtherNumberAmountScreen"
-            },
+            "router_options": [
+				{
+					"router_option": "{{airtime.status == `success`}}",
+					"next_screen": "SuccessScreen"
+				},
+				{
+					"router_option": "{{airtime.status == `failed`}}",
+					"next_screen": "OwnNumberAmountScreen"
+				},
+				{
+					"router_option": "{{airtime.status == `error`}}",
+					"next_screen": "OtherNumberAmountScreen"
+				}
+			],
             "default_next_screen": "DefaultNoneScreen"
-        }
+        },
+		"SuccessScreen": {
+			"title": "Transaction Successful",
+			"type": "Quit",
+			"default_next_screen": "MainScreen"
+		}
 	},
 	"services": {
 		"buy_airtime": {

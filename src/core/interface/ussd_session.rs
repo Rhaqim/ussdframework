@@ -5,12 +5,12 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::helper::stack::Stack;
+use crate::{helper::stack::Stack, types::HashStrAny};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UssdSession {
     pub session_id: String,
-    pub data: HashMap<String, String>,
+    pub data: HashMap<String, HashStrAny>,
     pub current_screen: String,
     pub visited_screens: Stack<String>,
     pub last_interaction_time: SystemTime,

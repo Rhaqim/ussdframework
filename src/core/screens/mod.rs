@@ -115,7 +115,7 @@ impl UssdAction for USSDScreen {
                 default_next_screen,
                 router: _,
                 router_options,
-            } => router_handler(session, input, router_options, default_next_screen),
+            } => router_handler(session, router_options, default_next_screen),
             USSDScreen::Quit {
                 title: _,
                 default_next_screen,
@@ -131,18 +131,18 @@ impl UssdAction for USSDScreen {
             USSDScreen::Menu {
                 title, menu_items, ..
             } => {
-                println!("Title: {} \n", title);
+                println!("\n{} \n", title);
                 for (index, (_, value)) in menu_items.iter().enumerate() {
                     let option_idx = index + 1;
                     println!("{}. {} \n", option_idx, value.display_name);
                 }
             }
             USSDScreen::Input { title, .. } => {
-                println!("Title: {} \n", title);
+                println!("\n{} \n", title);
                 // Additional display logic for input screen
             }
             USSDScreen::Quit { title, .. } => {
-                println!("Title: {} \n", title);
+                println!("\n{} \n", title);
             }
             _ => {}
         }

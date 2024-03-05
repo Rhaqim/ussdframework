@@ -3,33 +3,17 @@ use std::collections::HashMap;
 
 use super::{ussd_session::UssdSession, USSDService};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct MenuItems {
     pub option: String,
     pub display_name: String,
     pub default_next_screen: String,
 }
 
-impl<'de> Deserialize<'de> for MenuItems {
-    fn deserialize<D>(deserializer: D) -> Result<MenuItems, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        #[derive(Debug, Deserialize)]
-        struct RawMenuItems {
-            option: String,
-            display_name: String,
-            default_next_screen: String,
-        }
-
-        let raw_menu_items = RawMenuItems::deserialize(deserializer)?;
-
-        Ok(MenuItems {
-            option: raw_menu_items.option,
-            display_name: raw_menu_items.display_name,
-            default_next_screen: raw_menu_items.default_next_screen,
-        })
-    }
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RouterOptions {
+    pub router_option: String,
+    pub next_screen: String,
 }
 
 // Define an enum to represent different types of USSD screens
@@ -58,7 +42,7 @@ pub enum USSDScreen {
         title: String,
         default_next_screen: String,
         router: String,
-        router_options: HashMap<String, String>,
+        router_options: Vec<RouterOptions>
     },
     Quit {
         title: String,
@@ -83,7 +67,7 @@ impl<'de> Deserialize<'de> for USSDScreen {
             input_type: Option<String>,
             input_identifier: Option<String>,
             function: Option<String>,
-            router_options: Option<HashMap<String, String>>,
+            router_options: Option<Vec<RouterOptions>>,
             router: Option<String>,
         }
 

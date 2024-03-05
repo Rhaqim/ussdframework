@@ -1,4 +1,4 @@
-use crate::core::UssdSession;
+use crate::{core::UssdSession, types::HashStrAny};
 
 pub fn input_handler(
     session: &mut UssdSession,
@@ -9,7 +9,7 @@ pub fn input_handler(
 ) -> Option<String> {
     session
         .data
-        .insert(input_identifier.clone(), input.to_string());
+        .insert(input_identifier.clone(), HashStrAny::Str(input.to_string()));
     session.current_screen = default_next_screen.clone();
     Some(default_next_screen.clone())
 }

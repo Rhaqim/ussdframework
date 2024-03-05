@@ -53,3 +53,10 @@ pub enum HashStrAny {
     Dict(HashMap<String, HashStrAny>),
     None,
 }
+
+impl HashStrAny {
+    // Helper function to create a new HashStrAny::Dict variant
+    pub fn new_dict(dict: HashMap<String, HashStrAny>) -> HashStrAny {
+        HashStrAny::Dict(dict)
+    }
+}
