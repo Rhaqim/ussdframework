@@ -12,7 +12,8 @@ pub struct USSDService {
 
 pub trait USSDServiceTrait {
     fn new(functions_path: String, function_name: String, function_url: Option<String>, data_key: String) -> Self;
-    fn call(&self, session: &UssdSession) -> String;
+    fn call(&self, session: &mut UssdSession) -> String;
+    fn load_function(&self) -> Box<dyn Fn(&str) -> String>;
 }
 
 impl USSDServiceTrait for USSDService {
@@ -25,20 +26,29 @@ impl USSDServiceTrait for USSDService {
         }
     }
 
-    fn call(&self, session: &UssdSession) -> String {
-        let function = self.function_name.clone();
-        let data_key = self.data_key.clone();
-        let function_url = self.function_url.clone();
-        let functions_path = self.functions_path.clone();
-
-        if let Some(url) = function_url {
-            // Call the function using the URL
-            // Example: call_function_from_url(url, session, data_key)
-            format!("Calling function {} from URL: {}", function, url)
+    fn call(&self, session: &mut UssdSession) -> String {
+        // Find and load the function from the functions_path
+        // Logic to load the function from the function_path (You need to implement this logic)
+        let loaded_function = self.load_function();
+        
+        // Pass the function_url as an argument to the loaded function
+        let result = if let Some(url) = &self.function_url {
+            loaded_function(url)
         } else {
-            // Call the function from the local file
-            // Example: call_function_from_file(functions_path, function, session, data_key)
-            format!("Calling function {} from file: {}", function, functions_path)
-        }
+            loaded_function("")
+        };
+        
+        // Save the returned result in the session data with the data_key
+        session.data.insert(self.data_key.clone(), result.clone());
+
+        result
+    }
+
+    fn load_function(&self) -> Box<dyn Fn(&str) -> String> {
+        // Logic to load the function from the function_path (You need to implement this logic)
+        // For now, we will return a dummy function
+        Box::new(|url| {
+            format!("Function loaded with url: {}", url)
+        })
     }
 }

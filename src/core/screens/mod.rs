@@ -56,6 +56,7 @@ impl UssdAction for USSDScreen {
             self, input
         );
 
+        // validate input
         if !self.validate_input(input) {
             println!("Invalid input!");
             return None;
@@ -75,6 +76,9 @@ impl UssdAction for USSDScreen {
 
         // track visited screens
         session.visited_screens.push(session.current_screen.clone());
+
+        // display screen history
+        session.display_screen_history();
 
         match self {
             USSDScreen::Initial {

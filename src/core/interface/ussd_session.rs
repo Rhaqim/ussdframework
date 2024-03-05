@@ -41,7 +41,7 @@ impl UssdSession {
     // Display screen history with an arrow pointing to the current screen
     pub fn display_screen_history(&self) {
         for screen in self.visited_screens.iter() {
-            print!("{} -> ", screen);
+            print!("{} \u{25B6} ", screen);
         }
     }
 }
