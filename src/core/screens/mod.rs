@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::info;
 
-use super::{USSDService, UssdAction, USSDScreen, UssdSession};
+use super::{USSDService, UssdAction, USSDScreen, USSDSession};
 
 use function::function_handler;
 use input::input_handler;
@@ -37,19 +37,19 @@ impl UssdAction for USSDScreen {
         }
     }
 
-    fn back(&self, session: &mut UssdSession) {
+    fn back(&self, session: &mut USSDSession) {
         // switch to the previous screen
         if let Some(prev_screen) = session.visited_screens.pop() {
             session.current_screen = prev_screen;
         }
     }
 
-    fn home(&self, session: &mut UssdSession) {
+    fn home(&self, session: &mut USSDSession) {
         // Switch to the initial screen
         session.current_screen = "InitialScreen".to_string();
     }
 
-    fn execute(&self, session: &mut UssdSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String> {
+    fn execute(&self, session: &mut USSDSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String> {
         // logging
         info!(
             "\nCurrent screen:\n    {:?} \n\nInput received:\n    {:?} \n",

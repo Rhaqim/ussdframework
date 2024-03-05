@@ -8,7 +8,7 @@ use std::{
 use crate::{helper::stack::Stack, types::HashStrAny};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UssdSession {
+pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
     pub current_screen: String,
@@ -18,7 +18,7 @@ pub struct UssdSession {
     // Add any other session-related data here
 }
 
-impl UssdSession {
+impl USSDSession {
     // Check if session has timed out
     pub fn has_timed_out(&self, timeout_duration: Duration) -> bool {
         self.last_interaction_time.elapsed().unwrap_or_default() > timeout_duration

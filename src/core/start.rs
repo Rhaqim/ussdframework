@@ -7,14 +7,14 @@ use std::time::{SystemTime, Duration};
 
 // Define a structure to represent a USSD session
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UssdSession {
+pub struct USSDSession {
     pub session_id: String,
     pub current_screen: String,
     pub last_interaction_time: SystemTime,
     // Add any other session-related data here
 }
 
-impl UssdSession {
+impl USSDSession {
     // Check if session has timed out
     fn has_timed_out(&self, timeout_duration: Duration) -> bool {
         self.last_interaction_time.elapsed().unwrap_or_default() > timeout_duration
@@ -158,7 +158,7 @@ impl<'de> Deserialize<'de> for USSDScreen {
 
 // Define the USSDRequest struct
 pub struct USSDRequest {
-    pub session: UssdSession,
+    pub session: USSDSession,
     pub menu: USSDMenu,
     pub timeout_duration: Duration,
 }
@@ -167,7 +167,7 @@ impl USSDRequest {
     // Create a new USSDRequest
     pub fn new(session_id: String, initial_screen: String, menu: USSDMenu, timeout_duration: Duration) -> Self {
         USSDRequest {
-            session: UssdSession {
+            session: USSDSession {
                 session_id,
                 current_screen: initial_screen,
                 last_interaction_time: SystemTime::now(),
@@ -197,7 +197,7 @@ impl USSDRequest {
 // Define a trait to represent actions that can be performed in a USSD session
 pub trait UssdAction {
     fn validate_input(&self, input: &str) -> bool;
-    fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String>;
+    fn execute(&self, session: &mut USSDSession, input: &str) -> Option<String>;
     fn display(&self);
 }
 
@@ -217,7 +217,7 @@ impl UssdAction for USSDScreen {
             USSDScreen::Quit => true, // No input to validate
         }
     }
-    fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String> {
+    fn execute(&self, session: &mut USSDSession, input: &str) -> Option<String> {
         if !self.validate_input(input) {
             println!("Invalid input!");
             return None;

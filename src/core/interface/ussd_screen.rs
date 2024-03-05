@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-use super::{ussd_session::UssdSession, USSDService};
+use super::{ussd_session::USSDSession, USSDService};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MenuItems {
@@ -111,8 +111,8 @@ impl<'de> Deserialize<'de> for USSDScreen {
 // Define a trait to represent actions that can be performed in a USSD session
 pub trait UssdAction {
     fn validate_input(&self, input: &str) -> bool;
-    fn back(&self, session: &mut UssdSession);
-    fn home(&self, session: &mut UssdSession);
-    fn execute(&self, session: &mut UssdSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String>;
+    fn back(&self, session: &mut USSDSession);
+    fn home(&self, session: &mut USSDSession);
+    fn execute(&self, session: &mut USSDSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String>;
     fn display(&self);
 }

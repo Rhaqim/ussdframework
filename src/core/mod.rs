@@ -6,5 +6,5 @@ pub use interface::USSDRequest;
 pub use interface::USSDService;
 pub use interface::USSDMenu;
 pub use interface::UssdResponse;
-pub use interface::UssdSession;
+pub use interface::USSDSession;
 pub use interface::{MenuItems, UssdAction, USSDScreen};

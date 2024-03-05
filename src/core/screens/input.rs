@@ -1,7 +1,7 @@
-use crate::{core::UssdSession, types::HashStrAny};
+use crate::{core::USSDSession, types::HashStrAny};
 
 pub fn input_handler(
-    session: &mut UssdSession,
+    session: &mut USSDSession,
     input: &str,
     _input_type: &Option<String>,
     input_identifier: &String,

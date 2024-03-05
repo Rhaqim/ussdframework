@@ -1,5 +1,5 @@
 use crate::{
-    core::{interface::ussd_screen::RouterOptions, UssdSession},
+    core::{interface::ussd_screen::RouterOptions, USSDSession},
     types::HashStrAny,
 };
 
@@ -11,7 +11,7 @@ use crate::{
 ///
 /// # Arguments
 ///
-/// * `session` - The mutable reference to the `UssdSession` struct.
+/// * `session` - The mutable reference to the `USSDSession` struct.
 /// * `router_options` - The vector of `RouterOptions` structs representing the available router options.
 /// * `default_next_screen` - The string representing the default next screen when no router option evaluates to true.
 ///
@@ -20,7 +20,7 @@ use crate::{
 /// An optional string representing the next screen. If a router option evaluates to true, the next screen is returned.
 /// If no router option evaluates to true, the default next screen is returned.
 pub fn router_handler(
-    session: &mut UssdSession,
+    session: &mut USSDSession,
     router_options: &Vec<RouterOptions>,
     default_next_screen: &String,
 ) -> Option<String> {
@@ -52,13 +52,13 @@ pub fn router_handler(
 ///
 /// # Arguments
 ///
-/// * `session` - The reference to the `UssdSession` struct.
+/// * `session` - The reference to the `USSDSession` struct.
 /// * `router_option` - The string representing the router option to be evaluated.
 ///
 /// # Returns
 ///
 /// A boolean value indicating whether the router option evaluates to true or false.
-fn evaluate_router_options(session: &UssdSession, router_option: &str) -> bool {
+fn evaluate_router_options(session: &USSDSession, router_option: &str) -> bool {
     // Check if the router option contains `{{` and `}}` to indicate an expression
     if router_option.contains("{{") && router_option.contains("}}") {
         // Extract the expression inside `{{ }}`
@@ -89,7 +89,7 @@ fn evaluate_router_options(session: &UssdSession, router_option: &str) -> bool {
     }
 }
 
-fn parse_and_evaluate_expression(session: &UssdSession, expression: &str) -> Result<bool, String> {
+fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Result<bool, String> {
     // Split the expression into parts
     let parts: Vec<&str> = expression.split_whitespace().collect();
     if parts.len() != 3 {

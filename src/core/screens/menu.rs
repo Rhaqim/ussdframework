@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::core::{MenuItems, UssdSession};
+use crate::core::{MenuItems, USSDSession};
 
-pub fn menu_handler(session: &mut UssdSession, input: &str, menu_items: &HashMap<String, MenuItems>, default_next_screen: &String) -> Option<String> {
+pub fn menu_handler(session: &mut USSDSession, input: &str, menu_items: &HashMap<String, MenuItems>, default_next_screen: &String) -> Option<String> {
     // iterate over the menu_items and give each item an index within the bounds of the menu_items_len
     let menu_items_len = menu_items.len();
 

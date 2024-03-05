@@ -12,4 +12,4 @@ pub use ussd_request::USSDRequest;
 pub use ussd_response::UssdResponse;
 pub use ussd_screen::{MenuItems, UssdAction, USSDScreen};
 pub use ussd_service::USSDService;
-pub use ussd_session::UssdSession;
+pub use ussd_session::USSDSession;

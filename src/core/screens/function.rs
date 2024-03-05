@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use crate::core::{interface::ussd_service::USSDServiceTrait, USSDService, UssdSession};
+use crate::core::{interface::ussd_service::USSDServiceTrait, USSDService, USSDSession};
 
 pub fn function_handler(
-    session: &mut UssdSession,
+    session: &mut USSDSession,
     function: &str,
     services: &HashMap<String, USSDService>,
     default_next_screen: &String,

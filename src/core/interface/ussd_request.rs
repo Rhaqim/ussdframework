@@ -5,11 +5,11 @@ use std::{
 
 use crate::helper::stack::Stack;
 
-use super::{ussd_menu::USSDMenu, ussd_screen::UssdAction, ussd_session::UssdSession};
+use super::{ussd_menu::USSDMenu, ussd_screen::UssdAction, ussd_session::USSDSession};
 
 // Define the USSDRequest struct
 pub struct USSDRequest {
-    pub session: UssdSession,
+    pub session: USSDSession,
     pub menu: USSDMenu,
     pub timeout_duration: Duration,
 }
@@ -20,7 +20,7 @@ impl USSDRequest {
         let (start_screen, _) = menu.get_initial_screen();
 
         USSDRequest {
-            session: UssdSession {
+            session: USSDSession {
                 session_id,
                 data: HashMap::new(),
                 current_screen: start_screen,
