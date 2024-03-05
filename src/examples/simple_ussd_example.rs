@@ -13,7 +13,7 @@ fn main() {
     // config.add_service("ServiceName".to_string(), USSDServiceConfig { ... });
 
     // Create a USSD gateway
-    let gateway = USSDGateway::new("functions_path".to_string(), "menu_source".to_string());
+    let gateway = USSDGateway::new(config);
 
     // Initialize the USSD gateway
     gateway.initial();

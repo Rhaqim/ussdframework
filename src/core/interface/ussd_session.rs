@@ -44,4 +44,57 @@ impl USSDSession {
             print!("{} \u{25B6} ", screen);
         }
     }
+
+    // Store session
+    pub fn store_session(&self, cache: &impl SessionCache) -> Result<(), String> {
+        cache.store_session(&self)
+    }
+
+    // Retrieve session
+    pub fn retrieve_session(session_id: &str, cache: &impl SessionCache) -> Result<Self, String> {
+        let session = cache.retrieve_session(session_id);
+
+        match session {
+            Ok(Some(session)) => Ok(session),
+            Ok(None) => Err("Session not found".to_string()),
+            Err(e) => Err(e),
+        }
+    }
+
+    // Get or create session
+    pub fn get_or_create_session(
+        session_id: &str,
+        initial_screen: &str,
+        timeout_duration: Duration,
+        cache: &impl SessionCache,
+    ) -> Self {
+        let retrieved_session = USSDSession::retrieve_session(session_id, cache);
+
+        match retrieved_session {
+            Ok(session) => {
+                // Update last interaction time for existing session
+                let mut session = session;
+                session.update_last_interaction_time();
+                session
+            }
+            Err(_) => {
+                // Create new session
+                let new_session = USSDSession {
+                    session_id: session_id.to_string(),
+                    data: HashMap::new(),
+                    current_screen: initial_screen.to_string(),
+                    visited_screens: Stack::new(),
+                    last_interaction_time: SystemTime::now(),
+                    end_session: false,
+                };
+                new_session.store_session(cache).unwrap();
+                new_session
+            }
+        }
+    }
+}
+
+pub trait SessionCache {
+    fn store_session(&self, session: &USSDSession) -> Result<(), String>;
+    fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String>;
 }

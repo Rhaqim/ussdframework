@@ -1,11 +1,6 @@
-use std::{
-    collections::HashMap,
-    time::{Duration, SystemTime},
-};
+use std::time::{Duration, SystemTime};
 
-use crate::helper::stack::Stack;
-
-use super::{ussd_menu::USSDMenu, ussd_screen::UssdAction, ussd_session::USSDSession};
+use super::{SessionCache, USSDMenu, USSDSession, UssdAction};
 
 // Define the USSDRequest struct
 pub struct USSDRequest {
@@ -14,20 +9,38 @@ pub struct USSDRequest {
     pub timeout_duration: Duration,
 }
 
+pub struct RedisCache {
+    // Redis connection or any other configuration needed
+}
+
+impl SessionCache for RedisCache {
+    fn store_session(&self, session: &USSDSession) -> Result<(), String> {
+        // Store session in Redis
+        Ok(())
+    }
+
+    fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String> {
+        // Retrieve session from Redis
+        Ok(None)
+    }
+}
+
 impl USSDRequest {
     // Create a new USSDRequest
     pub fn new(session_id: String, menu: USSDMenu, timeout_duration: Duration) -> Self {
-        let (start_screen, _) = menu.get_initial_screen();
+        let (initial_screen, _) = menu.get_initial_screen();
+
+        let cache = RedisCache {};
+
+        let session = USSDSession::get_or_create_session(
+            &session_id,
+            &initial_screen,
+            timeout_duration,
+            &cache,
+        );
 
         USSDRequest {
-            session: USSDSession {
-                session_id,
-                data: HashMap::new(),
-                current_screen: start_screen,
-                visited_screens: Stack::new(),
-                last_interaction_time: SystemTime::now(),
-                end_session: false,
-            },
+            session,
             menu,
             timeout_duration,
         }
@@ -35,9 +48,9 @@ impl USSDRequest {
 
     // Handle USSD request
     pub fn handle_ussd_request(&mut self, input: &str) -> Option<String> {
-        let (start_screen, _) = self.menu.get_initial_screen();
+        let (initial_screen, _) = self.menu.get_initial_screen();
         if self.session.has_timed_out(self.timeout_duration) {
-            self.session.restart(&start_screen);
+            self.session.restart(&initial_screen);
         }
 
         if let Some(screen) = self.menu.menus.get(&self.session.current_screen) {
