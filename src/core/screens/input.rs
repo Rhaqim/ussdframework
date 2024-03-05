@@ -3,7 +3,7 @@ use crate::core::UssdSession;
 pub fn input_handler(
     session: &mut UssdSession,
     input: &str,
-    _input_type: &String,
+    _input_type: &Option<String>,
     input_identifier: &String,
     default_next_screen: &String,
 ) -> Option<String> {

@@ -1,51 +1,111 @@
 {
-    "menus": {
-        "InitialScreen": {
-            "title": "Welcome to the system",
-            "type": "Initial",
-            "default_next_screen": "MainScreen"
+	"menus": {
+		"InitialScreen": {
+			"title": "Welcome to the system",
+			"type": "Initial",
+			"default_next_screen": "MainScreen"
+		},
+		"MainScreen": {
+			"title": "Main Menu",
+			"type": "Menu",
+			"default_next_screen": "DefaultNoneScreen",
+			"menu_items": {
+				"BalanceOption": {
+					"option": "1",
+					"display_name": "Balance Inquiry",
+					"default_next_screen": "BalanceInquiryScreen"
+				},
+				"SendMoneyOption": {
+					"option": "2",
+					"display_name": "Send Money",
+					"default_next_screen": "SendMoneyScreen"
+				},
+				"AirtimeOption": {
+					"option": "3",
+					"display_name": "Buy Airtime",
+					"default_next_screen": "AirtimeScreen"
+				}
+			}
+		},
+		"DefaultNoneScreen": {
+			"title": "Thank you for using the system",
+			"type": "Quit",
+			"default_next_screen": "MainScreen"
+		},
+		"BalanceInquiryScreen": {
+			"title": "Select Account",
+			"type": "Menu",
+			"default_next_screen": "MainScreen",
+			"menu_items": {
+				"SavingsOption": {
+					"option": "1",
+					"display_name": "Savings",
+					"default_next_screen": "MainScreen"
+				},
+				"CurrentOption": {
+					"option": "2",
+					"display_name": "Current",
+					"default_next_screen": "MainScreen"
+				}
+			}
+		},
+		"SendMoneyScreen": {
+			"title": "Select option",
+			"type": "Menu",
+			"default_next_screen": "MainScreen",
+			"menu_items": {
+				"OwnAccountOption": {
+					"option": "1",
+					"display_name": "Own Account",
+					"default_next_screen": "MainScreen"
+				},
+				"OtherAccountOption": {
+					"option": "2",
+					"display_name": "Other Account",
+					"default_next_screen": "MainScreen"
+				}
+			}
+		},
+		"AirtimeScreen": {
+			"title": "Select option",
+			"type": "Menu",
+			"default_next_screen": "MainScreen",
+			"menu_items": {
+				"OwnNumberOption": {
+					"option": "1",
+					"display_name": "Own Number",
+					"default_next_screen": "OwnNumberAmountScreen"
+				},
+				"OtherNumberOption": {
+					"option": "2",
+					"display_name": "Other Number",
+					"default_next_screen": "OtherNumberAmountScreen"
+				}
+			}
+		},
+		"OwnNumberAmountScreen": {
+			"title": "Enter amount",
+			"type": "Input",
+            "input_identifier": "amount",
+			"default_next_screen": "OwnNumberFunctionScreen"
+		},
+        "OwnNumberFunctionScreen": {
+            "title": "Processing...",
+            "type": "Function",
+            "function": "buy_airtime",
+            "data_key": "amount",
+            "default_next_screen": "OwnNumberRouterScreen"
         },
-        "MainScreen": {
-            "title": "Main Menu",
-            "type": "Menu",
-            "default_next_screen": "DefaultNoneScreen",
-            "menu_items": {
-                "AccountNumberMenu": {
-                    "option": "1",
-                    "display_name": "Account Number",
-                    "default_next_screen": "AccountNumberScreen"
-                },
-                "PhoneNumberMenu": {
-                    "option": "2",
-                    "display_name": "Phone Number",
-                    "default_next_screen": "PhoneNumberScreen"
-                },
-                "EmailMenu": {
-                    "option": "3",
-                    "display_name": "Email",
-                    "default_next_screen": "EmailScreen"
-                }
-            }
-        },
-        "DefaultNoneScreen": {
-            "title":"Main Menu",
-            "type": "Menu",
-            "default_next_screen": "MainScreen"
-        },
-        "AccountNumberScreen": {
-            "title": "Enter Account Number",
-            "type": "Input",
-            "default_next_screen": "MainScreen",
-            "input_type": "account_number",
-            "input_identifier": "account_number"
-        },
-        "PhoneNumberScreen": {
-            "title": "Enter Phone Number",
-            "type": "Input",
-            "default_next_screen": "MainScreen",
-            "input_type": "phone_number",
-            "input_identifier": "phone_number"
+        "OwnNumberRouterScreen": {
+            "title": "Selecting...",
+            "type": "Router",
+            "router": "AirtimeScreen",
+            "router_options": {
+                "OwnNumberOption": "OwnNumberAmountScreen",
+                "OtherNumberOption": "OtherNumberAmountScreen"
+            },
+            "default_next_screen": "DefaultNoneScreen"
         }
-    },
-    "services": {}
+	},
+	"services": {}
 }

@@ -102,12 +102,13 @@ impl UssdAction for UssdScreen {
             UssdScreen::Function {
                 title: _,
                 default_next_screen,
-                function_name,
-            } => function_handler(session, function_name, default_next_screen),
+                function,
+                data_key,
+            } => function_handler(session, function, data_key, default_next_screen),
             UssdScreen::Router {
                 title: _,
                 default_next_screen,
-                router_name: _,
+                router: _,
                 router_options,
             } => router_handler(session, input, router_options, default_next_screen),
             UssdScreen::Quit {

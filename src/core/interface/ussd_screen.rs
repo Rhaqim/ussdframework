@@ -46,18 +46,19 @@ pub enum UssdScreen {
     Input {
         title: String,
         default_next_screen: String,
-        input_type: String,
+        input_type: Option<String>,
         input_identifier: String,
     },
     Function {
         title: String,
         default_next_screen: String,
-        function_name: String,
+        function: String,
+        data_key: String,
     },
     Router {
         title: String,
         default_next_screen: String,
-        router_name: String,
+        router: String,
         router_options: HashMap<String, String>,
     },
     Quit {
@@ -82,9 +83,10 @@ impl<'de> Deserialize<'de> for UssdScreen {
             menu_items: Option<HashMap<String, MenuItems>>,
             input_type: Option<String>,
             input_identifier: Option<String>,
-            function_name: Option<String>,
+            function: Option<String>,
+            data_key: Option<String>,
             router_options: Option<HashMap<String, String>>,
-            router_name: Option<String>,
+            router: Option<String>,
         }
 
         let raw_screen = RawUssdScreen::deserialize(deserializer)?;
@@ -101,19 +103,20 @@ impl<'de> Deserialize<'de> for UssdScreen {
             "Input" => Ok(UssdScreen::Input {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
-                input_type: raw_screen.input_type.unwrap_or_default(),
+                input_type: Some(raw_screen.input_type.unwrap_or_default()),
                 input_identifier: raw_screen.input_identifier.unwrap_or_default(),
             }),
             "Function" => Ok(UssdScreen::Function {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
-                function_name: raw_screen.function_name.unwrap_or_default(),
+                function: raw_screen.function.unwrap_or_default(),
+                data_key: raw_screen.data_key.unwrap_or_default(),
             }),
             "Router" => Ok(UssdScreen::Router {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 router_options: raw_screen.router_options.unwrap_or_default(),
-                router_name: raw_screen.router_name.unwrap_or_default(),
+                router: raw_screen.router.unwrap_or_default(),
             }),
             "Quit" => Ok(UssdScreen::Quit {
                 title: raw_screen.title,
