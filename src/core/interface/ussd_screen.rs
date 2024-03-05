@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::info;
+use crate::{core::menu_handler, info};
 
 use super::ussd_session::UssdSession;
 
@@ -190,22 +190,7 @@ impl UssdAction for UssdScreen {
                 Some(default_next_screen.clone())
             }
             UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
-                // iterate over the menu_items and give each item an index within the bounds of the menu_items_len
-                let menu_items_len = menu_items.len();
-
-                // if input is within the bounds of the menu_items_len, return the next screen
-                if let Ok(input) = input.parse::<usize>() {
-                    if input > 0 && input <= menu_items_len {
-                        let next_screen = menu_items.values().nth(input - 1).unwrap().default_next_screen.clone();
-                        session.current_screen = next_screen.clone();
-                        return Some(next_screen);
-                    }
-                }
-
-                // if input is not within the bounds of the menu_items_len, return the current screen
-                session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
-                
+                menu_handler(session, input, menu_items, default_next_screen)
             }
             UssdScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
                 // Handle input screen

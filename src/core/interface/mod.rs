@@ -7,5 +7,5 @@ pub mod ussd_session;
 pub use ussd_menu::UssdMenu;
 pub use ussd_request::USSDRequest;
 pub use ussd_response::UssdResponse;
-pub use ussd_screen::{UssdScreen, UssdAction};
+pub use ussd_screen::{UssdScreen, UssdAction, MenuItems};
 pub use ussd_session::UssdSession;

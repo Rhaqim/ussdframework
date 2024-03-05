@@ -3,12 +3,10 @@ extern crate tokio;
 
 mod core;
 mod helper;
-mod interface;
 mod log;
-mod model;
 mod types;
 
-use interface::{USSDRequest, UssdMenu, UssdAction};
+use core::{USSDRequest, UssdMenu, UssdAction};
 use std::{io::{self, prelude::*}, time::Duration};
 
 #[tokio::main]
@@ -20,7 +18,7 @@ async fn main() {
     let timeout_duration = Duration::from_secs(60); // Example: 60 seconds
 
     // Create USSDRequest instance
-    let mut ussd_request = USSDRequest::new("session_id_123".to_string(), "InitialScreen".to_string(), menu, timeout_duration);
+    let mut ussd_request = USSDRequest::new("session_id_123".to_string(), menu, timeout_duration);
 
     loop {
         // if screen is initial, execute the initial screen
