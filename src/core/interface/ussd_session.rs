@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use std::{collections::HashMap, time::{Duration, SystemTime}};
+use std::{
+    collections::HashMap,
+    time::{Duration, SystemTime},
+};
 
 use crate::helper::stack::Stack;
 
@@ -11,6 +14,7 @@ pub struct UssdSession {
     pub current_screen: String,
     pub visited_screens: Stack<String>,
     pub last_interaction_time: SystemTime,
+    pub end_session: bool,
     // Add any other session-related data here
 }
 

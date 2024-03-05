@@ -1,8 +1,11 @@
-use std::{collections::HashMap, time::{Duration, SystemTime}};
+use std::{
+    collections::HashMap,
+    time::{Duration, SystemTime},
+};
 
 use crate::helper::stack::Stack;
 
-use super::{ussd_menu::UssdMenu, ussd_session::UssdSession, ussd_screen::UssdAction};
+use super::{ussd_menu::UssdMenu, ussd_screen::UssdAction, ussd_session::UssdSession};
 
 // Define the USSDRequest struct
 pub struct USSDRequest {
@@ -23,6 +26,7 @@ impl USSDRequest {
                 current_screen: start_screen,
                 visited_screens: Stack::new(),
                 last_interaction_time: SystemTime::now(),
+                end_session: false,
             },
             menu,
             timeout_duration,

@@ -1,7 +1,5 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Deserializer, Serialize};
-
-use crate::{core::menu_handler, info};
+use std::collections::HashMap;
 
 use super::ussd_session::UssdSession;
 
@@ -60,8 +58,12 @@ pub enum UssdScreen {
         title: String,
         default_next_screen: String,
         router_name: String,
+        router_options: HashMap<String, String>,
     },
-    Quit,
+    Quit {
+        title: String,
+        default_next_screen: String,
+    },
 }
 
 impl<'de> Deserialize<'de> for UssdScreen {
@@ -81,6 +83,7 @@ impl<'de> Deserialize<'de> for UssdScreen {
             input_type: Option<String>,
             input_identifier: Option<String>,
             function_name: Option<String>,
+            router_options: Option<HashMap<String, String>>,
             router_name: Option<String>,
         }
 
@@ -89,7 +92,6 @@ impl<'de> Deserialize<'de> for UssdScreen {
         match raw_screen.screen_type.as_str() {
             "Initial" => Ok(UssdScreen::Initial {
                 default_next_screen: raw_screen.default_next_screen,
-            
             }),
             "Menu" => Ok(UssdScreen::Menu {
                 title: raw_screen.title,
@@ -110,15 +112,17 @@ impl<'de> Deserialize<'de> for UssdScreen {
             "Router" => Ok(UssdScreen::Router {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
+                router_options: raw_screen.router_options.unwrap_or_default(),
                 router_name: raw_screen.router_name.unwrap_or_default(),
             }),
-            "Quit" => Ok(UssdScreen::Quit),
+            "Quit" => Ok(UssdScreen::Quit {
+                title: raw_screen.title,
+                default_next_screen: raw_screen.default_next_screen,
+            }),
             _ => Err(serde::de::Error::custom("Unknown screen type")),
         }
     }
 }
-
-
 
 // Define a trait to represent actions that can be performed in a USSD session
 pub trait UssdAction {
@@ -127,123 +131,4 @@ pub trait UssdAction {
     fn home(&self, session: &mut UssdSession);
     fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String>;
     fn display(&self);
-}
-
-// Implement the UssdAction trait for different screen types
-impl UssdAction for UssdScreen {
-    fn validate_input(&self, input: &str) -> bool {
-        match self {
-            UssdScreen::Initial { .. } |
-            UssdScreen::Menu { .. } => {
-                // Perform input validation logic here
-                // For example, check if input is numeric
-                // Validate input based on menu items
-                input.chars().all(|c| c.is_digit(10))
-            }
-            UssdScreen::Input { .. } |
-            UssdScreen::Function { .. } |
-            UssdScreen::Router { .. } |
-            UssdScreen::Quit => true, // No input to validate
-        }
-    }
-
-    fn back(&self, session: &mut UssdSession) {
-        // switch to the previous screen
-        if let Some(prev_screen) = session.visited_screens.pop() {
-            session.current_screen = prev_screen;
-        }
-    }
-
-    fn home(&self, session: &mut UssdSession) {
-        // Switch to the initial screen
-        session.current_screen = "InitialScreen".to_string();
-    }
-
-    fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String> {
-        // logging
-        info!("\nCurrent screen:\n    {:?} \n\nInput received:\n    {:?} \n", self, input);
-
-        if !self.validate_input(input) {
-            println!("Invalid input!");
-            return None;
-        }
-
-        // if input is 0, go back
-        if input == "0" {
-            self.back(session);
-            return Some(session.current_screen.clone());
-        }
-
-        // if input is 00, go home
-        if input == "00" {
-            self.home(session);
-            return Some(session.current_screen.clone());
-        }
-
-        // track visited screens
-        session.visited_screens.push(session.current_screen.clone());
-
-        match self {
-            UssdScreen::Initial { default_next_screen } => {
-                // Handle initial screen
-                session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
-            }
-            UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
-                menu_handler(session, input, menu_items, default_next_screen)
-            }
-            UssdScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
-                // Handle input screen
-                // Process input and return the next screen
-                session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
-            }
-            UssdScreen::Function { title: _, default_next_screen, function_name: _ } => {
-                // Call the corresponding function
-                // Update session state based on function result
-                // Return the next screen
-                session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
-            }
-            UssdScreen::Router { title: _, default_next_screen, router_name: _ } => {
-                // Call the corresponding router
-                // Update session state based on router result
-                // Return the next screen
-                session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
-            }
-            UssdScreen::Quit => {
-                // End the session
-                None
-            }
-        }
-    }
-
-    fn display(&self) {
-        match self {
-            UssdScreen::Menu { title, menu_items, .. } => {
-                println!("Title: {} \n", title);
-                for (index, (_, value)) in menu_items.iter().enumerate() {
-                    let option_idx = index + 1;
-                    println!("{}. {} \n", option_idx, value.display_name);
-                }
-            }
-            UssdScreen::Input { title, .. } => {
-                println!("Title: {} \n", title);
-                // Additional display logic for input screen
-            }
-            UssdScreen::Function { title, .. } => {
-                println!("Title: {} \n", title);
-                // Additional display logic for function screen
-            }
-            UssdScreen::Router { title, .. } => {
-                println!("Title: {} \n", title);
-                // Additional display logic for router screen
-            }
-            UssdScreen::Quit => {
-                // No display needed for quit screen
-            }
-            _ => {}
-        }
-    }
 }
