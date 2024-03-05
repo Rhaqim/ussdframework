@@ -45,7 +45,7 @@ pub struct UssdResponse {
 
 // Define an enum to represent different types of USSD screens
 #[derive(Debug, Serialize)]
-pub enum UssdScreen {
+pub enum USSDScreen {
     Initial {
         title: String,
         default_next_screen: String,
@@ -76,18 +76,18 @@ pub enum UssdScreen {
 
 // Define a structure to hold the USSD menu data
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UssdMenu {
-    pub menus: HashMap<String, UssdScreen>,
+pub struct USSDMenu {
+    pub menus: HashMap<String, USSDScreen>,
 }
 
-impl UssdMenu {
+impl USSDMenu {
     // Load menu structure from JSON file
     pub fn load_from_json(_file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         // let mut file = File::open(file_path)?;
         // let mut contents = String::new();
         // file.read_to_string(&mut contents)?;
         let contents = include_str!("../data/screens.json");
-        let menu: UssdMenu = serde_json::from_str(contents)?;
+        let menu: USSDMenu = serde_json::from_str(contents)?;
         Ok(menu)
     }
 
@@ -100,13 +100,13 @@ impl UssdMenu {
     }
 }
 
-impl<'de> Deserialize<'de> for UssdScreen {
-    fn deserialize<D>(deserializer: D) -> Result<UssdScreen, D::Error>
+impl<'de> Deserialize<'de> for USSDScreen {
+    fn deserialize<D>(deserializer: D) -> Result<USSDScreen, D::Error>
     where
         D: Deserializer<'de>,
     {
         #[derive(Debug, Deserialize)]
-        struct RawUssdScreen {
+        struct RawUSSDScreen {
             #[serde(rename = "type")]
             screen_type: String,
             // Other fields common to all screen types
@@ -120,36 +120,36 @@ impl<'de> Deserialize<'de> for UssdScreen {
             router_name: Option<String>,
         }
 
-        let raw_screen = RawUssdScreen::deserialize(deserializer)?;
+        let raw_screen = RawUSSDScreen::deserialize(deserializer)?;
 
         match raw_screen.screen_type.as_str() {
-            "Initial" => Ok(UssdScreen::Initial {
+            "Initial" => Ok(USSDScreen::Initial {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
             
             }),
-            "Menu" => Ok(UssdScreen::Menu {
+            "Menu" => Ok(USSDScreen::Menu {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 menu_items: raw_screen.menu_items.unwrap_or_default(),
             }),
-            "Input" => Ok(UssdScreen::Input {
+            "Input" => Ok(USSDScreen::Input {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 input_type: raw_screen.input_type.unwrap_or_default(),
                 input_identifier: raw_screen.input_identifier.unwrap_or_default(),
             }),
-            "Function" => Ok(UssdScreen::Function {
+            "Function" => Ok(USSDScreen::Function {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 function_name: raw_screen.function_name.unwrap_or_default(),
             }),
-            "Router" => Ok(UssdScreen::Router {
+            "Router" => Ok(USSDScreen::Router {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 router_name: raw_screen.router_name.unwrap_or_default(),
             }),
-            "Quit" => Ok(UssdScreen::Quit),
+            "Quit" => Ok(USSDScreen::Quit),
             _ => Err(serde::de::Error::custom("Unknown screen type")),
         }
     }
@@ -159,13 +159,13 @@ impl<'de> Deserialize<'de> for UssdScreen {
 // Define the USSDRequest struct
 pub struct USSDRequest {
     pub session: UssdSession,
-    pub menu: UssdMenu,
+    pub menu: USSDMenu,
     pub timeout_duration: Duration,
 }
 
 impl USSDRequest {
     // Create a new USSDRequest
-    pub fn new(session_id: String, initial_screen: String, menu: UssdMenu, timeout_duration: Duration) -> Self {
+    pub fn new(session_id: String, initial_screen: String, menu: USSDMenu, timeout_duration: Duration) -> Self {
         USSDRequest {
             session: UssdSession {
                 session_id,
@@ -202,19 +202,19 @@ pub trait UssdAction {
 }
 
 // Implement the UssdAction trait for different screen types
-impl UssdAction for UssdScreen {
+impl UssdAction for USSDScreen {
     fn validate_input(&self, input: &str) -> bool {
         match self {
-            UssdScreen::Initial { .. } |
-            UssdScreen::Menu { .. } |
-            UssdScreen::Input { .. } |
-            UssdScreen::Function { .. } |
-            UssdScreen::Router { .. } => {
+            USSDScreen::Initial { .. } |
+            USSDScreen::Menu { .. } |
+            USSDScreen::Input { .. } |
+            USSDScreen::Function { .. } |
+            USSDScreen::Router { .. } => {
                 // Perform input validation logic here
                 // For example, check if input is numeric
                 input.chars().all(|c| c.is_digit(10))
             }
-            UssdScreen::Quit => true, // No input to validate
+            USSDScreen::Quit => true, // No input to validate
         }
     }
     fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String> {
@@ -224,12 +224,12 @@ impl UssdAction for UssdScreen {
         }
 
         match self {
-            UssdScreen::Initial { title: _, default_next_screen } => {
+            USSDScreen::Initial { title: _, default_next_screen } => {
                 // Handle initial screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
             }
-            UssdScreen::Menu { title: _, default_next_screen, menu_items } => {
+            USSDScreen::Menu { title: _, default_next_screen, menu_items } => {
                 // Handle menu input
                 if let Some(next_screen) = menu_items.get(input) {
                     session.current_screen = next_screen.clone();
@@ -239,27 +239,27 @@ impl UssdAction for UssdScreen {
                     Some(default_next_screen.clone())
                 }
             }
-            UssdScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
+            USSDScreen::Input { title: _, default_next_screen, input_type: _, input_identifier: _ } => {
                 // Handle input screen
                 // Process input and return the next screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
             }
-            UssdScreen::Function { title: _, default_next_screen, function_name: _ } => {
+            USSDScreen::Function { title: _, default_next_screen, function_name: _ } => {
                 // Call the corresponding function
                 // Update session state based on function result
                 // Return the next screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
             }
-            UssdScreen::Router { title: _, default_next_screen, router_name: _ } => {
+            USSDScreen::Router { title: _, default_next_screen, router_name: _ } => {
                 // Call the corresponding router
                 // Update session state based on router result
                 // Return the next screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
             }
-            UssdScreen::Quit => {
+            USSDScreen::Quit => {
                 // End the session
                 None
             }
@@ -268,25 +268,25 @@ impl UssdAction for UssdScreen {
 
     fn display(&self) {
         match self {
-            UssdScreen::Menu { title, menu_items, .. } => {
+            USSDScreen::Menu { title, menu_items, .. } => {
                 println!("Title: {}", title);
                 for (index, item) in menu_items.iter() {
                     println!("{}. {}", index, item);
                 }
             }
-            UssdScreen::Input { title, .. } => {
+            USSDScreen::Input { title, .. } => {
                 println!("Title: {}", title);
                 // Additional display logic for input screen
             }
-            UssdScreen::Function { title, .. } => {
+            USSDScreen::Function { title, .. } => {
                 println!("Title: {}", title);
                 // Additional display logic for function screen
             }
-            UssdScreen::Router { title, .. } => {
+            USSDScreen::Router { title, .. } => {
                 println!("Title: {}", title);
                 // Additional display logic for router screen
             }
-            UssdScreen::Quit => {
+            USSDScreen::Quit => {
                 // No display needed for quit screen
             }
             _ => {}

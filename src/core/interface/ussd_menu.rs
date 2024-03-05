@@ -5,23 +5,23 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-use super::{USSDService, UssdScreen};
+use super::{USSDService, USSDScreen};
 
 // Define a structure to hold the USSD menu data
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UssdMenu {
-    pub menus: HashMap<String, UssdScreen>,
+pub struct USSDMenu {
+    pub menus: HashMap<String, USSDScreen>,
     pub services: HashMap<String, USSDService>,
 }
 
-impl UssdMenu {
+impl USSDMenu {
     // Load menu structure from JSON file
     pub fn load_from_json(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let mut file = File::open(file_path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         // let contents = include_str!("../data/menu.json");
-        let menu: UssdMenu = serde_json::from_str(&contents)?;
+        let menu: USSDMenu = serde_json::from_str(&contents)?;
         Ok(menu)
     }
 
@@ -35,14 +35,14 @@ impl UssdMenu {
 
     // load menu from config
     pub fn _load_from_config(config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let menu: UssdMenu = config.get("menu")?;
+        let menu: USSDMenu = config.get("menu")?;
         Ok(menu)
     }
 
     // Get the Intial screen
-    pub fn get_initial_screen(&self) -> (String, &UssdScreen) {
+    pub fn get_initial_screen(&self) -> (String, &USSDScreen) {
         for (screen_name, screen) in self.menus.iter() {
-            if let UssdScreen::Initial { .. } = screen {
+            if let USSDScreen::Initial { .. } = screen {
                 return (screen_name.clone(), screen);
             }
         }

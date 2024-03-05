@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-use super::ussd_session::UssdSession;
+use super::{ussd_session::UssdSession, USSDService};
 
 #[derive(Debug, Serialize)]
 pub struct MenuItems {
@@ -34,7 +34,7 @@ impl<'de> Deserialize<'de> for MenuItems {
 
 // Define an enum to represent different types of USSD screens
 #[derive(Debug, Serialize)]
-pub enum UssdScreen {
+pub enum USSDScreen {
     Initial {
         default_next_screen: String,
     },
@@ -53,7 +53,6 @@ pub enum UssdScreen {
         title: String,
         default_next_screen: String,
         function: String,
-        data_key: String,
     },
     Router {
         title: String,
@@ -67,13 +66,13 @@ pub enum UssdScreen {
     },
 }
 
-impl<'de> Deserialize<'de> for UssdScreen {
-    fn deserialize<D>(deserializer: D) -> Result<UssdScreen, D::Error>
+impl<'de> Deserialize<'de> for USSDScreen {
+    fn deserialize<D>(deserializer: D) -> Result<USSDScreen, D::Error>
     where
         D: Deserializer<'de>,
     {
         #[derive(Debug, Deserialize)]
-        struct RawUssdScreen {
+        struct RawUSSDScreen {
             #[serde(rename = "type")]
             screen_type: String,
             // Other fields common to all screen types
@@ -84,41 +83,39 @@ impl<'de> Deserialize<'de> for UssdScreen {
             input_type: Option<String>,
             input_identifier: Option<String>,
             function: Option<String>,
-            data_key: Option<String>,
             router_options: Option<HashMap<String, String>>,
             router: Option<String>,
         }
 
-        let raw_screen = RawUssdScreen::deserialize(deserializer)?;
+        let raw_screen = RawUSSDScreen::deserialize(deserializer)?;
 
         match raw_screen.screen_type.as_str() {
-            "Initial" => Ok(UssdScreen::Initial {
+            "Initial" => Ok(USSDScreen::Initial {
                 default_next_screen: raw_screen.default_next_screen,
             }),
-            "Menu" => Ok(UssdScreen::Menu {
+            "Menu" => Ok(USSDScreen::Menu {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 menu_items: raw_screen.menu_items.unwrap_or_default(),
             }),
-            "Input" => Ok(UssdScreen::Input {
+            "Input" => Ok(USSDScreen::Input {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 input_type: Some(raw_screen.input_type.unwrap_or_default()),
                 input_identifier: raw_screen.input_identifier.unwrap_or_default(),
             }),
-            "Function" => Ok(UssdScreen::Function {
+            "Function" => Ok(USSDScreen::Function {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 function: raw_screen.function.unwrap_or_default(),
-                data_key: raw_screen.data_key.unwrap_or_default(),
             }),
-            "Router" => Ok(UssdScreen::Router {
+            "Router" => Ok(USSDScreen::Router {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
                 router_options: raw_screen.router_options.unwrap_or_default(),
                 router: raw_screen.router.unwrap_or_default(),
             }),
-            "Quit" => Ok(UssdScreen::Quit {
+            "Quit" => Ok(USSDScreen::Quit {
                 title: raw_screen.title,
                 default_next_screen: raw_screen.default_next_screen,
             }),
@@ -132,6 +129,6 @@ pub trait UssdAction {
     fn validate_input(&self, input: &str) -> bool;
     fn back(&self, session: &mut UssdSession);
     fn home(&self, session: &mut UssdSession);
-    fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String>;
+    fn execute(&self, session: &mut UssdSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String>;
     fn display(&self);
 }

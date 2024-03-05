@@ -93,7 +93,6 @@
             "title": "Processing...",
             "type": "Function",
             "function": "buy_airtime",
-            "data_key": "amount",
             "default_next_screen": "OwnNumberRouterScreen"
         },
         "OwnNumberRouterScreen": {
@@ -107,5 +106,12 @@
             "default_next_screen": "DefaultNoneScreen"
         }
 	},
-	"services": {}
+	"services": {
+		"buy_airtime": {
+			"function_name": "buy_airtime",
+			"functions_path": "services/buy_airtime.js",
+			"function_url": "http://localhost:3000/buy_airtime",
+			"data_key": "airtime"
+		}
+	}
 }

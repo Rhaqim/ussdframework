@@ -1,23 +1,21 @@
-use crate::core::UssdSession;
+use std::collections::HashMap;
+
+use crate::core::{interface::ussd_service::USSDServiceTrait, USSDService, UssdSession};
 
 pub fn function_handler(
     session: &mut UssdSession,
     function: &str,
-    _data_key: &String,
+    services: &HashMap<String, USSDService>,
     default_next_screen: &String,
 ) -> Option<String> {
-    match function {
-        "get_balance" => {
-            session.current_screen = default_next_screen.clone();
-            Some(default_next_screen.clone())
-        }
-        "get_mini_statement" => {
-            session.current_screen = default_next_screen.clone();
-            Some(default_next_screen.clone())
-        }
-        _ => {
-            session.current_screen = default_next_screen.clone();
-            Some(default_next_screen.clone())
-        }
+    if let Some(service) = services.get(function) {
+        println!("Calling service: {}", function);
+        println!("Service: {:?}", service);
+
+        let _ = service.call(session);
+        session.current_screen = default_next_screen.clone();
+        Some(default_next_screen.clone())
+    } else {
+        None
     }
 }

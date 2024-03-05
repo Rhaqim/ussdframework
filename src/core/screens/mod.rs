@@ -4,9 +4,11 @@ pub mod menu;
 pub mod quit;
 pub mod router;
 
+use std::collections::HashMap;
+
 use crate::info;
 
-use super::{UssdAction, UssdScreen, UssdSession};
+use super::{USSDService, UssdAction, USSDScreen, UssdSession};
 
 use function::function_handler;
 use input::input_handler;
@@ -15,19 +17,19 @@ use quit::quit_handler;
 use router::router_handler;
 
 // Implement the UssdAction trait for different screen types
-impl UssdAction for UssdScreen {
+impl UssdAction for USSDScreen {
     fn validate_input(&self, input: &str) -> bool {
         match self {
-            UssdScreen::Initial { .. } | UssdScreen::Menu { .. } => {
+            USSDScreen::Initial { .. } | USSDScreen::Menu { .. } => {
                 // Perform input validation logic here
                 // For example, check if input is numeric
                 // Validate input based on menu items
                 input.chars().all(|c| c.is_digit(10))
             }
-            UssdScreen::Input { .. }
-            | UssdScreen::Function { .. }
-            | UssdScreen::Router { .. }
-            | UssdScreen::Quit { .. } => {
+            USSDScreen::Input { .. }
+            | USSDScreen::Function { .. }
+            | USSDScreen::Router { .. }
+            | USSDScreen::Quit { .. } => {
                 // Perform input validation logic here
                 // For example, check if input is numeric
                 input.chars().all(|c| c.is_digit(10))
@@ -47,7 +49,7 @@ impl UssdAction for UssdScreen {
         session.current_screen = "InitialScreen".to_string();
     }
 
-    fn execute(&self, session: &mut UssdSession, input: &str) -> Option<String> {
+    fn execute(&self, session: &mut UssdSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String> {
         // logging
         info!(
             "\nCurrent screen:\n    {:?} \n\nInput received:\n    {:?} \n",
@@ -75,19 +77,19 @@ impl UssdAction for UssdScreen {
         session.visited_screens.push(session.current_screen.clone());
 
         match self {
-            UssdScreen::Initial {
+            USSDScreen::Initial {
                 default_next_screen,
             } => {
                 // Handle initial screen
                 session.current_screen = default_next_screen.clone();
                 Some(default_next_screen.clone())
             }
-            UssdScreen::Menu {
+            USSDScreen::Menu {
                 title: _,
                 default_next_screen,
                 menu_items,
             } => menu_handler(session, input, menu_items, default_next_screen),
-            UssdScreen::Input {
+            USSDScreen::Input {
                 title: _,
                 default_next_screen,
                 input_type,
@@ -99,19 +101,18 @@ impl UssdAction for UssdScreen {
                 input_identifier,
                 default_next_screen,
             ),
-            UssdScreen::Function {
+            USSDScreen::Function {
                 title: _,
                 default_next_screen,
                 function,
-                data_key,
-            } => function_handler(session, function, data_key, default_next_screen),
-            UssdScreen::Router {
+            } => function_handler(session, function, services, default_next_screen),
+            USSDScreen::Router {
                 title: _,
                 default_next_screen,
                 router: _,
                 router_options,
             } => router_handler(session, input, router_options, default_next_screen),
-            UssdScreen::Quit {
+            USSDScreen::Quit {
                 title: _,
                 default_next_screen,
             } => {
@@ -123,7 +124,7 @@ impl UssdAction for UssdScreen {
 
     fn display(&self) {
         match self {
-            UssdScreen::Menu {
+            USSDScreen::Menu {
                 title, menu_items, ..
             } => {
                 println!("Title: {} \n", title);
@@ -132,19 +133,11 @@ impl UssdAction for UssdScreen {
                     println!("{}. {} \n", option_idx, value.display_name);
                 }
             }
-            UssdScreen::Input { title, .. } => {
+            USSDScreen::Input { title, .. } => {
                 println!("Title: {} \n", title);
                 // Additional display logic for input screen
             }
-            UssdScreen::Function { .. } => {
-                // println!("Title: {} \n", title);
-                // Additional display logic for function screen
-            }
-            UssdScreen::Router { .. } => {
-                // println!("Title: {} \n", title);
-                // Additional display logic for router screen
-            }
-            UssdScreen::Quit { title, .. } => {
+            USSDScreen::Quit { title, .. } => {
                 println!("Title: {} \n", title);
             }
             _ => {}
