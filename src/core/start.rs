@@ -38,7 +38,7 @@ pub struct UssdRequest {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct UssdResponse {
+pub struct USSDResponse {
     pub session_id: String,
     pub message: String,
 }

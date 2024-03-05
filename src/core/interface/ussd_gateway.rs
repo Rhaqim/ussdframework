@@ -3,7 +3,7 @@ use std::{
     time::Duration,
 };
 
-use super::{USSDRequest, USSDScreen, UssdAction, USSDMenu};
+use super::{USSDConfig, USSDMenu, USSDRequest, USSDScreen, UssdAction};
 
 #[derive(Debug)]
 pub struct USSDGateway {
@@ -12,10 +12,10 @@ pub struct USSDGateway {
 }
 
 impl USSDGateway {
-    pub fn new(functions_path: String, _menu_source: String) -> Self {
+    pub fn new(config: USSDConfig) -> Self {
         Self {
-            functions_path,
-            menu_source: "src/data/menu.json".to_string(),
+            functions_path: config.functions_path,
+            menu_source: config.menu_source,
         }
     }
 
@@ -60,7 +60,7 @@ impl USSDGateway {
                     continue;
                 }
 
-                self.display_screen(&screen);
+                self.handle_response(&screen);
                 if let Some(input) = self.read_user_input() {
                     if let Some(next_screen) = self.process_input(&mut ussd_request, input) {
                         if next_screen == "Quit" {
@@ -84,7 +84,7 @@ impl USSDGateway {
         ussd_request.handle_ussd_request("")
     }
 
-    fn display_screen(&self, screen: &USSDScreen) {
+    fn handle_response(&self, screen: &USSDScreen) {
         screen.display();
     }
 
