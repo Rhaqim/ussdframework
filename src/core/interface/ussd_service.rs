@@ -6,7 +6,7 @@ use crate::types::HashStrAny;
 
 use super::USSDSession;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDService {
     pub functions_path: String,
     pub function_name: String,

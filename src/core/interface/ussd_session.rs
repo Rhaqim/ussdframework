@@ -9,7 +9,7 @@ use crate::{helper::stack::Stack, types::HashStrAny};
 
 use super::USSDRequest;
 
-#[derive(Debug,Clone, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
@@ -72,8 +72,7 @@ impl USSDSession {
         request: &USSDRequest,
         initial_screen: &str,
         _timeout_duration: Duration,
-        // cache: Box<dyn SessionCache>,
-        cache: &Box<(dyn SessionCache + 'static)>,
+        cache: &Box<dyn SessionCache>,
     ) -> Self {
         let retrieved_session = USSDSession::retrieve_session(&request.session_id, &cache);
 

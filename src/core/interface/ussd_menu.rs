@@ -8,7 +8,7 @@ use std::io::prelude::*;
 use super::{USSDService, USSDScreen};
 
 // Define a structure to hold the USSD menu data
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDMenu {
     pub menus: HashMap<String, USSDScreen>,
     pub services: HashMap<String, USSDService>,

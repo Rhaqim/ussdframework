@@ -2,7 +2,7 @@ use std::time::{Duration, SystemTime};
 
 use crate::core::USSDSession;
 
-use super::{USSDConfig, USSDMenu, USSDRequest, USSDResponse, UssdAction};
+use super::{USSDConfig, USSDMenu, USSDRequest, USSDResponse, USSDScreen, UssdAction};
 
 pub struct USSDGateway {
     pub config: USSDConfig,
@@ -32,10 +32,24 @@ impl USSDGateway {
             session.visited_screens.push(initial_screen.clone());
         }
 
-        if let Some(screen) = self.menus.menus.get(&mut session.current_screen) {
-            let response = screen.execute(&request, &mut session, &self.menus.services);
-            session.last_interaction_time = SystemTime::now();
-            response
+        if let Some(screen) = self.menus.menus.get(&session.current_screen) {
+            // Execute the screen
+            match screen {
+                USSDScreen::Function { .. } | USSDScreen::Router { .. } => {
+                    screen.execute(&request, &mut session, &self.menus.services);
+                    None
+                }
+                USSDScreen::Initial { default_next_screen, .. } => {
+                    session.current_screen = default_next_screen.clone();
+                    None
+                }
+                _ => {
+                    // For other screens, return the response
+                    let response = screen.execute(&request, &mut session, &self.menus.services);
+                    session.last_interaction_time = SystemTime::now();
+                    response
+                }
+            }
         } else {
             None // Invalid screen
         }

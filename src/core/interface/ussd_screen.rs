@@ -3,21 +3,21 @@ use std::collections::HashMap;
 
 use super::{ussd_session::USSDSession, USSDRequest, USSDResponse, USSDService};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MenuItems {
     pub option: String,
     pub display_name: String,
     pub default_next_screen: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RouterOptions {
     pub router_option: String,
     pub next_screen: String,
 }
 
 // Define an enum to represent different types of USSD screens
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub enum USSDScreen {
     Initial {
         default_next_screen: String,

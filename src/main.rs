@@ -7,8 +7,12 @@ mod log;
 mod types;
 
 use core::{SessionCache, USSDConfig, USSDGateway, USSDSession};
-use redis;
-use std::io::{self, Write};
+// use redis;
+use std::{
+    collections::HashMap,
+    io::{self, Write},
+    sync::Mutex,
+};
 
 use crate::core::{USSDMenu, USSDRequest};
 
@@ -16,43 +20,40 @@ use crate::core::{USSDMenu, USSDRequest};
 async fn main() {
     let functions_path = "src/data/functions";
 
-    struct RedisCache {
-        // client: redis::Client,
+    pub struct InMemorySessionStore {
+        data: Mutex<HashMap<String, String>>,
     }
 
-    impl SessionCache for RedisCache {
+    impl InMemorySessionStore {
+        pub fn new() -> Self {
+            Self {
+                data: Mutex::new(HashMap::new()),
+            }
+        }
+    }
+
+    impl SessionCache for InMemorySessionStore {
         fn store_session(&self, session: &USSDSession) -> Result<(), String> {
-            // let mut connection = self.client.get_connection().unwrap();
-            // let _: () = redis::cmd("SET")
-            //     .arg(session.session_id.clone())
-            //     .arg(serde_json::to_string(session).unwrap())
-            //     .query(&mut connection)
-            //     .unwrap();
+            let mut data = self.data.lock().unwrap();
+            data.insert(
+                session.session_id.clone(),
+                serde_json::to_string(session).unwrap(),
+            );
             Ok(())
         }
 
         fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String> {
-            // let mut connection = self.client.get_connection().unwrap();
-            // let session: Option<String> = redis::cmd("GET")
-            //     .arg(session_id)
-            //     .query(&mut connection)
-            //     .unwrap();
-            // match session {
-            //     Some(session) => {
-            //         let session: USSDSession = serde_json::from_str(&session).unwrap();
-            //         Ok(Some(session))
-            //     }
-            //     None => Ok(None),
-            // }
-            Ok(None)
+            let data = self.data.lock().unwrap();
+            match data.get(session_id) {
+                Some(session) => Ok(Some(serde_json::from_str(session).unwrap())),
+                None => Ok(None),
+            }
         }
     }
 
     let config = USSDConfig {
         functions_path: functions_path.to_string(),
-        session_cache: Box::new(RedisCache {
-            // client: redis::Client::open("redis://localhost/").unwrap(),
-        }),
+        session_cache: Box::new(InMemorySessionStore::new()),
     };
 
     let menus = USSDMenu::load_from_json("src/data/menu.json").unwrap();
@@ -70,21 +71,21 @@ async fn main() {
         }
     }
 
-    async fn initiate_request(gateway: USSDGateway) {
-        let input = read_user_input().unwrap();
+    let input = read_user_input().unwrap();
 
-        let request = USSDRequest {
-            input,
-            session_id: "123".to_string(),
-            msisdn: "123".to_string(),
-            request_id: "123".to_string(),
-            telco: "Vodafone".to_string(),
-            service_code: "123".to_string(),
-            country_code: "123".to_string(),
-            language: "en".to_string(),
-        };
+    let request = USSDRequest {
+        input,
+        session_id: "123".to_string(),
+        msisdn: "123".to_string(),
+        request_id: "123".to_string(),
+        telco: "Vodafone".to_string(),
+        service_code: "123".to_string(),
+        country_code: "123".to_string(),
+        language: "en".to_string(),
+    };
 
-        let response = gateway.process_request(request);
+    loop {
+        let response = gateway.process_request(request.clone());
 
         match response {
             Some(response) => {
@@ -94,17 +95,6 @@ async fn main() {
                 println!("Invalid input or screen!");
             }
         }
+    
     }
-
-    initiate_request(gateway).await;
-
-    // let config = USSDConfig::new(
-    //     "src/functions".to_string(),
-    //     "src/data/menu.json".to_string(),
-    //     60,
-    // );
-
-    // let ussd_gateway: USSDGateway = USSDGateway::new(config);
-
-    // ussd_gateway.initial();
 }

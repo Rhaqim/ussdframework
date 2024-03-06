@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 // Define the USSDRequest struct
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDRequest {
     pub input: String,
     pub msisdn: String,
