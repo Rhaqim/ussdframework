@@ -1,5 +1,6 @@
 pub mod interface;
 pub mod screens;
+pub mod second;
 
 pub use interface::USSDConfig;
 pub use interface::USSDGateway;

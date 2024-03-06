@@ -1,12 +1,12 @@
 {
 	"menus": {
 		"InitialScreen": {
-			"title": "Welcome to the system",
+			"text": "Welcome to the system",
 			"type": "Initial",
 			"default_next_screen": "MainScreen"
 		},
 		"MainScreen": {
-			"title": "Main Menu",
+			"text": "Main Menu",
 			"type": "Menu",
 			"default_next_screen": "DefaultNoneScreen",
 			"menu_items": {
@@ -28,12 +28,12 @@
 			}
 		},
 		"DefaultNoneScreen": {
-			"title": "Thank you for using the system",
+			"text": "Thank you for using the system",
 			"type": "Quit",
 			"default_next_screen": "MainScreen"
 		},
 		"BalanceInquiryScreen": {
-			"title": "Select Account",
+			"text": "Select Account",
 			"type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
@@ -50,7 +50,7 @@
 			}
 		},
 		"SendMoneyScreen": {
-			"title": "Select option",
+			"text": "Select option",
 			"type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
@@ -67,7 +67,7 @@
 			}
 		},
 		"AirtimeScreen": {
-			"title": "Select option",
+			"text": "Select option",
 			"type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
@@ -84,19 +84,19 @@
 			}
 		},
 		"OwnNumberAmountScreen": {
-			"title": "Enter amount",
+			"text": "Enter amount",
 			"type": "Input",
             "input_identifier": "amount",
 			"default_next_screen": "OwnNumberFunctionScreen"
 		},
         "OwnNumberFunctionScreen": {
-            "title": "Processing...",
+            "text": "Processing...",
             "type": "Function",
             "function": "buy_airtime",
             "default_next_screen": "OwnNumberRouterScreen"
         },
         "OwnNumberRouterScreen": {
-            "title": "Selecting...",
+            "text": "Selecting...",
             "type": "Router",
             "router": "AirtimeScreen",
             "router_options": [
@@ -116,7 +116,7 @@
             "default_next_screen": "DefaultNoneScreen"
         },
 		"SuccessScreen": {
-			"title": "Transaction Successful",
+			"text": "Transaction Successful",
 			"type": "Quit",
 			"default_next_screen": "MainScreen"
 		}

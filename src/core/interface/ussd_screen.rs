@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-use super::{ussd_session::USSDSession, USSDService};
+use super::{ussd_session::USSDSession, USSDRequest, USSDResponse, USSDService};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct MenuItems {
@@ -23,29 +23,29 @@ pub enum USSDScreen {
         default_next_screen: String,
     },
     Menu {
-        title: String,
+        text: String,
         default_next_screen: String,
         menu_items: HashMap<String, MenuItems>,
     },
     Input {
-        title: String,
+        text: String,
         default_next_screen: String,
         input_type: Option<String>,
         input_identifier: String,
     },
     Function {
-        title: String,
+        text: String,
         default_next_screen: String,
         function: String,
     },
     Router {
-        title: String,
+        text: String,
         default_next_screen: String,
         router: String,
         router_options: Vec<RouterOptions>
     },
     Quit {
-        title: String,
+        text: String,
         default_next_screen: String,
     },
 }
@@ -60,7 +60,7 @@ impl<'de> Deserialize<'de> for USSDScreen {
             #[serde(rename = "type")]
             screen_type: String,
             // Other fields common to all screen types
-            title: String,
+            text: String,
             default_next_screen: String,
             // Fields specific to certain screen types
             menu_items: Option<HashMap<String, MenuItems>>,
@@ -78,29 +78,29 @@ impl<'de> Deserialize<'de> for USSDScreen {
                 default_next_screen: raw_screen.default_next_screen,
             }),
             "Menu" => Ok(USSDScreen::Menu {
-                title: raw_screen.title,
+                text: raw_screen.text,
                 default_next_screen: raw_screen.default_next_screen,
                 menu_items: raw_screen.menu_items.unwrap_or_default(),
             }),
             "Input" => Ok(USSDScreen::Input {
-                title: raw_screen.title,
+                text: raw_screen.text,
                 default_next_screen: raw_screen.default_next_screen,
                 input_type: Some(raw_screen.input_type.unwrap_or_default()),
                 input_identifier: raw_screen.input_identifier.unwrap_or_default(),
             }),
             "Function" => Ok(USSDScreen::Function {
-                title: raw_screen.title,
+                text: raw_screen.text,
                 default_next_screen: raw_screen.default_next_screen,
                 function: raw_screen.function.unwrap_or_default(),
             }),
             "Router" => Ok(USSDScreen::Router {
-                title: raw_screen.title,
+                text: raw_screen.text,
                 default_next_screen: raw_screen.default_next_screen,
                 router_options: raw_screen.router_options.unwrap_or_default(),
                 router: raw_screen.router.unwrap_or_default(),
             }),
             "Quit" => Ok(USSDScreen::Quit {
-                title: raw_screen.title,
+                text: raw_screen.text,
                 default_next_screen: raw_screen.default_next_screen,
             }),
             _ => Err(serde::de::Error::custom("Unknown screen type")),
@@ -113,6 +113,6 @@ pub trait UssdAction {
     fn validate_input(&self, input: &str) -> bool;
     fn back(&self, session: &mut USSDSession);
     fn home(&self, session: &mut USSDSession);
-    fn execute(&self, session: &mut USSDSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String>;
+    fn execute(&self, request: &USSDRequest, session: &mut USSDSession, services: &HashMap<String, USSDService>) -> Option<USSDResponse>;
     fn display(&self);
 }

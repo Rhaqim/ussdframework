@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use crate::info;
 
-use super::{USSDService, UssdAction, USSDScreen, USSDSession};
+use super::{USSDRequest, USSDResponse, USSDScreen, USSDService, USSDSession, UssdAction};
 
 use function::function_handler;
 use input::input_handler;
@@ -49,7 +49,26 @@ impl UssdAction for USSDScreen {
         session.current_screen = "InitialScreen".to_string();
     }
 
-    fn execute(&self, session: &mut USSDSession, input: &str, services: &HashMap<String, USSDService>) -> Option<String> {
+    fn execute(
+        &self,
+        request: &USSDRequest,
+        session: &mut USSDSession,
+        services: &HashMap<String, USSDService>,
+    ) -> Option<USSDResponse> {
+        let input = &request.input.clone();
+
+        let default_message = "Dear customer, an error occurred. Please try again later.";
+
+        let mut response = USSDResponse {
+            msisdn: request.msisdn.clone(),
+            request_id: request.request_id.clone(),
+            telco: request.telco.clone(),
+            service_code: request.service_code.clone(),
+            country_code: request.country_code.clone(),
+            language: request.language.clone(),
+            message: default_message.to_string(),
+        };
+
         // logging
         info!(
             "\nCurrent screen:\n    {:?} \n\nInput received:\n    {:?} \n",
@@ -59,19 +78,16 @@ impl UssdAction for USSDScreen {
         // validate input
         if !self.validate_input(input) {
             println!("Invalid input!");
-            return None;
         }
 
         // if input is 0, go back
         if input == "0" {
             self.back(session);
-            return Some(session.current_screen.clone());
         }
 
         // if input is 00, go home
         if input == "00" {
             self.home(session);
-            return Some(session.current_screen.clone());
         }
 
         // track visited screens
@@ -86,42 +102,65 @@ impl UssdAction for USSDScreen {
             } => {
                 // Handle initial screen
                 session.current_screen = default_next_screen.clone();
-                Some(default_next_screen.clone())
+                None
             }
             USSDScreen::Menu {
-                title: _,
+                text,
                 default_next_screen,
                 menu_items,
-            } => menu_handler(session, input, menu_items, default_next_screen),
+            } => {
+                menu_handler(session, input, menu_items, default_next_screen);
+
+                let mut message = text.to_string();
+                for (idx, (_, value)) in menu_items.iter().enumerate() {
+                    message.push_str(&format!("\n{}: {}", idx, value.display_name));
+                }
+
+                response.message = message;
+                Some(response)
+            }
             USSDScreen::Input {
-                title: _,
+                text,
                 default_next_screen,
                 input_type,
                 input_identifier,
-            } => input_handler(
-                session,
-                input,
-                input_type,
-                input_identifier,
-                default_next_screen,
-            ),
+            } => {
+                input_handler(
+                    session,
+                    input,
+                    input_type,
+                    input_identifier,
+                    default_next_screen,
+                );
+                response.message = text.to_string();
+                Some(response)
+            }
             USSDScreen::Function {
-                title: _,
+                text,
                 default_next_screen,
                 function,
-            } => function_handler(session, function, services, default_next_screen),
+            } => {
+                function_handler(session, function, services, default_next_screen);
+                response.message = text.to_string();
+                Some(response)
+            }
             USSDScreen::Router {
-                title: _,
+                text,
                 default_next_screen,
                 router: _,
                 router_options,
-            } => router_handler(session, router_options, default_next_screen),
+            } => {
+                router_handler(session, router_options, default_next_screen);
+                response.message = text.to_string();
+                Some(response)
+            }
             USSDScreen::Quit {
-                title: _,
+                text,
                 default_next_screen,
             } => {
                 quit_handler(session, input, default_next_screen);
-                Some(default_next_screen.clone())
+                response.message = text.to_string();
+                Some(response)
             }
         }
     }
@@ -129,20 +168,20 @@ impl UssdAction for USSDScreen {
     fn display(&self) {
         match self {
             USSDScreen::Menu {
-                title, menu_items, ..
+                text, menu_items, ..
             } => {
-                println!("\n{} \n", title);
+                println!("\n{}", text);
                 for (index, (_, value)) in menu_items.iter().enumerate() {
                     let option_idx = index + 1;
                     println!("{}. {} \n", option_idx, value.display_name);
                 }
             }
-            USSDScreen::Input { title, .. } => {
-                println!("\n{} \n", title);
+            USSDScreen::Input { text, .. } => {
+                println!("\n{} \n", text);
                 // Additional display logic for input screen
             }
-            USSDScreen::Quit { title, .. } => {
-                println!("\n{} \n", title);
+            USSDScreen::Quit { text, .. } => {
+                println!("\n{} \n", text);
             }
             _ => {}
         }

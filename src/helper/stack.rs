@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Stack<T> {
     pub items: Vec<T>,
 }
@@ -12,7 +12,7 @@ impl<T> Stack<T> {
     }
 
     // Check if the stack is empty
-    pub fn is_empty(&self) -> bool {
+    pub fn _is_empty(&self) -> bool {
         self.items.is_empty()
     }
 
@@ -32,12 +32,12 @@ impl<T> Stack<T> {
     }
 
     // Peek at the top item of the stack without removing it
-    pub fn peek(&self) -> Option<&T> {
+    pub fn _peek(&self) -> Option<&T> {
         self.items.last()
     }
 
     // Get the number of items in the stack
-    pub fn len(&self) -> usize {
+    pub fn _len(&self) -> usize {
         self.items.len()
     }
 

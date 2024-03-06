@@ -7,7 +7,9 @@ use std::{
 
 use crate::{helper::stack::Stack, types::HashStrAny};
 
-#[derive(Debug, Deserialize, Serialize)]
+use super::USSDRequest;
+
+#[derive(Debug,Clone, Deserialize, Serialize)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
@@ -15,7 +17,8 @@ pub struct USSDSession {
     pub visited_screens: Stack<String>,
     pub last_interaction_time: SystemTime,
     pub end_session: bool,
-    // Add any other session-related data here
+    pub language: String,
+    pub msisdn: String,
 }
 
 impl USSDSession {
@@ -46,12 +49,15 @@ impl USSDSession {
     }
 
     // Store session
-    pub fn store_session(&self, cache: &impl SessionCache) -> Result<(), String> {
+    pub fn store_session(&self, cache: &Box<dyn SessionCache>) -> Result<(), String> {
         cache.store_session(&self)
     }
 
     // Retrieve session
-    pub fn retrieve_session(session_id: &str, cache: &impl SessionCache) -> Result<Self, String> {
+    pub fn retrieve_session(
+        session_id: &str,
+        cache: &Box<dyn SessionCache>,
+    ) -> Result<Self, String> {
         let session = cache.retrieve_session(session_id);
 
         match session {
@@ -63,12 +69,13 @@ impl USSDSession {
 
     // Get or create session
     pub fn get_or_create_session(
-        session_id: &str,
+        request: &USSDRequest,
         initial_screen: &str,
-        timeout_duration: Duration,
-        cache: &impl SessionCache,
+        _timeout_duration: Duration,
+        // cache: Box<dyn SessionCache>,
+        cache: &Box<(dyn SessionCache + 'static)>,
     ) -> Self {
-        let retrieved_session = USSDSession::retrieve_session(session_id, cache);
+        let retrieved_session = USSDSession::retrieve_session(&request.session_id, &cache);
 
         match retrieved_session {
             Ok(session) => {
@@ -80,14 +87,16 @@ impl USSDSession {
             Err(_) => {
                 // Create new session
                 let new_session = USSDSession {
-                    session_id: session_id.to_string(),
+                    session_id: request.session_id.clone(),
                     data: HashMap::new(),
                     current_screen: initial_screen.to_string(),
                     visited_screens: Stack::new(),
                     last_interaction_time: SystemTime::now(),
                     end_session: false,
+                    language: request.language.clone(),
+                    msisdn: request.msisdn.clone(),
                 };
-                new_session.store_session(cache).unwrap();
+                new_session.store_session(&cache).unwrap();
                 new_session
             }
         }
