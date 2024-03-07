@@ -1,0 +1,7 @@
+[package]
+name = "ussd_framework_examples"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+ussd_framework = { path = "../" }  # Link to the local ussd_framework directory
