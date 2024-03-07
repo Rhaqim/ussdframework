@@ -37,13 +37,17 @@ pub struct RouterOption {
 }
 
 // Implement logic to process USSD requests
-pub fn process_request(request: &USSDRequest) -> USSDResponse {
+pub fn process_request(
+    request: &USSDRequest,
+    functions_path: String,
+    session_cache: Box<dyn SessionCache>,
+) -> USSDResponse {
     // Initialize variables to store response data
     let mut current_screen_name = "InitialScreen".to_string();
     let mut message = String::new();
 
     // Process USSDRequest, return screens and session
-    let (mut session, screens) = process_ussd_request(request, screens);
+    let (mut session, screens) = process_ussd_request(request, &session_cache);
 
     // Process USSD request
     loop {
@@ -99,7 +103,7 @@ pub fn process_request(request: &USSDRequest) -> USSDResponse {
                 // Process user input
                 let input = &request.input.trim();
 
-               // input identifier
+                // input identifier
                 if let Some(input_identifier) = &current_screen.input_identifier {
                     process_input(input, input_identifier, &mut session);
                 } else {
@@ -113,7 +117,7 @@ pub fn process_request(request: &USSDRequest) -> USSDResponse {
                 // Handle function screen logic
                 if let Some(function_name) = &current_screen.function {
                     // Call the function
-                    let response_message = call_function(function_name, &request);
+                    let response_message = call_function(function_name, functions_path, &request);
                     message.push_str(&response_message);
                 } else {
                     message.push_str("\nNo function specified");
@@ -157,7 +161,7 @@ pub fn process_request(request: &USSDRequest) -> USSDResponse {
 
 fn process_ussd_request(
     request: &USSDRequest,
-    screens: &HashMap<String, Screen>,
+    session_cache: &Box<dyn SessionCache>,
 ) -> (Session, HashMap<String, Screen>) {
     // Implement logic to process USSD request and return session and screens
     // For simplicity, let's assume it always returns a new session and all screens
@@ -165,9 +169,10 @@ fn process_ussd_request(
 }
 
 // Dummy function to call service
-fn call_function(function_name: &str, request: &USSDRequest) -> String {
+fn call_function(function_name: &str, functions_path: String, request: &USSDRequest) -> String {
     // Implement logic to call the function
-    format!("\nCalling function: {}", function_name)
+    // For simplicity, let's assume it always returns a response message
+    "Function called successfully".to_string()
 }
 
 // Dummy function to evaluate router option
