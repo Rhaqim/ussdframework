@@ -35,7 +35,7 @@ fn main() {
     }
 
     let app = UssdApp::new(
-        "functions".to_string(),
+        "config/functions".to_string(),
         Box::new(InMemorySessionStore::new()),
     );
     let request = USSDRequest {
@@ -45,6 +45,11 @@ fn main() {
         service_code: "1234".to_string(),
         language: "en".to_string(),
     };
-    let response = app.run(request);
+
+    let content = include_str!("../examples/data/menu.json");
+    
+    let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+
+    let response = app.run(request, menus);
     app.display_menu(&response);
 }

@@ -24,7 +24,7 @@ pub struct Screen {
     pub screen_type: ScreenType,
     pub default_next_screen: String,
     #[serde(default)]
-    pub menu_items: Option<HashMap<String, String>>,
+    pub menu_items: Option<HashMap<String, MenuItems>>,
     #[serde(default)]
     pub function: Option<String>,
     #[serde(default)]
@@ -32,6 +32,13 @@ pub struct Screen {
     #[serde(default)]
     pub input_identifier: Option<String>,
     // Additional fields based on screen type
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MenuItems {
+    pub option: String,
+    pub display_name: String,
+    pub default_next_screen: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -45,13 +52,16 @@ pub fn process_request(
     request: &USSDRequest,
     functions_path: &String,
     session_cache: &Box<dyn SessionCache>,
+    screens: &USSDMenu,
 ) -> USSDResponse {
     // Initialize variables to store response data
     let mut current_screen_name = "InitialScreen".to_string();
     let mut message = String::new();
 
+    let (initial_screen, _) = screens.get_initial_screen();
+
     // Process USSDRequest, return screens and session
-    let (mut session, screens) = process_ussd_request(request, &session_cache);
+    let mut session = process_ussd_request(request, &initial_screen, &session_cache);
 
     let response: USSDResponse = USSDResponse {
         msisdn: request.msisdn.clone(),
@@ -81,22 +91,29 @@ pub fn process_request(
             ScreenType::Menu => {
                 // Append menu items to message
                 if let Some(menu_items) = &current_screen.menu_items {
-                    for (option, display_name) in menu_items {
-                        message.push_str(&format!("\n{}. {}", option, display_name));
+                    for (index, (_, value)) in menu_items.iter().enumerate() {
+                        message.push_str(&format!("\n{}. {}", index, value.display_name));
                     }
+                    // for (option, display_name) in menu_items {
+                    //     message.push_str(&format!("\n{}. {}", option, display_name));
+                    // }
                 } else {
                     message.push_str("\nNo menu items found");
                 }
 
                 // Process user input
                 let selected_option = &request.input.trim();
-                if let Some(next_screen_name) = current_screen
-                    .menu_items
-                    .as_ref()
-                    .and_then(|items| items.get(*selected_option))
-                {
-                    // Navigate to the next screen based on the selected option
-                    current_screen_name = next_screen_name.clone();
+                if let Some(selected_option) = selected_option.parse::<usize>().ok() {
+                    if let Some(next_screen_name) = current_screen
+                        .menu_items
+                        .as_ref()
+                        .and_then(|items| items.values().nth(selected_option))
+                    {
+                        // Navigate to the next screen based on the selected option
+                        current_screen_name = next_screen_name.default_next_screen.clone();
+                    } else {
+                        message.push_str("\nInvalid option, please try again");
+                    }
                 } else {
                     message.push_str("\nInvalid option, please try again");
                 }
@@ -195,33 +212,30 @@ pub fn process_request(
 
 fn process_ussd_request(
     request: &USSDRequest,
+    initial_screen: &String,
     session_cache: &Box<dyn SessionCache>,
-) -> (USSDSession, USSDMenu) {
+) -> USSDSession {
     // Implement logic to process USSD request and return session and screens
     // For simplicity, let's assume it always returns a new session and all screens
-    let menus: USSDMenu = USSDMenu::load_from_json("data/menu.json").unwrap();
-
-    let (initial_screen, _) = menus.get_initial_screen();
-
     let session = USSDSession::get_or_create_session(
         request,
-        &initial_screen,
+        initial_screen,
         std::time::Duration::from_secs(60),
         session_cache,
     );
 
-    (session, menus)
+    session
 }
 
 // Dummy function to call service
-fn call_function(function_name: &str, functions_path: String, request: &USSDRequest) -> String {
+fn call_function(_function_name: &str, _functions_path: String, _request: &USSDRequest) -> String {
     // Implement logic to call the function
     // For simplicity, let's assume it always returns a response message
     "Function called successfully".to_string()
 }
 
 // Dummy function to evaluate router option
-fn evaluate_router_option(router_option: &str, request: &USSDRequest) -> bool {
+fn evaluate_router_option(_router_option: &str, _request: &USSDRequest) -> bool {
     // Implement logic to evaluate router option
     // For simplicity, let's assume it always evaluates to true
     true
@@ -236,7 +250,6 @@ fn process_input(input: &str, input_identifier: &str, session: &mut USSDSession)
         HashStrAny::Str(input.to_string()),
     );
 }
-
 
 /// Evaluates the router options.
 ///
@@ -259,7 +272,11 @@ fn process_input(input: &str, input_identifier: &str, session: &mut USSDSession)
 /// # Returns
 ///
 /// A boolean value indicating whether the router option evaluates to true or false.
-fn evaluate_router_options(session: &USSDSession, request: &USSDRequest, router_option: &str) -> bool {
+fn _evaluate_router_options(
+    session: &USSDSession,
+    _request: &USSDRequest,
+    router_option: &str,
+) -> bool {
     // Check if the router option contains `{{` and `}}` to indicate an expression
     if router_option.contains("{{") && router_option.contains("}}") {
         // Extract the expression inside `{{ }}`
@@ -273,7 +290,7 @@ fn evaluate_router_options(session: &USSDSession, request: &USSDRequest, router_
         // You need to replace this with your actual implementation.
 
         // Parse and evaluate the expression
-        match parse_and_evaluate_expression(&session, expression) {
+        match _parse_and_evaluate_expression(&session, expression) {
             Ok(result) => result,
             Err(e) => {
                 eprintln!("Error evaluating router option: {}", e);
@@ -290,11 +307,13 @@ fn evaluate_router_options(session: &USSDSession, request: &USSDRequest, router_
     }
 }
 
-fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Result<bool, String> {
+fn _parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Result<bool, String> {
     // Split the expression into parts
     let parts: Vec<&str> = expression.split_whitespace().collect();
     if parts.len() != 3 {
-        return Err("Invalid expression: Must consist of three parts separated by whitespace".to_string());
+        return Err(
+            "Invalid expression: Must consist of three parts separated by whitespace".to_string(),
+        );
     }
 
     // Extract the data key from the expression
@@ -306,7 +325,10 @@ fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Res
     if data_key.contains('.') {
         data_key_parts = data_key.split('.').collect();
         if data_key_parts.len() != 2 {
-            return Err("Invalid expression: Data key must consist of one or two parts separated by a dot".to_string());
+            return Err(
+                "Invalid expression: Data key must consist of one or two parts separated by a dot"
+                    .to_string(),
+            );
         }
     } else {
         data_key_parts.push(data_key);
@@ -318,7 +340,9 @@ fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Res
         let operator = parts[1];
         let right_operand: i32 = match parts[2].parse() {
             Ok(num) => num,
-            Err(_) => return Err("Invalid expression: Right operand is not a valid integer".to_string()),
+            Err(_) => {
+                return Err("Invalid expression: Right operand is not a valid integer".to_string())
+            }
         };
 
         // Evaluate the expression based on the data value type
@@ -337,7 +361,7 @@ fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Res
                     Err("Invalid expression: Left operand is not a valid integer".to_string())
                 }
             }
-            HashStrAny::Dict(dict_value) => {
+            HashStrAny::Dict(_dict_value) => {
                 // If the data value is a dictionary, extract nested values
                 let mut current_value: &HashStrAny = data_value;
                 for key_part in parts[0].split('.') {
@@ -350,7 +374,8 @@ fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Res
                         }
                     } else {
                         // If any intermediate value is not a dictionary, return an error
-                        return Err("Invalid expression: Intermediate value is not a dictionary".to_string());
+                        return Err("Invalid expression: Intermediate value is not a dictionary"
+                            .to_string());
                     }
                 }
 
@@ -371,6 +396,9 @@ fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Res
         }
     } else {
         // If the data key doesn't exist in the session data, return an error
-        Err(format!("Key '{}' not found in session data", data_key_parts[0]))
+        Err(format!(
+            "Key '{}' not found in session data",
+            data_key_parts[0]
+        ))
     }
 }

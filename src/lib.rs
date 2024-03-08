@@ -9,6 +9,7 @@ mod ussd_session;
 
 extern crate serde;
 
+use prelude::USSDMenu;
 use screens::process_request;
 use ussd_request::USSDRequest;
 use ussd_response::USSDResponse;
@@ -27,8 +28,8 @@ impl UssdApp {
         }
     }
 
-    pub fn run(&self, request: USSDRequest) -> ussd_response::USSDResponse {
-        process_request(&request, &self.functions_path, &self.session_cache)
+    pub fn run(&self, request: USSDRequest, menus: USSDMenu) -> ussd_response::USSDResponse {
+        process_request(&request, &self.functions_path, &self.session_cache, &menus)
     }
 
     pub fn display_menu(&self, ussd_response: &USSDResponse) {

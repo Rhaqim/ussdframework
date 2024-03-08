@@ -2,12 +2,12 @@
 	"menus": {
 		"InitialScreen": {
 			"text": "Welcome to the system",
-			"type": "Initial",
+			"screen_type": "Initial",
 			"default_next_screen": "MainScreen"
 		},
 		"MainScreen": {
 			"text": "Main Menu",
-			"type": "Menu",
+			"screen_type": "Menu",
 			"default_next_screen": "DefaultNoneScreen",
 			"menu_items": {
 				"BalanceOption": {
@@ -29,12 +29,12 @@
 		},
 		"DefaultNoneScreen": {
 			"text": "Thank you for using the system",
-			"type": "Quit",
+			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		},
 		"BalanceInquiryScreen": {
 			"text": "Select Account",
-			"type": "Menu",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"SavingsOption": {
@@ -51,7 +51,7 @@
 		},
 		"SendMoneyScreen": {
 			"text": "Select option",
-			"type": "Menu",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"OwnAccountOption": {
@@ -68,7 +68,7 @@
 		},
 		"AirtimeScreen": {
 			"text": "Select option",
-			"type": "Menu",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"OwnNumberOption": {
@@ -85,19 +85,19 @@
 		},
 		"OwnNumberAmountScreen": {
 			"text": "Enter amount",
-			"type": "Input",
+			"screen_type": "Input",
             "input_identifier": "amount",
 			"default_next_screen": "OwnNumberFunctionScreen"
 		},
         "OwnNumberFunctionScreen": {
             "text": "Processing...",
-            "type": "Function",
+            "screen_type": "Function",
             "function": "buy_airtime",
             "default_next_screen": "OwnNumberRouterScreen"
         },
         "OwnNumberRouterScreen": {
             "text": "Selecting...",
-            "type": "Router",
+            "screen_type": "Router",
             "router": "AirtimeScreen",
             "router_options": [
 				{
@@ -117,7 +117,7 @@
         },
 		"SuccessScreen": {
 			"text": "Transaction Successful",
-			"type": "Quit",
+			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		}
 	},
