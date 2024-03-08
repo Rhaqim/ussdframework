@@ -28,8 +28,13 @@ impl UssdApp {
         }
     }
 
-    pub fn run(&self, request: USSDRequest, menus: USSDMenu) -> ussd_response::USSDResponse {
-        process_request(&request, &self.functions_path, &self.session_cache, &menus)
+    pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> ussd_response::USSDResponse {
+        process_request(
+            &request,
+            &self.functions_path,
+            &self.session_cache,
+            &screens,
+        )
     }
 
     pub fn display_menu(&self, ussd_response: &USSDResponse) {

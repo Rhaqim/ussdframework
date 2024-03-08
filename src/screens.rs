@@ -47,6 +47,18 @@ pub struct RouterOption {
     pub next_screen: String,
 }
 
+fn back(session: &mut USSDSession) {
+    // switch to the previous screen
+    if let Some(prev_screen) = session.visited_screens.pop() {
+        session.current_screen = prev_screen;
+    }
+}
+
+fn home(session: &mut USSDSession) {
+    // Switch to the initial screen
+    session.current_screen = "InitialScreen".to_string();
+}
+
 // Implement logic to process USSD requests
 pub fn process_request(
     request: &USSDRequest,
@@ -58,16 +70,44 @@ pub fn process_request(
     let mut current_screen_name = "InitialScreen".to_string();
     let mut message = String::new();
 
+    // Get the initial screen
     let (initial_screen, _) = screens.get_initial_screen();
 
-    // Process USSDRequest, return screens and session
-    let mut session = process_ussd_request(request, &initial_screen, &session_cache);
+    // Generate or retrieve the session
+    let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
 
+    // Create a response object
     let response: USSDResponse = USSDResponse {
         msisdn: request.msisdn.clone(),
         session_id: request.session_id.clone(),
-        message: "Invalid screen name".to_string(),
+        message: "Something went wrong, please try again later".to_string(),
     };
+
+    // Process user input
+    let input = request.input.trim();
+
+    // if input is 0, go back
+    if input == "0" {
+        back(&mut session);
+    }
+
+    // if input is 00, go home
+    if input == "00" {
+        home(&mut session);
+    }
+
+    // Check if the session has ended
+    if session.end_session {
+        return response;
+    }
+
+    // Check if the session has timed out
+    if session.has_timed_out(std::time::Duration::from_secs(60)) {
+        return response;
+    }
+
+    // Display screen history
+    session.display_screen_history();
 
     // Process USSD request
     loop {
@@ -80,30 +120,29 @@ pub fn process_request(
         };
 
         // Append screen text to message
-        message.push_str(&current_screen.text);
+        // message.push_str(&current_screen.text);
 
         // Process different types of screens
         match current_screen.screen_type {
             ScreenType::Initial => {
                 // Move to the next screen
                 current_screen_name = current_screen.default_next_screen.clone();
+                continue;
             }
             ScreenType::Menu => {
+                message.push_str(&current_screen.text);
+
                 // Append menu items to message
                 if let Some(menu_items) = &current_screen.menu_items {
                     for (index, (_, value)) in menu_items.iter().enumerate() {
                         message.push_str(&format!("\n{}. {}", index, value.display_name));
                     }
-                    // for (option, display_name) in menu_items {
-                    //     message.push_str(&format!("\n{}. {}", option, display_name));
-                    // }
                 } else {
                     message.push_str("\nNo menu items found");
                 }
 
                 // Process user input
-                let selected_option = &request.input.trim();
-                if let Some(selected_option) = selected_option.parse::<usize>().ok() {
+                if let Some(selected_option) = input.parse::<usize>().ok() {
                     if let Some(next_screen_name) = current_screen
                         .menu_items
                         .as_ref()
@@ -121,10 +160,7 @@ pub fn process_request(
             ScreenType::Input => {
                 // Handle input screen logic
                 // For simplicity, let's echo back the input
-                message.push_str("\nEnter your input: ");
-
-                // Process user input
-                let input = &request.input.trim();
+                message.push_str(&current_screen.text);
 
                 // input identifier
                 if let Some(input_identifier) = &current_screen.input_identifier {
@@ -174,26 +210,17 @@ pub fn process_request(
             }
         }
 
+        // Update the session's current screen
         session.current_screen = current_screen_name.clone();
 
-        // Store the session
-        session.store_session(&session_cache).unwrap();
-
-        // Check if the session has ended
-        if session.end_session {
-            return response;
-        }
-
-        // Check if the session has timed out
-        if session.has_timed_out(std::time::Duration::from_secs(60)) {
-            return response;
-        }
+        // Store the current screen in the session's visited screens
+        session.visited_screens.push(current_screen_name.clone());
 
         // Update the session's last interaction time
         session.update_last_interaction_time();
 
-        // Display screen history
-        session.display_screen_history();
+        // Store the session
+        session.store_session(&session_cache).unwrap();
 
         // Return USSD response
         return USSDResponse {
@@ -202,29 +229,6 @@ pub fn process_request(
             message,
         };
     }
-    // Return USSD response
-    // USSDResponse {
-    //     msisdn: request.msisdn.clone(),
-    //     session_id: request.session_id.clone(),
-    //     message,
-    // }
-}
-
-fn process_ussd_request(
-    request: &USSDRequest,
-    initial_screen: &String,
-    session_cache: &Box<dyn SessionCache>,
-) -> USSDSession {
-    // Implement logic to process USSD request and return session and screens
-    // For simplicity, let's assume it always returns a new session and all screens
-    let session = USSDSession::get_or_create_session(
-        request,
-        initial_screen,
-        std::time::Duration::from_secs(60),
-        session_cache,
-    );
-
-    session
 }
 
 // Dummy function to call service

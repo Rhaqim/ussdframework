@@ -89,7 +89,6 @@ impl USSDSession {
     pub fn get_or_create_session(
         request: &USSDRequest,
         initial_screen: &str,
-        _timeout_duration: Duration,
         cache: &Box<dyn SessionCache>,
     ) -> Self {
         let retrieved_session = USSDSession::retrieve_session(&request.session_id, &cache);
