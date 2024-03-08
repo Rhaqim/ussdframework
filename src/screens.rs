@@ -38,7 +38,7 @@ pub struct Screen {
 pub struct MenuItems {
     pub option: String,
     pub display_name: String,
-    pub default_next_screen: String,
+    pub next_screen: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -59,6 +59,113 @@ fn home(session: &mut USSDSession) {
     session.current_screen = "InitialScreen".to_string();
 }
 
+pub trait USSDAction {
+    fn execute(
+        &self,
+        session: &mut USSDSession,
+        request: &USSDRequest,
+        function_path: String,
+        message: &mut String,
+    );
+}
+
+impl USSDAction for Screen {
+    fn execute(
+        &self,
+        session: &mut USSDSession,
+        request: &USSDRequest,
+        function_path: String,
+        message: &mut String,
+    ) {
+        let input = request.input.trim();
+
+        // if input is 0, go back
+        if input == "0" {
+            back(session);
+        }
+
+        // if input is 00, go home
+        if input == "00" {
+            home(session);
+        }
+
+        match self.screen_type {
+            ScreenType::Initial => {
+                session.current_screen = self.default_next_screen.clone();
+            }
+            ScreenType::Menu => {
+                message.push_str(&self.text);
+
+                // Append menu items to message
+                if let Some(menu_items) = &self.menu_items {
+                    for (index, (_, value)) in menu_items.iter().enumerate() {
+                        message.push_str(&format!("\n{}. {}", index + 1, value.display_name));
+                    }
+                } else {
+                    message.push_str("\nNo menu items found");
+                }
+
+                // Process user input
+                if let Some(selected_option) = input.parse::<usize>().ok() {
+                    let menu_items_len = self.menu_items.as_ref().unwrap().len();
+                    if selected_option > 0 && selected_option <= menu_items_len {
+                        let next_screen = self
+                            .menu_items
+                            .as_ref()
+                            .unwrap()
+                            .values()
+                            .nth(selected_option - 1)
+                            .unwrap()
+                            .next_screen
+                            .clone();
+                        session.current_screen = next_screen;
+                    } else {
+                        message.push_str("\nInvalid option, please try again");
+                    }
+                } else {
+                    message.push_str("\nInvalid option, please try again");
+                }
+            }
+            ScreenType::Input => {
+                if let Some(input_identifier) = &self.input_identifier {
+                    session.data.insert(
+                        input_identifier.to_string(),
+                        HashStrAny::Str(input.to_string()),
+                    );
+                }
+                session.current_screen = self.default_next_screen.clone();
+            }
+            ScreenType::Function => {
+                if let Some(function_name) = &self.function {
+                    // Call the function
+                    let response_message = call_function(function_name, function_path, &request);
+                    message.push_str(&response_message);
+                }
+                session.current_screen = self.default_next_screen.clone();
+            }
+            ScreenType::Router => {
+                if let Some(router_options) = &self.router_options {
+                    for option in router_options {
+                        if evaluate_router_option(session, &option.router_option) {
+                            // Navigate to the next screen based on the router option
+                            session.current_screen = option.next_screen.clone();
+                        }
+                    }
+                } else {
+                    // Navigate to the default next screen
+                    session.current_screen = self.default_next_screen.clone();
+                }
+            }
+            ScreenType::Quit => {
+                message.push_str(&self.text);
+
+                // Quit the session
+                session.end_session = true;
+            }
+        }
+    }
+}
+
 // Implement logic to process USSD requests
 pub fn process_request(
     request: &USSDRequest,
@@ -66,8 +173,6 @@ pub fn process_request(
     session_cache: &Box<dyn SessionCache>,
     screens: &USSDMenu,
 ) -> USSDResponse {
-    // Initialize variables to store response data
-    let mut current_screen_name = "InitialScreen".to_string();
     let mut message = String::new();
 
     // Get the initial screen
@@ -77,158 +182,41 @@ pub fn process_request(
     let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
 
     // Create a response object
-    let response: USSDResponse = USSDResponse {
+    let mut response: USSDResponse = USSDResponse {
         msisdn: request.msisdn.clone(),
         session_id: request.session_id.clone(),
         message: "Something went wrong, please try again later".to_string(),
     };
 
-    // Process user input
-    let input = request.input.trim();
-
-    // if input is 0, go back
-    if input == "0" {
-        back(&mut session);
-    }
-
-    // if input is 00, go home
-    if input == "00" {
-        home(&mut session);
-    }
-
-    // Check if the session has ended
-    if session.end_session {
-        return response;
-    }
-
-    // Check if the session has timed out
-    if session.has_timed_out(std::time::Duration::from_secs(60)) {
-        return response;
-    }
-
     // Display screen history
     session.display_screen_history();
 
-    // Process USSD request
-    loop {
-        // Get the current screen
-        let current_screen = match screens.menus.get(&current_screen_name) {
-            Some(screen) => screen,
-            None => {
-                return response;
-            }
-        };
+    let current_screen = session.current_screen.clone();
 
-        // Append screen text to message
-        // message.push_str(&current_screen.text);
+    println!("\nCurrent screen: {}", current_screen);
+    println!("\nRequest: {:?}", request);
 
-        // Process different types of screens
-        match current_screen.screen_type {
-            ScreenType::Initial => {
-                // Move to the next screen
-                current_screen_name = current_screen.default_next_screen.clone();
-                continue;
-            }
-            ScreenType::Menu => {
-                message.push_str(&current_screen.text);
+    match screens.menus.get(&current_screen) {
+        Some(screen) => {
+            screen.execute(&mut session, request, functions_path.clone(), &mut message);
 
-                // Append menu items to message
-                if let Some(menu_items) = &current_screen.menu_items {
-                    for (index, (_, value)) in menu_items.iter().enumerate() {
-                        message.push_str(&format!("\n{}. {}", index, value.display_name));
-                    }
-                } else {
-                    message.push_str("\nNo menu items found");
-                }
+            // Store the current screen in the session's visited screens
+            session.visited_screens.push(session.current_screen.clone());
 
-                // Process user input
-                if let Some(selected_option) = input.parse::<usize>().ok() {
-                    if let Some(next_screen_name) = current_screen
-                        .menu_items
-                        .as_ref()
-                        .and_then(|items| items.values().nth(selected_option))
-                    {
-                        // Navigate to the next screen based on the selected option
-                        current_screen_name = next_screen_name.default_next_screen.clone();
-                    } else {
-                        message.push_str("\nInvalid option, please try again");
-                    }
-                } else {
-                    message.push_str("\nInvalid option, please try again");
-                }
-            }
-            ScreenType::Input => {
-                // Handle input screen logic
-                // For simplicity, let's echo back the input
-                message.push_str(&current_screen.text);
+            // Update the session's last interaction time
+            session.update_last_interaction_time();
 
-                // input identifier
-                if let Some(input_identifier) = &current_screen.input_identifier {
-                    process_input(input, input_identifier, &mut session);
-                } else {
-                    message.push_str("\nNo input identifier specified");
-                }
+            // Store the session
+            session.store_session(&session_cache).unwrap();
 
-                // Move to the next screen
-                current_screen_name = current_screen.default_next_screen.clone();
-            }
-            ScreenType::Function => {
-                // Handle function screen logic
-                if let Some(function_name) = &current_screen.function {
-                    // Call the function
-                    let response_message =
-                        call_function(function_name, functions_path.clone(), &request);
-                    message.push_str(&response_message);
-                } else {
-                    message.push_str("\nNo function specified");
-                }
+            response.message = message;
 
-                // Move to the next screen
-                current_screen_name = current_screen.default_next_screen.clone();
-            }
-            ScreenType::Router => {
-                // Handle router screen logic
-                if let Some(router_options) = &current_screen.router_options {
-                    for option in router_options {
-                        if evaluate_router_option(&option.router_option, &request) {
-                            // Navigate to the next screen based on the router option
-                            current_screen_name = option.next_screen.clone();
-                        }
-                    }
-                } else {
-                    // Navigate to the default next screen
-                    current_screen_name = current_screen.default_next_screen.clone();
-                }
-            }
-            ScreenType::Quit => {
-                // Quit the session
-                return USSDResponse {
-                    msisdn: request.msisdn.clone(),
-                    session_id: request.session_id.clone(),
-                    message: "Thank you for using the system".to_string(),
-                };
-            }
+            return response;
         }
-
-        // Update the session's current screen
-        session.current_screen = current_screen_name.clone();
-
-        // Store the current screen in the session's visited screens
-        session.visited_screens.push(current_screen_name.clone());
-
-        // Update the session's last interaction time
-        session.update_last_interaction_time();
-
-        // Store the session
-        session.store_session(&session_cache).unwrap();
-
-        // Return USSD response
-        return USSDResponse {
-            msisdn: request.msisdn.clone(),
-            session_id: request.session_id.clone(),
-            message,
-        };
-    }
+        None => {
+            return response;
+        }
+    };
 }
 
 // Dummy function to call service
@@ -236,23 +224,6 @@ fn call_function(_function_name: &str, _functions_path: String, _request: &USSDR
     // Implement logic to call the function
     // For simplicity, let's assume it always returns a response message
     "Function called successfully".to_string()
-}
-
-// Dummy function to evaluate router option
-fn evaluate_router_option(_router_option: &str, _request: &USSDRequest) -> bool {
-    // Implement logic to evaluate router option
-    // For simplicity, let's assume it always evaluates to true
-    true
-}
-
-// Dummy function to process input
-fn process_input(input: &str, input_identifier: &str, session: &mut USSDSession) {
-    // Implement logic to process input
-    // For simplicity, let's assume it always stores the input in the session
-    session.data.insert(
-        input_identifier.to_string(),
-        HashStrAny::Str(input.to_string()),
-    );
 }
 
 /// Evaluates the router options.
@@ -276,9 +247,8 @@ fn process_input(input: &str, input_identifier: &str, session: &mut USSDSession)
 /// # Returns
 ///
 /// A boolean value indicating whether the router option evaluates to true or false.
-fn _evaluate_router_options(
+fn evaluate_router_option(
     session: &USSDSession,
-    _request: &USSDRequest,
     router_option: &str,
 ) -> bool {
     // Check if the router option contains `{{` and `}}` to indicate an expression
@@ -294,7 +264,7 @@ fn _evaluate_router_options(
         // You need to replace this with your actual implementation.
 
         // Parse and evaluate the expression
-        match _parse_and_evaluate_expression(&session, expression) {
+        match parse_and_evaluate_expression(&session, expression) {
             Ok(result) => result,
             Err(e) => {
                 eprintln!("Error evaluating router option: {}", e);
@@ -311,7 +281,7 @@ fn _evaluate_router_options(
     }
 }
 
-fn _parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Result<bool, String> {
+fn parse_and_evaluate_expression(session: &USSDSession, expression: &str) -> Result<bool, String> {
     // Split the expression into parts
     let parts: Vec<&str> = expression.split_whitespace().collect();
     if parts.len() != 3 {

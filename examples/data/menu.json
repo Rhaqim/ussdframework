@@ -13,17 +13,17 @@
 				"BalanceOption": {
 					"option": "1",
 					"display_name": "Balance Inquiry",
-					"default_next_screen": "BalanceInquiryScreen"
+					"next_screen": "BalanceInquiryScreen"
 				},
 				"SendMoneyOption": {
 					"option": "2",
 					"display_name": "Send Money",
-					"default_next_screen": "SendMoneyScreen"
+					"next_screen": "SendMoneyScreen"
 				},
 				"AirtimeOption": {
 					"option": "3",
 					"display_name": "Buy Airtime",
-					"default_next_screen": "AirtimeScreen"
+					"next_screen": "AirtimeScreen"
 				}
 			}
 		},
@@ -40,12 +40,12 @@
 				"SavingsOption": {
 					"option": "1",
 					"display_name": "Savings",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				},
 				"CurrentOption": {
 					"option": "2",
 					"display_name": "Current",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				}
 			}
 		},
@@ -57,12 +57,12 @@
 				"OwnAccountOption": {
 					"option": "1",
 					"display_name": "Own Account",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				},
 				"OtherAccountOption": {
 					"option": "2",
 					"display_name": "Other Account",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				}
 			}
 		},
@@ -74,12 +74,12 @@
 				"OwnNumberOption": {
 					"option": "1",
 					"display_name": "Own Number",
-					"default_next_screen": "OwnNumberAmountScreen"
+					"next_screen": "OwnNumberAmountScreen"
 				},
 				"OtherNumberOption": {
 					"option": "2",
 					"display_name": "Other Number",
-					"default_next_screen": "OtherNumberAmountScreen"
+					"next_screen": "OtherNumberAmountScreen"
 				}
 			}
 		},
