@@ -5,9 +5,13 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 
-use super::{USSDService, USSDScreen};
+use crate::{
+    screens::{Screen, ScreenType},
+    ussd_service::USSDService,
+};
 
 // Define a structure to hold the USSD menu data
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDMenu {
     pub menus: HashMap<String, Screen>,
     pub services: HashMap<String, USSDService>,
@@ -39,16 +43,15 @@ impl USSDMenu {
     }
 
     // Get the Intial screen
-    pub fn get_initial_screen(&self) -> (String, &USSDScreen) {
+    pub fn get_initial_screen(&self) -> (String, &Screen) {
         for (screen_name, screen) in self.menus.iter() {
-            if let USSDScreen::Initial { .. } = screen {
+            if let ScreenType::Initial = screen.screen_type {
                 return (screen_name.clone(), screen);
             }
         }
         panic!("No initial screen found!");
     }
 }
-
 
 // pub struct MenuBuilder {
 //     name: String,

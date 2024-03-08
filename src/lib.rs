@@ -1,12 +1,18 @@
+mod menu;
+pub mod prelude;
 mod screens;
+mod types;
 mod ussd_request;
 mod ussd_response;
+mod ussd_service;
+mod ussd_session;
 
-use std::collections::HashMap;
+extern crate serde;
 
-use crate::{USSDRequest, USSDResponse};
 use screens::process_request;
 use ussd_request::USSDRequest;
+use ussd_response::USSDResponse;
+use ussd_session::SessionCache;
 
 pub struct UssdApp {
     functions_path: String,
@@ -29,8 +35,7 @@ impl UssdApp {
         // Display the menu to the user
 
         // For example, you can use the following code to display the menu:
-        println!("{}", ussd_response.text);
-            
+        println!("{}", ussd_response.message);
     }
 }
 

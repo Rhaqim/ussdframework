@@ -5,7 +5,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{helper::stack::Stack, types::HashStrAny};
+use crate::types::{HashStrAny, Stack};
 
 use super::USSDRequest;
 
