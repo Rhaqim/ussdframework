@@ -10,17 +10,18 @@ fn main() {
     let menus: USSDMenu = serde_json::from_str(&content).unwrap();
 
     loop {
+        // Define input variable for each iteration
         let mut input = String::new();
 
         let request = USSDRequest {
             session_id: "1234".to_string(),
             msisdn: "1234".to_string(),
-            input: input.clone(),
+            input: input.clone(), // Use input directly here
             service_code: "1234".to_string(),
             language: "en".to_string(),
         };
 
-        let response = app.run(request.clone(), menus.clone());
+        let response = app.run(request, menus.clone());
         app.display_menu(&response);
 
         // Process user input and update request input for the next iteration

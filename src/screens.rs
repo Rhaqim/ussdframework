@@ -56,7 +56,7 @@ fn back(session: &mut USSDSession) {
 
 fn home(session: &mut USSDSession) {
     // Switch to the initial screen
-    session.current_screen = "InitialScreen".to_string();
+    session.current_screen = session.visited_screens.first().unwrap().clone();
 }
 
 pub trait USSDAction {
@@ -89,13 +89,13 @@ impl USSDAction for Screen {
             home(session);
         }
 
+        message.push_str(&self.text);
+
         match self.screen_type {
             ScreenType::Initial => {
                 session.current_screen = self.default_next_screen.clone();
             }
             ScreenType::Menu => {
-                message.push_str(&self.text);
-
                 // Append menu items to message
                 if let Some(menu_items) = &self.menu_items {
                     for (index, (_, value)) in menu_items.iter().enumerate() {

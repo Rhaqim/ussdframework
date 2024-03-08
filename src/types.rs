@@ -106,4 +106,9 @@ impl<T> Stack<T> {
     pub fn iter(&self) -> std::slice::Iter<T> {
         self.items.iter()
     }
+
+    // First item in the stack
+    pub fn first(&self) -> Option<&T> {
+        self.items.first()
+    }
 }
