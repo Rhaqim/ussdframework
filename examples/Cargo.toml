@@ -1,7 +1,20 @@
 [package]
-name = "ussd_framework_examples"
+name = "ussdframework_examples"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
+authors = ["Rhaqim <anusiemj@gmail.com>"]
+
+[[bin]]
+name = "basic_usage"
+path = "basic_usage.rs"
 
 [dependencies]
-ussd_framework = { path = "../" }  # Link to the local ussd_framework directory
+ussdframework = { path = "../" }  # Link to the local ussdframework directory
+# Redis client library
+# redis = "0.24.0"
+# HTTP server library
+# hyper = "1.2.0"
+# Routing library
+# routerify = "3.0.0"
+# Templating library
+# askama = "0.12.1"

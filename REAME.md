@@ -29,7 +29,7 @@ ussd-framework = "0.1.0"
 Here's a simple example of how to create a USSD menu using the USSD Framework:
 
 ```rust
-use ussd_framework::prelude::*;
+use ussdframework::prelude::*;
 
 fn main() {
     let mut app = UssdApp::new();
