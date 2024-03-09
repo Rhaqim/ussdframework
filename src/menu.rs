@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::{
-    screens::{Screen, ScreenType},
+    ussd_screens::{Screen, ScreenType},
     ussd_service::USSDService,
 };
 

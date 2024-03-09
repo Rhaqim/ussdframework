@@ -1,8 +1,12 @@
 use crate::{
-    prelude::{HashStrAny, USSDMenu},
+    types::HashStrAny,
+    ussd_request::USSDRequest,
+    ussd_response::USSDResponse,
     ussd_session::{SessionCache, USSDSession},
-    USSDRequest, USSDResponse,
+    USSDMenu,
+    info,
 };
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -45,6 +49,91 @@ pub struct MenuItems {
 pub struct RouterOption {
     pub router_option: String,
     pub next_screen: String,
+}
+
+/// Entry point for processing USSD requests.
+///
+/// # Arguments
+///
+/// * `request` - The USSD request.
+/// * `functions_path` - The path to the functions used by the USSD application.
+/// * `session_cache` - The session cache implementation used by the USSD application.
+/// * `screens` - The USSD menu screens.
+///
+/// # Returns
+///
+/// The USSD response.
+///
+/// # Example
+///
+/// ```
+/// use crate::ussd_service::process_request;
+/// use crate::ussd_request::USSDRequest;
+/// use crate::ussd_response::USSDResponse;
+/// use crate::ussd_session::SessionCache;
+///
+/// let request = USSDRequest {
+///    msisdn
+///    session_id
+///    input
+/// };
+///
+/// let functions_path = "path/to/functions".to_string();
+/// let session_cache = Box::new(SessionCacheImpl::new());
+/// let screens = USSDMenu::new();
+///
+/// let response = process_request(&request, &functions_path, &session_cache, &screens);
+/// ```
+pub fn process_request(
+    request: &USSDRequest,
+    functions_path: &String,
+    session_cache: &Box<dyn SessionCache>,
+    screens: &USSDMenu,
+) -> USSDResponse {
+    let mut message = String::new();
+
+    // Get the initial screen
+    let (initial_screen, _) = screens.get_initial_screen();
+
+    // Generate or retrieve the session
+    let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
+
+    // Create a response object
+    let mut response: USSDResponse = USSDResponse {
+        msisdn: request.msisdn.clone(),
+        session_id: request.session_id.clone(),
+        message: "Something went wrong, please try again later".to_string(),
+    };
+
+    // Display screen history
+    session.display_screen_history();
+
+    let current_screen = session.current_screen.clone();
+
+    info!("\nCurrent screen: {}", current_screen);
+    info!("\nRequest: {:?}", request);
+
+    match screens.menus.get(&current_screen) {
+        Some(screen) => {
+            screen.execute(&mut session, request, functions_path.clone(), &mut message);
+
+            // Store the current screen in the session's visited screens
+            session.visited_screens.push(session.current_screen.clone());
+
+            // Update the session's last interaction time
+            session.update_last_interaction_time();
+
+            // Store the session
+            session.store_session(&session_cache).unwrap();
+
+            response.message = message;
+
+            return response;
+        }
+        None => {
+            return response;
+        }
+    };
 }
 
 fn back(session: &mut USSDSession) {
@@ -166,59 +255,6 @@ impl USSDAction for Screen {
     }
 }
 
-// Implement logic to process USSD requests
-pub fn process_request(
-    request: &USSDRequest,
-    functions_path: &String,
-    session_cache: &Box<dyn SessionCache>,
-    screens: &USSDMenu,
-) -> USSDResponse {
-    let mut message = String::new();
-
-    // Get the initial screen
-    let (initial_screen, _) = screens.get_initial_screen();
-
-    // Generate or retrieve the session
-    let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
-
-    // Create a response object
-    let mut response: USSDResponse = USSDResponse {
-        msisdn: request.msisdn.clone(),
-        session_id: request.session_id.clone(),
-        message: "Something went wrong, please try again later".to_string(),
-    };
-
-    // Display screen history
-    session.display_screen_history();
-
-    let current_screen = session.current_screen.clone();
-
-    println!("\nCurrent screen: {}", current_screen);
-    println!("\nRequest: {:?}", request);
-
-    match screens.menus.get(&current_screen) {
-        Some(screen) => {
-            screen.execute(&mut session, request, functions_path.clone(), &mut message);
-
-            // Store the current screen in the session's visited screens
-            session.visited_screens.push(session.current_screen.clone());
-
-            // Update the session's last interaction time
-            session.update_last_interaction_time();
-
-            // Store the session
-            session.store_session(&session_cache).unwrap();
-
-            response.message = message;
-
-            return response;
-        }
-        None => {
-            return response;
-        }
-    };
-}
-
 // Dummy function to call service
 fn call_function(_function_name: &str, _functions_path: String, _request: &USSDRequest) -> String {
     // Implement logic to call the function
@@ -247,10 +283,7 @@ fn call_function(_function_name: &str, _functions_path: String, _request: &USSDR
 /// # Returns
 ///
 /// A boolean value indicating whether the router option evaluates to true or false.
-fn evaluate_router_option(
-    session: &USSDSession,
-    router_option: &str,
-) -> bool {
+fn evaluate_router_option(session: &USSDSession, router_option: &str) -> bool {
     // Check if the router option contains `{{` and `}}` to indicate an expression
     if router_option.contains("{{") && router_option.contains("}}") {
         // Extract the expression inside `{{ }}`
