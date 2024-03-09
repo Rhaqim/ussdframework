@@ -70,7 +70,7 @@ impl USSDLogger for Logger {
 }
 
 #[macro_export]
-/// Macro for logging a warning message.
+/// Macro for logging an info message.
 ///
 /// This macro takes a format string and arguments, and logs a warning message using the `logger` function from the `log` module.
 /// The format string and arguments are passed to the `format!` macro to create the final log message.
@@ -87,7 +87,7 @@ macro_rules! info {
 }
 
 #[macro_export]
-/// Macro for logging a warning message.
+/// Macro for logging an error message.
 ///
 /// This macro takes a format string and arguments, and logs a warning message using the `logger` function from the `log` module.
 /// The format string and arguments are passed to the `format!` macro to create the final log message.
@@ -121,7 +121,7 @@ macro_rules! warning {
 }
 
 #[macro_export]
-/// Macro for logging a warning message.
+/// Macro for logging a debug message.
 ///
 /// This macro takes a format string and arguments, and logs a warning message using the `logger` function from the `log` module.
 /// The format string and arguments are passed to the `format!` macro to create the final log message.

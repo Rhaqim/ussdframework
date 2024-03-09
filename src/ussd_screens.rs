@@ -1,10 +1,10 @@
 use crate::{
+    info,
     types::HashStrAny,
     ussd_request::USSDRequest,
     ussd_response::USSDResponse,
     ussd_session::{SessionCache, USSDSession},
     USSDMenu,
-    info,
 };
 
 use serde::{Deserialize, Serialize};
@@ -35,6 +35,8 @@ pub struct Screen {
     pub router_options: Option<Vec<RouterOption>>,
     #[serde(default)]
     pub input_identifier: Option<String>,
+    #[serde(default)]
+    pub input_type: Option<String>,
     // Additional fields based on screen type
 }
 
@@ -110,8 +112,10 @@ pub fn process_request(
 
     let current_screen = session.current_screen.clone();
 
-    info!("\nCurrent screen: {}", current_screen);
-    info!("\nRequest: {:?}", request);
+    info!(
+        "\nCurrent screen: {} \nRequest: {:?}",
+        current_screen, request
+    );
 
     match screens.menus.get(&current_screen) {
         Some(screen) => {
