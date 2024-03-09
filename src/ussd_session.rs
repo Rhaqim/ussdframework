@@ -5,9 +5,11 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::types::{HashStrAny, Stack};
-
-use super::USSDRequest;
+use crate::{
+    info,
+    types::{HashStrAny, Stack},
+    ussd_request::USSDRequest
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct USSDSession {
@@ -96,6 +98,8 @@ impl USSDSession {
         match retrieved_session {
             Ok(session) => {
                 // Update last interaction time for existing session
+                info!("Retrieved session {:?}", session);
+
                 let mut session = session;
                 session.update_last_interaction_time();
                 session
@@ -112,6 +116,9 @@ impl USSDSession {
                     language: request.language.clone(),
                     msisdn: request.msisdn.clone(),
                 };
+
+                info!("New session {:?}", new_session);
+
                 new_session.store_session(&cache).unwrap();
                 new_session
             }

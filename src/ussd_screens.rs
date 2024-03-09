@@ -1,5 +1,5 @@
 use crate::{
-    info,
+    debug, info,
     types::HashStrAny,
     ussd_request::USSDRequest,
     ussd_response::USSDResponse,
@@ -92,8 +92,6 @@ pub fn process_request(
     session_cache: &Box<dyn SessionCache>,
     screens: &USSDMenu,
 ) -> USSDResponse {
-    let mut message = String::new();
-
     // Get the initial screen
     let (initial_screen, _) = screens.get_initial_screen();
 
@@ -110,35 +108,98 @@ pub fn process_request(
     // Display screen history
     session.display_screen_history();
 
-    let current_screen = session.current_screen.clone();
+    let mut current_screen = session.current_screen.clone();
 
     info!(
         "\nCurrent screen: {} \nRequest: {:?}",
         current_screen, request
     );
 
-    match screens.menus.get(&current_screen) {
-        Some(screen) => {
-            screen.execute(&mut session, request, functions_path.clone(), &mut message);
+    loop {
+        match screens.menus.get(&current_screen) {
+            Some(screen) => {
+                let message = screen.display();
 
-            // Store the current screen in the session's visited screens
-            session.visited_screens.push(session.current_screen.clone());
+                // if the message is present then add to the response and send it
+                if let Some(message) = message {
+                    // Execute the screen
+                    screen.execute(&mut session, request, functions_path.clone());
 
-            // Update the session's last interaction time
-            session.update_last_interaction_time();
+                    // Store the current screen in the session's visited screens
+                    session.visited_screens.push(session.current_screen.clone());
 
-            // Store the session
-            session.store_session(&session_cache).unwrap();
+                    // Update the session's last interaction time
+                    session.update_last_interaction_time();
 
-            response.message = message;
+                    // Store the session
+                    session.store_session(&session_cache).unwrap();
 
-            return response;
+                    // current_screen = session.current_screen.clone();
+
+                    debug!("Session: {:?}", session);
+
+                    response.message = message;
+
+                    break;
+                } else {
+                    // Execute the screen
+                    screen.execute(&mut session, request, functions_path.clone());
+
+                    // Store the current screen in the session's visited screens
+                    session.visited_screens.push(session.current_screen.clone());
+
+                    // Update the session's last interaction time
+                    session.update_last_interaction_time();
+
+                    // Store the session
+                    session.store_session(&session_cache).unwrap();
+
+                    debug!("Session: {:?}", session);
+
+                    // Update current_screen for the next iteration
+                    current_screen = session.current_screen.clone();
+                }
+            }
+            None => {
+                break; // Break the loop if there's no screen found
+            }
         }
-        None => {
-            return response;
-        }
-    };
+    }
+
+    response
 }
+// match screens.menus.get(&current_screen) {
+//     Some(screen) => {
+//         let message = screen.display();
+
+//         screen.execute(&mut session, request, functions_path.clone());
+
+//         // Store the current screen in the session's visited screens
+//         session.visited_screens.push(session.current_screen.clone());
+
+//         // Update the session's last interaction time
+//         session.update_last_interaction_time();
+
+//         // Store the session
+//         session.store_session(&session_cache).unwrap();
+
+//         match message {
+//             Some(message) => {
+//                 response.message = message;
+//                 return response;
+//             }
+//             None => {
+//                 response.message = "Something went wrong, please try again later".to_string();
+
+//                 return response;
+//             }
+//         }
+//     }
+//     None => {
+//         return response;
+//     }
+// };
+// }
 
 fn back(session: &mut USSDSession) {
     // switch to the previous screen
@@ -153,23 +214,49 @@ fn home(session: &mut USSDSession) {
 }
 
 pub trait USSDAction {
-    fn execute(
-        &self,
-        session: &mut USSDSession,
-        request: &USSDRequest,
-        function_path: String,
-        message: &mut String,
-    );
+    fn display(&self) -> Option<String>;
+    fn execute(&self, session: &mut USSDSession, request: &USSDRequest, function_path: String);
 }
 
 impl USSDAction for Screen {
-    fn execute(
-        &self,
-        session: &mut USSDSession,
-        request: &USSDRequest,
-        function_path: String,
-        message: &mut String,
-    ) {
+    fn display(&self) -> Option<String> {
+        let mut message = String::new();
+
+        match self.screen_type {
+            ScreenType::Initial => None,
+            ScreenType::Menu => {
+                message.push_str(&self.text);
+
+                if let Some(menu_items) = &self.menu_items {
+                    let mut sorted_menu_items: Vec<(&String, &MenuItems)> =
+                        menu_items.iter().collect();
+                    // Sort the menu items by their option number
+                    sorted_menu_items
+                        .sort_by_key(|(_, item)| item.option.parse::<usize>().unwrap());
+
+                    for (index, (_, value)) in sorted_menu_items.iter().enumerate() {
+                        message.push_str(&format!("\n{}. {}", index + 1, value.display_name));
+                    }
+                } else {
+                    message.push_str("\nNo menu items found");
+                }
+
+                Some(message)
+            }
+            ScreenType::Input => {
+                message.push_str(&self.text);
+                Some(message)
+            }
+            ScreenType::Function => None,
+            ScreenType::Router => None,
+            ScreenType::Quit => {
+                message.push_str(&self.text);
+                Some(message)
+            }
+        }
+    }
+
+    fn execute(&self, session: &mut USSDSession, request: &USSDRequest, function_path: String) {
         let input = request.input.trim();
 
         // if input is 0, go back
@@ -182,41 +269,36 @@ impl USSDAction for Screen {
             home(session);
         }
 
-        message.push_str(&self.text);
-
         match self.screen_type {
             ScreenType::Initial => {
                 session.current_screen = self.default_next_screen.clone();
             }
             ScreenType::Menu => {
-                // Append menu items to message
-                if let Some(menu_items) = &self.menu_items {
-                    for (index, (_, value)) in menu_items.iter().enumerate() {
-                        message.push_str(&format!("\n{}. {}", index + 1, value.display_name));
-                    }
-                } else {
-                    message.push_str("\nNo menu items found");
-                }
-
-                // Process user input
                 if let Some(selected_option) = input.parse::<usize>().ok() {
                     let menu_items_len = self.menu_items.as_ref().unwrap().len();
+
                     if selected_option > 0 && selected_option <= menu_items_len {
-                        let next_screen = self
+                        // Find the selected menu item by its option number
+                        let selected_item = self
                             .menu_items
                             .as_ref()
                             .unwrap()
                             .values()
-                            .nth(selected_option - 1)
-                            .unwrap()
-                            .next_screen
-                            .clone();
-                        session.current_screen = next_screen;
+                            .find(|item| item.option == selected_option.to_string());
+
+                        debug!("Selected Items: {:?}", selected_item);
+                         
+                        if let Some(selected_item) = selected_item {
+                            let next_screen = selected_item.next_screen.clone();
+                            session.current_screen = next_screen;
+                        } else {
+                            session.current_screen = self.default_next_screen.clone();
+                        }
                     } else {
-                        message.push_str("\nInvalid option, please try again");
+                        session.current_screen = self.default_next_screen.clone();
                     }
                 } else {
-                    message.push_str("\nInvalid option, please try again");
+                    session.current_screen = self.default_next_screen.clone();
                 }
             }
             ScreenType::Input => {
@@ -231,8 +313,7 @@ impl USSDAction for Screen {
             ScreenType::Function => {
                 if let Some(function_name) = &self.function {
                     // Call the function
-                    let response_message = call_function(function_name, function_path, &request);
-                    message.push_str(&response_message);
+                    call_function(session, function_name, function_path, &request);
                 }
                 session.current_screen = self.default_next_screen.clone();
             }
@@ -250,8 +331,6 @@ impl USSDAction for Screen {
                 }
             }
             ScreenType::Quit => {
-                message.push_str(&self.text);
-
                 // Quit the session
                 session.end_session = true;
             }
@@ -260,7 +339,12 @@ impl USSDAction for Screen {
 }
 
 // Dummy function to call service
-fn call_function(_function_name: &str, _functions_path: String, _request: &USSDRequest) -> String {
+fn call_function(
+    _session: &USSDSession,
+    _function_name: &str,
+    _functions_path: String,
+    _request: &USSDRequest,
+) -> String {
     // Implement logic to call the function
     // For simplicity, let's assume it always returns a response message
     "Function called successfully".to_string()
