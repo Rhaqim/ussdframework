@@ -2,14 +2,19 @@ use actix_web::{web, App, HttpResponse, HttpServer};
 use std::{collections::HashMap, sync::Mutex};
 use ussdframework::prelude::*;
 
+mod config;
+mod functions;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let session_store = InMemorySessionStore::new();
-        let app = UssdApp::new("config/functions".to_string(), Box::new(session_store));
+        let app = UssdApp::new("functions".to_string(), Box::new(session_store));
 
         let content = include_str!("../examples/data/menu.json");
         let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+
+        register_function("buy_airtime", functions::buy_airtime);
 
         App::new()
             .app_data(web::Data::new(app))

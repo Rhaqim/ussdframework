@@ -1,3 +1,4 @@
+mod log;
 mod menu;
 pub mod prelude;
 mod types;
@@ -6,7 +7,7 @@ mod ussd_response;
 mod ussd_screens;
 mod ussd_service;
 mod ussd_session;
-mod log;
+mod utils;
 
 extern crate serde;
 

@@ -1,8 +1,10 @@
 use crate::{
     debug, error, info,
+    prelude::USSDService,
     types::HashStrAny,
     ussd_request::USSDRequest,
     ussd_response::USSDResponse,
+    ussd_service::USSDServiceTrait,
     ussd_session::{SessionCache, USSDSession},
     USSDMenu,
 };
@@ -123,7 +125,12 @@ pub fn process_request(
                         current_screen, screen.screen_type, request
                     );
 
-                    screen.execute(&mut session, request, functions_path.clone());
+                    screen.execute(
+                        &mut session,
+                        request,
+                        functions_path.clone(),
+                        &screens.services,
+                    );
 
                     session.update_session(session_cache);
 
@@ -171,7 +178,12 @@ pub fn process_request(
                     } else {
                         debug!("Executing action for screen: {}", current_screen);
 
-                        screen.execute(&mut session, request, functions_path.clone());
+                        screen.execute(
+                            &mut session,
+                            request,
+                            functions_path.clone(),
+                            &screens.services,
+                        );
 
                         session.update_session(session_cache);
 
@@ -204,7 +216,13 @@ fn home(session: &mut USSDSession) {
 
 pub trait USSDAction {
     fn display(&self) -> Option<String>;
-    fn execute(&self, session: &mut USSDSession, request: &USSDRequest, function_path: String);
+    fn execute(
+        &self,
+        session: &mut USSDSession,
+        request: &USSDRequest,
+        function_path: String,
+        services: &HashMap<String, USSDService>,
+    );
 }
 
 impl USSDAction for Screen {
@@ -245,7 +263,13 @@ impl USSDAction for Screen {
         }
     }
 
-    fn execute(&self, session: &mut USSDSession, request: &USSDRequest, function_path: String) {
+    fn execute(
+        &self,
+        session: &mut USSDSession,
+        request: &USSDRequest,
+        function_path: String,
+        services: &HashMap<String, USSDService>,
+    ) {
         let input = request.input.trim();
 
         // if input is 0, go back
@@ -306,7 +330,7 @@ impl USSDAction for Screen {
             ScreenType::Function => {
                 if let Some(function_name) = &self.function {
                     // Call the function
-                    call_function(session, function_name, function_path, &request);
+                    call_function(session, &request, services, function_name, function_path);
                 }
                 session.current_screen = self.default_next_screen.clone();
             }
@@ -333,14 +357,15 @@ impl USSDAction for Screen {
 
 // Dummy function to call service
 fn call_function(
-    _session: &USSDSession,
-    _function_name: &str,
-    _functions_path: String,
-    _request: &USSDRequest,
-) -> String {
-    // Implement logic to call the function
-    // For simplicity, let's assume it always returns a response message
-    "Function called successfully".to_string()
+    session: &mut USSDSession,
+    request: &USSDRequest,
+    services: &HashMap<String, USSDService>,
+    function_name: &str,
+    functions_path: String,
+) {
+    let service = services.get(function_name).unwrap();
+
+    service.call(session, request, functions_path);
 }
 
 /// Evaluates the router options.
