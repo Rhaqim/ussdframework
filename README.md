@@ -29,70 +29,16 @@ Here's a simple example of how to create a USSD menu using the USSD Framework wi
 
 ### Example
 
-```rust
-use actix_web::{web, App, HttpResponse, HttpServer};
-use std::{collections::HashMap, sync::Mutex};
-use ussdframework::prelude::*;
+You can find a complete example of a USSD application built with the USSD Framework [EXAMPLE](examples/basic_usage.rs). or buy running the following command:
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(move || {
-        let session_store = InMemorySessionStore::new();
-        let app = UssdApp::new("config/functions".to_string(), Box::new(session_store));
+```bash
+cargo run --example basic_usage
+```
 
-        let content = include_str!("../examples/data/menu.json");
-        let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+Using make:
 
-        App::new()
-            .app_data(web::Data::new(app))
-            .app_data(web::Data::new(menus))
-            .route("/ussd", web::post().to(handle_ussd))
-    })
-    .bind("127.0.0.1:3000")?
-    .run()
-    .await
-}
-
-async fn handle_ussd(
-    req: web::Json<USSDRequest>,
-    app: web::Data<UssdApp>,
-    menus: web::Data<USSDMenu>,
-) -> HttpResponse {
-    let request = req.into_inner();
-    let response = app.run(request, menus.get_ref().clone());
-    HttpResponse::Ok().body(response.message)
-}
-
-pub struct InMemorySessionStore {
-    data: Mutex<HashMap<String, String>>,
-}
-
-impl InMemorySessionStore {
-    pub fn new() -> Self {
-        Self {
-            data: Mutex::new(HashMap::new()),
-        }
-    }
-}
-
-impl SessionCache for InMemorySessionStore {
-    fn store_session(&self, session: &USSDSession) -> Result<(), String> {
-        let mut data = self.data.lock().unwrap();
-        data.insert(
-            session.session_id.clone(),
-            serde_json::to_string(session).unwrap(),
-        );
-        Ok(())
-    }
-
-    fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String> {
-        let data = self.data.lock().unwrap();
-        match data.get(session_id) {
-            Some(session) => Ok(Some(serde_json::from_str(session).unwrap())),
-            None => Ok(None),
-        }
-    }
-}
+```bash
+make run-example
 ```
 
 ### Menu Configuration
@@ -123,120 +69,9 @@ The services that can be called from the menu are also defined in the configurat
 - **function_url**: The URL the function calls for other services.
 - **data_key**: The key to use for the data returned from the function call.
 
-Here's an example of a menu configuration:
+You can find an example of a menu configuration [here](examples/data/menu.json).
 
-```json
-{
-	"menus": {
-		"InitialScreen": {
-			"text": "Welcome to the system",
-			"screen_type": "Initial",
-			"default_next_screen": "MainScreen"
-		},
-		"MainScreen": {
-			"text": "Main Menu",
-			"screen_type": "Menu",
-			"default_next_screen": "DefaultNoneScreen",
-			"menu_items": {
-				"BalanceOption": {
-					"option": "1",
-					"display_name": "Balance Inquiry",
-					"next_screen": "BalanceInquiryScreen"
-				},
-				"AirtimeOption": {
-					"option": "3",
-					"display_name": "Buy Airtime",
-					"next_screen": "AirtimeScreen"
-				}
-			}
-		},
-		"DefaultNoneScreen": {
-			"text": "Thank you for using the system",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		},
-		"BalanceInquiryScreen": {
-			"text": "Select Account",
-			"screen_type": "Menu",
-			"default_next_screen": "MainScreen",
-			"menu_items": {
-				"SavingsOption": {
-					"option": "1",
-					"display_name": "Savings",
-					"next_screen": "MainScreen"
-				},
-				"CurrentOption": {
-					"option": "2",
-					"display_name": "Current",
-					"next_screen": "MainScreen"
-				}
-			}
-		},
-		"AirtimeScreen": {
-			"text": "Select option",
-			"screen_type": "Menu",
-			"default_next_screen": "MainScreen",
-			"menu_items": {
-				"OwnNumberOption": {
-					"option": "1",
-					"display_name": "Own Number",
-					"next_screen": "OwnNumberAmountScreen"
-				},
-				"OtherNumberOption": {
-					"option": "2",
-					"display_name": "Other Number",
-					"next_screen": "OtherNumberAmountScreen"
-				}
-			}
-		},
-		"OwnNumberAmountScreen": {
-			"text": "Enter amount",
-			"screen_type": "Input",
-			"input_identifier": "amount",
-			"default_next_screen": "OwnNumberFunctionScreen"
-		},
-		"OwnNumberFunctionScreen": {
-			"text": "Processing...",
-			"screen_type": "Function",
-			"function": "buy_airtime",
-			"default_next_screen": "OwnNumberRouterScreen"
-		},
-		"OwnNumberRouterScreen": {
-			"text": "Routing...",
-			"screen_type": "Router",
-			"router_options": [
-				{
-					"router_option": "{{airtime.status == `success`}}",
-					"next_screen": "SuccessScreen"
-				},
-				{
-					"router_option": "{{airtime.status == `failed`}}",
-					"next_screen": "OwnNumberFailedScreen"
-				}
-			],
-			"default_next_screen": "DefaultNoneScreen"
-		},
-		"SuccessScreen": {
-			"text": "Transaction Successful",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		},
-		"OwnNumberFailedScreen": {
-			"text": "Transaction Failed",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		}
-	},
-	"services": {
-		"buy_airtime": {
-			"function_name": "buy_airtime",
-			"functions_path": "services/buy_airtime.js",
-			"function_url": "http://localhost:3000/buy_airtime",
-			"data_key": "airtime"
-		}
-	}
-}
-```
+
 
 It contains the menu items and the services that can be called from the menu.
 
