@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error, info, prelude::USSDRequest, types::HashStrAny, ussd_session::USSDSession,
+    error, info, types::HashStrAny, ussd_request::USSDRequest, ussd_session::USSDSession,
     utils::FUNCTION_MAP,
 };
 

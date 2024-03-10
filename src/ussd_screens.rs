@@ -1,6 +1,6 @@
 use crate::{
     debug, error, info,
-    prelude::USSDService,
+    prelude::{evaluate_expression, USSDService},
     types::HashStrAny,
     ussd_request::USSDRequest,
     ussd_response::USSDResponse,
@@ -157,7 +157,7 @@ pub fn process_request(
                     {
                         debug!("Displaying message for screen: {}", current_screen);
 
-                        let message = screen.display();
+                        let message = screen.display(&session);
 
                         match message {
                             Some(message) => {
@@ -215,7 +215,7 @@ fn home(session: &mut USSDSession) {
 }
 
 pub trait USSDAction {
-    fn display(&self) -> Option<String>;
+    fn display(&self, session: &USSDSession) -> Option<String>;
     fn execute(
         &self,
         session: &mut USSDSession,
@@ -226,13 +226,14 @@ pub trait USSDAction {
 }
 
 impl USSDAction for Screen {
-    fn display(&self) -> Option<String> {
+    fn display(&self, session: &USSDSession) -> Option<String> {
         let mut message = String::new();
 
         match self.screen_type {
             ScreenType::Initial => None,
             ScreenType::Menu => {
-                message.push_str(&self.text);
+                let text = evaluate_expression(&self.text, session);
+                message.push_str(&text);
 
                 if let Some(menu_items) = &self.menu_items {
                     let mut sorted_menu_items: Vec<(&String, &MenuItems)> =
@@ -251,13 +252,15 @@ impl USSDAction for Screen {
                 Some(message)
             }
             ScreenType::Input => {
-                message.push_str(&self.text);
+                let text = evaluate_expression(&self.text, session);
+                message.push_str(&text);
                 Some(message)
             }
             ScreenType::Function => None,
             ScreenType::Router => None,
             ScreenType::Quit => {
-                message.push_str(&self.text);
+                let text = evaluate_expression(&self.text, session);
+                message.push_str(&text);
                 Some(message)
             }
         }
