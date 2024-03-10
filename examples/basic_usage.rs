@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
         let content = include_str!("../examples/data/menu.json");
         let menus: USSDMenu = serde_json::from_str(&content).unwrap();
 
-        register_function("buy_airtime", functions::buy_airtime);
+        register_functions(functions::get_functions());
 
         App::new()
             .app_data(web::Data::new(app))

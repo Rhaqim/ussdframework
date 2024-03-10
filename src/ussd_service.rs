@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    prelude::USSDRequest, types::HashStrAny, ussd_session::USSDSession, utils::FUNCTION_MAP,
+    error, info, prelude::USSDRequest, types::HashStrAny, ussd_session::USSDSession,
+    utils::FUNCTION_MAP,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -59,23 +62,31 @@ impl USSDServiceTrait for USSDService {
 
     fn load_function(
         &self,
-        base_functions_path: String,
+        _base_functions_path: String,
     ) -> Box<dyn Fn(&USSDRequest, &str) -> HashStrAny> {
-        // Get the function parts
-
-        let mut parts = self.function_name.split('.');
-        let file_name = parts.next().expect("Invalid function file name");
-        let function_name = parts.next().expect("Invalid function name");
-
-        let function_path = format!("{}/{}.::{}", base_functions_path, file_name, function_name);
-
-        let function: fn(&USSDRequest, &str) -> HashStrAny = FUNCTION_MAP
+        // Load the function from the functions_path
+        let func = FUNCTION_MAP
             .lock()
             .unwrap()
-            .get(&function_path)
-            .unwrap()
-            .clone();
+            .get(&self.function_name)
+            .cloned();
 
-        Box::new(function)
+        match func {
+            Some(f) => {
+                info!("Function found: {}", self.function_name);
+                Box::new(f.clone())
+            }
+            None => {
+                error!("Function not found: {}", self.function_name);
+                Box::new(|_request: &USSDRequest, _url: &str| {
+                    let mut result = HashMap::new();
+                    result.insert(
+                        "error".to_string(),
+                        HashStrAny::Str("Function not found".to_string()),
+                    );
+                    HashStrAny::Dict(result)
+                })
+            }
+        }
     }
 }

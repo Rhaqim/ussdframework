@@ -19,10 +19,8 @@ pub fn register_function(path: &str, function_ptr: fn(&USSDRequest, &str) -> Has
     FUNCTION_MAP.lock().unwrap().insert(function_name, function_ptr);
 }
 
-#[macro_export]
-macro_rules! register_function {
-    ($path:expr, $function_ptr:expr) => {
-        $crate::utils::register_function($path, $function_ptr);
-    };
+pub fn register_functions(functions_map: HashMap<String, fn(&USSDRequest, &str) -> HashStrAny>) {
+    for (path, function) in functions_map {
+        register_function(&path, function);
+    }
 }
-
