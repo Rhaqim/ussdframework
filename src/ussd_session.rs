@@ -124,6 +124,17 @@ impl USSDSession {
             }
         }
     }
+
+    pub fn update_session(&mut self, session_cache: &Box<dyn SessionCache>) {
+        // Store the current screen in the session's visited screens
+        self.visited_screens.push(self.current_screen.clone());
+
+        // Update the session's last interaction time
+        self.update_last_interaction_time();
+
+        // Store the session
+        self.store_session(&session_cache).unwrap();
+    }
 }
 
 pub trait SessionCache {
