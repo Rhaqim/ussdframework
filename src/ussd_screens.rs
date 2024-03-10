@@ -113,6 +113,10 @@ pub fn process_request(
     loop {
         match screens.menus.get(&current_screen) {
             Some(screen) => match screen.screen_type {
+                // Execute the screen action for Function, Router, and Initial screen types
+                // They contain no display message
+                // They are used to execute a function, route to another screen, or set the initial screen
+                // The next screen is set based on the action
                 ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
                     info!(
                         "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
@@ -127,6 +131,11 @@ pub fn process_request(
 
                     continue;
                 }
+                // Display the screen message and execute the screen action for Menu and Input screen types
+                // They contain a display message
+                // The next screen is set based on the action
+                // It checks if the current screen has been displayed
+                // If not, it displays the message and sets the current screen as displayed and also routes back to the current screen
                 _ => {
                     info!(
                         "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
@@ -135,6 +144,7 @@ pub fn process_request(
 
                     debug!("Session: {:?}", session);
 
+                    // Represents the current screen being displayed in the session.
                     let current_screen_displayed = session.displayed.get(&current_screen);
 
                     debug!("Current Screen Displayed: {:?}", current_screen_displayed);
