@@ -47,7 +47,7 @@ pub enum HashStrAny {
     Str(String),
     Int(i32),
     Float(f32),
-    Bool(bool),
+    Bool(HashMap<String, bool>),
     List(Vec<HashStrAny>),
     ListStr(Vec<String>),
     Dict(HashMap<String, HashStrAny>),

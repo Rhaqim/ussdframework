@@ -110,16 +110,14 @@ pub fn process_request(
 
     let mut current_screen = session.current_screen.clone();
 
-    info!(
-        "\nCurrent screen: {} \nRequest: {:?}",
-        current_screen, request
-    );
-
     loop {
         match screens.menus.get(&current_screen) {
             Some(screen) => match screen.screen_type {
                 ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
-                    debug!("Ruuning for Function, Router and Initial");
+                    info!(
+                        "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
+                        screen.screen_type, current_screen, request
+                    );
 
                     screen.execute(&mut session, request, functions_path.clone());
 
@@ -130,26 +128,51 @@ pub fn process_request(
                     continue;
                 }
                 _ => {
-                    debug!("Ruuning for Menu, Input and Quit");
+                    info!(
+                        "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
+                        screen.screen_type, current_screen, request
+                    );
 
-                    let message = screen.display();
+                    debug!("Session: {:?}", session);
 
-                    match message {
-                        Some(message) => {
-                            response.message = message;
+                    let current_screen_displayed = session.displayed.get(&current_screen);
+
+                    debug!("Current Screen Displayed: {:?}", current_screen_displayed);
+
+                    if current_screen_displayed.is_none()
+                        || current_screen_displayed.unwrap() == &false
+                    {
+                        debug!("Displaying message for screen: {}", current_screen);
+
+                        let message = screen.display();
+
+                        match message {
+                            Some(message) => {
+                                response.message = message;
+                            }
+                            None => {
+                                response.message = "Something went wrong, please stop".to_string();
+                            }
                         }
-                        None => {
-                            response.message = "Something went wrong, please stop".to_string();
-                        }
+
+                        session.displayed.insert(current_screen.clone(), true);
+
+                        session.update_session(session_cache);
+
+                        session.current_screen = current_screen.clone();
+
+                        break;
+                    } else {
+                        debug!("Executing action for screen: {}", current_screen);
+
+                        screen.execute(&mut session, request, functions_path.clone());
+
+                        session.update_session(session_cache);
+
+                        current_screen = session.current_screen.clone();
+
+                        continue;
                     }
-
-                    session.current_screen = current_screen;
-
-                    // screen.execute(&mut session, request, functions_path.clone());
-
-                    // session.update_session(session_cache);
-
-                    break;
                 }
             },
             None => {
@@ -160,39 +183,6 @@ pub fn process_request(
 
     return response;
 }
-
-// match screens.menus.get(&current_screen) {
-//     Some(screen) => {
-//         let message = screen.display();
-
-//         screen.execute(&mut session, request, functions_path.clone());
-
-//         // Store the current screen in the session's visited screens
-//         session.visited_screens.push(session.current_screen.clone());
-
-//         // Update the session's last interaction time
-//         session.update_last_interaction_time();
-
-//         // Store the session
-//         session.store_session(&session_cache).unwrap();
-
-//         match message {
-//             Some(message) => {
-//                 response.message = message;
-//                 return response;
-//             }
-//             None => {
-//                 response.message = "Something went wrong, please try again later".to_string();
-
-//                 return response;
-//             }
-//         }
-//     }
-//     None => {
-//         return response;
-//     }
-// };
-// }
 
 fn back(session: &mut USSDSession) {
     // switch to the previous screen
