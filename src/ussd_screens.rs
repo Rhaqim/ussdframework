@@ -119,8 +119,8 @@ pub fn process_request(
                 // The next screen is set based on the action
                 ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
                     info!(
-                        "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
-                        screen.screen_type, current_screen, request
+                        "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
+                        current_screen, screen.screen_type, request
                     );
 
                     screen.execute(&mut session, request, functions_path.clone());
@@ -138,16 +138,12 @@ pub fn process_request(
                 // If not, it displays the message and sets the current screen as displayed and also routes back to the current screen
                 _ => {
                     info!(
-                        "\nRunning for {:?}\nCuurent Screen: {}\nRequest : {:?}\n",
-                        screen.screen_type, current_screen, request
+                        "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
+                        current_screen, screen.screen_type, request
                     );
-
-                    debug!("Session: {:?}", session);
 
                     // Represents the current screen being displayed in the session.
                     let current_screen_displayed = session.displayed.get(&current_screen);
-
-                    debug!("Current Screen Displayed: {:?}", current_screen_displayed);
 
                     if current_screen_displayed.is_none()
                         || current_screen_displayed.unwrap() == &false
