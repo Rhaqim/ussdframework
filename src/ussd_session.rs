@@ -5,20 +5,45 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{helper::stack::Stack, types::HashStrAny};
+use crate::{
+    info,
+    types::{HashStrAny, Stack},
+    ussd_request::USSDRequest
+};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
     pub current_screen: String,
+    pub displayed: HashMap<String, bool>,
     pub visited_screens: Stack<String>,
     pub last_interaction_time: SystemTime,
     pub end_session: bool,
-    // Add any other session-related data here
+    pub language: String,
+    pub msisdn: String,
 }
 
 impl USSDSession {
+    pub fn new(
+        session_id: String,
+        current_screen: String,
+        language: String,
+        msisdn: String,
+    ) -> Self {
+        USSDSession {
+            session_id,
+            data: HashMap::new(),
+            current_screen,
+            displayed: HashMap::new(),
+            visited_screens: Stack::new(),
+            last_interaction_time: SystemTime::now(),
+            end_session: false,
+            language,
+            msisdn,
+        }
+    }
+
     // Check if session has timed out
     pub fn has_timed_out(&self, timeout_duration: Duration) -> bool {
         self.last_interaction_time.elapsed().unwrap_or_default() > timeout_duration
@@ -46,12 +71,15 @@ impl USSDSession {
     }
 
     // Store session
-    pub fn store_session(&self, cache: &impl SessionCache) -> Result<(), String> {
+    pub fn store_session(&self, cache: &Box<dyn SessionCache>) -> Result<(), String> {
         cache.store_session(&self)
     }
 
     // Retrieve session
-    pub fn retrieve_session(session_id: &str, cache: &impl SessionCache) -> Result<Self, String> {
+    pub fn retrieve_session(
+        session_id: &str,
+        cache: &Box<dyn SessionCache>,
+    ) -> Result<Self, String> {
         let session = cache.retrieve_session(session_id);
 
         match session {
@@ -63,16 +91,17 @@ impl USSDSession {
 
     // Get or create session
     pub fn get_or_create_session(
-        session_id: &str,
+        request: &USSDRequest,
         initial_screen: &str,
-        timeout_duration: Duration,
-        cache: &impl SessionCache,
+        cache: &Box<dyn SessionCache>,
     ) -> Self {
-        let retrieved_session = USSDSession::retrieve_session(session_id, cache);
+        let retrieved_session = USSDSession::retrieve_session(&request.session_id, &cache);
 
         match retrieved_session {
             Ok(session) => {
                 // Update last interaction time for existing session
+                info!("Retrieved session {:?}", session);
+
                 let mut session = session;
                 session.update_last_interaction_time();
                 session
@@ -80,17 +109,34 @@ impl USSDSession {
             Err(_) => {
                 // Create new session
                 let new_session = USSDSession {
-                    session_id: session_id.to_string(),
+                    session_id: request.session_id.clone(),
                     data: HashMap::new(),
                     current_screen: initial_screen.to_string(),
+                    displayed: HashMap::new(),
                     visited_screens: Stack::new(),
                     last_interaction_time: SystemTime::now(),
                     end_session: false,
+                    language: request.language.clone(),
+                    msisdn: request.msisdn.clone(),
                 };
-                new_session.store_session(cache).unwrap();
+
+                info!("New session {:?}", new_session);
+
+                new_session.store_session(&cache).unwrap();
                 new_session
             }
         }
+    }
+
+    pub fn update_session(&mut self, session_cache: &Box<dyn SessionCache>) {
+        // Store the current screen in the session's visited screens
+        self.visited_screens.push(self.current_screen.clone());
+
+        // Update the session's last interaction time
+        self.update_last_interaction_time();
+
+        // Store the session
+        self.store_session(&session_cache).unwrap();
     }
 }
 

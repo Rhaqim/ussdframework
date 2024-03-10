@@ -1,103 +1,103 @@
 {
 	"menus": {
 		"InitialScreen": {
-			"title": "Welcome to the system",
-			"type": "Initial",
+			"text": "Welcome to the system",
+			"screen_type": "Initial",
 			"default_next_screen": "MainScreen"
 		},
 		"MainScreen": {
-			"title": "Main Menu",
-			"type": "Menu",
+			"text": "Main Menu",
+			"screen_type": "Menu",
 			"default_next_screen": "DefaultNoneScreen",
 			"menu_items": {
 				"BalanceOption": {
 					"option": "1",
 					"display_name": "Balance Inquiry",
-					"default_next_screen": "BalanceInquiryScreen"
+					"next_screen": "BalanceInquiryScreen"
 				},
 				"SendMoneyOption": {
 					"option": "2",
 					"display_name": "Send Money",
-					"default_next_screen": "SendMoneyScreen"
+					"next_screen": "SendMoneyScreen"
 				},
 				"AirtimeOption": {
 					"option": "3",
 					"display_name": "Buy Airtime",
-					"default_next_screen": "AirtimeScreen"
+					"next_screen": "AirtimeScreen"
 				}
 			}
 		},
 		"DefaultNoneScreen": {
-			"title": "Thank you for using the system",
-			"type": "Quit",
+			"text": "Thank you for using the system",
+			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		},
 		"BalanceInquiryScreen": {
-			"title": "Select Account",
-			"type": "Menu",
+			"text": "Select Account",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"SavingsOption": {
 					"option": "1",
 					"display_name": "Savings",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				},
 				"CurrentOption": {
 					"option": "2",
 					"display_name": "Current",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				}
 			}
 		},
 		"SendMoneyScreen": {
-			"title": "Select option",
-			"type": "Menu",
+			"text": "Select option",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"OwnAccountOption": {
 					"option": "1",
 					"display_name": "Own Account",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				},
 				"OtherAccountOption": {
 					"option": "2",
 					"display_name": "Other Account",
-					"default_next_screen": "MainScreen"
+					"next_screen": "MainScreen"
 				}
 			}
 		},
 		"AirtimeScreen": {
-			"title": "Select option",
-			"type": "Menu",
+			"text": "Select option",
+			"screen_type": "Menu",
 			"default_next_screen": "MainScreen",
 			"menu_items": {
 				"OwnNumberOption": {
 					"option": "1",
 					"display_name": "Own Number",
-					"default_next_screen": "OwnNumberAmountScreen"
+					"next_screen": "OwnNumberAmountScreen"
 				},
 				"OtherNumberOption": {
 					"option": "2",
 					"display_name": "Other Number",
-					"default_next_screen": "OtherNumberAmountScreen"
+					"next_screen": "OtherNumberAmountScreen"
 				}
 			}
 		},
 		"OwnNumberAmountScreen": {
-			"title": "Enter amount",
-			"type": "Input",
+			"text": "Enter amount",
+			"screen_type": "Input",
             "input_identifier": "amount",
 			"default_next_screen": "OwnNumberFunctionScreen"
 		},
         "OwnNumberFunctionScreen": {
-            "title": "Processing...",
-            "type": "Function",
+            "text": "Processing...",
+            "screen_type": "Function",
             "function": "buy_airtime",
             "default_next_screen": "OwnNumberRouterScreen"
         },
         "OwnNumberRouterScreen": {
-            "title": "Selecting...",
-            "type": "Router",
+            "text": "Selecting...",
+            "screen_type": "Router",
             "router": "AirtimeScreen",
             "router_options": [
 				{
@@ -116,8 +116,8 @@
             "default_next_screen": "DefaultNoneScreen"
         },
 		"SuccessScreen": {
-			"title": "Transaction Successful",
-			"type": "Quit",
+			"text": "Transaction Successful",
+			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		}
 	},
