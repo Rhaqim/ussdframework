@@ -362,7 +362,38 @@ impl USSDAction for Screen {
     }
 }
 
-// Dummy function to call service
+/// Call the function
+///
+/// # Arguments
+///
+/// * `session` - The USSD session.
+/// * `request` - The USSD request.
+/// * `services` - The USSD services.
+/// * `function_name` - The name of the function to call.
+/// * `functions_path` - The path to the functions used by the USSD application.
+///
+/// # Example
+///
+/// ```
+/// use crate::ussd_screens::call_function;
+/// use crate::ussd_request::USSDRequest;
+/// use crate::ussd_session::USSDSession;
+/// use std::collections::HashMap;
+///
+/// let mut session = USSDSession::new();
+/// let request = USSDRequest {
+///    msisdn
+///    session_id
+///    service_code
+///    input
+///    language
+/// };
+/// let services = HashMap::new();
+/// let function_name = "function_name".to_string();
+/// let functions_path = "path/to/functions".to_string();
+///
+/// call_function(&mut session, &request, &services, &function_name, &functions_path);
+/// ```
 fn call_function(
     session: &mut USSDSession,
     request: &USSDRequest,
