@@ -101,22 +101,22 @@
             "router": "AirtimeScreen",
             "router_options": [
 				{
-					"router_option": "{{airtime.status == `success`}}",
+					"router_option": "{{airtime.status == 'success'}}",
 					"next_screen": "SuccessScreen"
 				},
 				{
-					"router_option": "{{airtime.status == `failed`}}",
+					"router_option": "{{airtime.status == 'failed'}}",
 					"next_screen": "OwnNumberAmountScreen"
 				},
 				{
-					"router_option": "{{airtime.status == `error`}}",
+					"router_option": "{{airtime.status == 'error'}}",
 					"next_screen": "OtherNumberAmountScreen"
 				}
 			],
             "default_next_screen": "DefaultNoneScreen"
         },
 		"SuccessScreen": {
-			"text": "Transaction Successful",
+			"text": "Transaction Successful {{airtime.message}}",
 			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		}

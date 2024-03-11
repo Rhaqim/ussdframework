@@ -5,4 +5,4 @@ pub use crate::ussd_response::USSDResponse;
 pub use crate::ussd_service::USSDService;
 pub use crate::ussd_session::{USSDSession, SessionCache};
 pub use crate::types::{HashStrAny, Stack};
-pub use crate::utils::{register_functions, evaluate_expression, FUNCTION_MAP};
+pub use crate::utils::{register_functions, FUNCTION_MAP};
