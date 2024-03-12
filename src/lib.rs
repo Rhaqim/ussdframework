@@ -71,29 +71,67 @@ impl UssdApp {
     }
 }
 
-// pub mod prelude;
-// pub mod menu;
+#[cfg(feature = "menubuilder")]
+pub mod menubuilder {
+    pub mod menubuilder {
+        use crate::menu::USSDMenu;
+        use crate::ussd_screens::Screen;
+        use crate::ussd_service::USSDService;
+        use diesel::{self, prelude::*};
 
-// pub struct UssdApp {
-//     // You can define any necessary fields here
-// }
+        pub struct MenuBuilder {
+            pub service_code: String,
+            pub connection: DbConnection,
+        }
 
-// impl UssdApp {
-//     pub fn new() -> Self {
-//         // Initialize any necessary resources
-//         UssdApp {}
-//     }
+        impl MenuBuilder {
+            pub fn new(service_code: &str, connection: DbConnection) -> Self {
+                MenuBuilder {
+                    service_code: service_code.to_string(),
+                    connection,
+                }
+            }
 
-//     pub fn menu<F>(&mut self, name: &str, builder: F)
-//     where
-//         F: FnOnce(&mut menu::MenuBuilder),
-//     {
-//         let mut menu_builder = menu::MenuBuilder::new(name);
-//         builder(&mut menu_builder);
-//         // Store or process the constructed menu
-//     }
+            pub fn add_screen(&self, screen: Screen) {
+                diesel::insert_into(screens::table)
+                    .values(&screen)
+                    .execute(&self.connection)
+                    .expect("Error saving new screen");
+            }
 
-//     pub fn run(&self) {
-//         // Execute the USSD application
-//     }
-// }
+            pub fn add_service(&self, service: USSDService) {
+                // Add the service to the database
+                diesel::insert_into(services::table)
+                    .values(&service)
+                    .execute(&self.connection)
+                    .expect("Error saving new service");
+            }
+
+            pub fn build(&self) -> USSDMenu {
+                // Build the USSD menu
+                let mut menus = HashMap::new();
+                let mut services = HashMap::new();
+
+                // Add the screens and services to the menu
+                for screen in Screen::belonging_to(&self.service_code)
+                    .load::<Screen>(&self.connection)
+                    .expect("Error loading screens")
+                {
+                    menus.insert(screen.name.clone(), screen);
+                }
+
+                for service in USSDService::belonging_to(&self.service_code)
+                    .load::<USSDService>(&self.connection)
+                    .expect("Error loading services")
+                {
+                    services.insert(service.name.clone(), service);
+                }
+
+                USSDMenu { menus, services }
+            }
+        }
+    }
+}
+
+#[cfg(not(feature = "menubuilder"))]
+pub struct MenuBuilder {}

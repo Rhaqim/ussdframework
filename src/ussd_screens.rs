@@ -30,6 +30,8 @@ pub struct Screen {
     pub screen_type: ScreenType,
     pub default_next_screen: String,
     #[serde(default)]
+    pub service_code: Option<String>,
+    #[serde(default)]
     pub menu_items: Option<HashMap<String, MenuItems>>,
     #[serde(default)]
     pub function: Option<String>,

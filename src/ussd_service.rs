@@ -13,6 +13,7 @@ pub struct USSDService {
     pub function_name: String,
     pub function_url: Option<String>,
     pub data_key: String,
+    pub service_code: Option<String>,
 }
 
 pub trait USSDServiceTrait {
@@ -21,6 +22,7 @@ pub trait USSDServiceTrait {
         function_name: String,
         function_url: Option<String>,
         data_key: String,
+        service_code: Option<String>,
     ) -> Self;
     fn call(&self, session: &mut USSDSession, request: &USSDRequest, functions_path: String);
     fn load_function(
@@ -35,12 +37,14 @@ impl USSDServiceTrait for USSDService {
         function_name: String,
         function_url: Option<String>,
         data_key: String,
+        service_code: Option<String>,
     ) -> Self {
         Self {
             functions_path,
             function_name,
             function_url,
             data_key,
+            service_code,
         }
     }
 

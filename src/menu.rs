@@ -51,6 +51,33 @@ impl USSDMenu {
         }
         panic!("No initial screen found!");
     }
+
+    pub fn belonging_to(&self, service_code: &str) -> USSDMenu {
+        let mut menus = HashMap::new();
+        let mut services = HashMap::new();
+
+        for (name, screen) in self.menus.iter() {
+            match screen.service_code {
+                Some(ref code) if code == service_code => {
+                    menus.insert(name.clone(), screen.clone());
+                }
+                None => {}
+                _ => {}
+            }
+        }
+
+        for (name, service) in self.services.iter() {
+            match service.service_code {
+                Some(ref code) if code == service_code => {
+                    services.insert(name.clone(), service.clone());
+                }
+                None => {}
+                _ => {}
+            }
+        }
+
+        USSDMenu { menus, services }
+    }
 }
 
 // pub struct MenuBuilder {

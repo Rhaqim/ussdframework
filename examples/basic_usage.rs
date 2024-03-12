@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use std::{collections::HashMap, sync::Mutex};
 use ussdframework::prelude::*;
 
@@ -19,11 +19,17 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(app))
             .app_data(web::Data::new(menus))
+            .service(health_check)
             .route("/ussd", web::post().to(handle_ussd))
     })
     .bind("127.0.0.1:3000")?
     .run()
     .await
+}
+
+#[get("/")]
+async fn health_check() -> impl Responder {
+    format!("Welcome to the USSD server")
 }
 
 async fn handle_ussd(
