@@ -1,7 +1,7 @@
 mod log;
 mod menu;
 pub mod prelude;
-mod types;
+pub mod types;
 mod ussd_request;
 mod ussd_response;
 mod ussd_screens;

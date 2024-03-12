@@ -38,9 +38,121 @@ pub enum HashStrAny {
 }
 
 impl HashStrAny {
+    pub fn new() -> HashStrAny {
+        HashStrAny::None
+    }
     // Helper function to create a new HashStrAny::Dict variant
     pub fn new_dict(dict: HashMap<String, HashStrAny>) -> HashStrAny {
         HashStrAny::Dict(dict)
+    }
+
+    /// Convert a JSON value to a HashStrAny value
+    /// This function is recursive and will convert nested JSON values to HashStrAny values
+    /// The HashStrAny type is a custom enum type that can represent any JSON value
+    ///
+    /// # Arguments
+    ///
+    /// * `json` - A JSON value
+    ///
+    /// # Returns
+    ///
+    /// A HashStrAny value
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use serde_json::json;
+    /// use serde_json::Value;
+    ///
+    /// let json = json!({
+    ///    "one": "1",
+    ///   "two": "2"
+    /// });
+    ///
+    /// let hash_str_any = json_to_hash_str_any(json);
+    /// ```
+    pub fn json_to_hash_str_any(&self, json: Value) -> Self {
+        match json {
+            Value::Null => HashStrAny::None,
+            Value::Bool(b) => HashStrAny::Str(b.to_string()),
+            Value::Number(n) => {
+                if let Some(i) = n.as_i64() {
+                    HashStrAny::Int(i as i64)
+                } else if let Some(f) = n.as_f64() {
+                    HashStrAny::Float(f as f64)
+                } else {
+                    HashStrAny::None
+                }
+            }
+            Value::String(s) => HashStrAny::Str(s),
+            Value::Array(arr) => {
+                let mut list = Vec::new();
+                for val in arr {
+                    list.push(self.json_to_hash_str_any(val));
+                }
+                HashStrAny::List(list)
+            }
+            Value::Object(obj) => {
+                let mut dict = HashMap::new();
+                for (key, val) in obj {
+                    dict.insert(key, self.json_to_hash_str_any(val));
+                }
+                HashStrAny::Dict(dict)
+            }
+        }
+    }
+
+    /// Convert a HashStrAny value to a JSON value
+    /// This function is recursive and will convert nested HashStrAny values to JSON values
+    /// The HashStrAny type is a custom enum type that can represent any JSON value
+    ///
+    /// # Arguments
+    ///
+    /// * `hash_any` - A HashStrAny value
+    ///
+    /// # Returns
+    ///
+    /// A JSON value
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use serde_json::json;
+    /// use serde_json::Value;
+    ///
+    /// let hash_str_any = HashStrAny::Dict({
+    ///    let mut dict = HashMap::new();
+    ///   dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
+    ///  dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
+    /// dict
+    /// });
+    ///
+    /// let json = hash_str_any_to_json(hash_str_any);
+    /// `
+    pub fn hash_str_any_to_json(&self, hash_any: HashStrAny) -> Value {
+        match hash_any {
+            HashStrAny::Str(s) => Value::String(s),
+            HashStrAny::Int(i) => Value::Number(i.into()),
+            HashStrAny::Float(f) => Value::Number((f as i64).into()),
+            HashStrAny::List(list) => {
+                let items: Vec<Value> = list
+                    .into_iter()
+                    .map(|item| self.hash_str_any_to_json(item))
+                    .collect();
+                Value::Array(items)
+            }
+            HashStrAny::ListStr(list) => {
+                Value::Array(list.into_iter().map(Value::String).collect())
+            }
+            HashStrAny::Dict(dict) => {
+                let mut obj = serde_json::Map::new();
+                for (key, value) in dict {
+                    obj.insert(key, self.hash_str_any_to_json(value));
+                }
+                Value::Object(obj)
+            }
+            HashStrAny::None => Value::Null,
+        }
     }
 }
 
@@ -62,26 +174,26 @@ impl Display for HashStrAny {
 /// Convert a JSON value to a HashStrAny value
 /// This function is recursive and will convert nested JSON values to HashStrAny values
 /// The HashStrAny type is a custom enum type that can represent any JSON value
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `json` - A JSON value
-/// 
+///
 /// # Returns
-/// 
+///
 /// A HashStrAny value
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use serde_json::json;
 /// use serde_json::Value;
-/// 
+///
 /// let json = json!({
 ///    "one": "1",
 ///   "two": "2"
 /// });
-/// 
+///
 /// let hash_str_any = json_to_hash_str_any(json);
 /// ```
 pub fn json_to_hash_str_any(json: Value) -> HashStrAny {
@@ -118,28 +230,28 @@ pub fn json_to_hash_str_any(json: Value) -> HashStrAny {
 /// Convert a HashStrAny value to a JSON value
 /// This function is recursive and will convert nested HashStrAny values to JSON values
 /// The HashStrAny type is a custom enum type that can represent any JSON value
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `hash_any` - A HashStrAny value
-/// 
+///
 /// # Returns
-/// 
+///
 /// A JSON value
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 /// use serde_json::json;
 /// use serde_json::Value;
-/// 
+///
 /// let hash_str_any = HashStrAny::Dict({
 ///    let mut dict = HashMap::new();
 ///   dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
 ///  dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
 /// dict
 /// });
-/// 
+///
 /// let json = hash_str_any_to_json(hash_str_any);
 /// `
 pub fn hash_str_any_to_json(hash_any: HashStrAny) -> Value {

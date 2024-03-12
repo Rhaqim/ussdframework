@@ -1,21 +1,25 @@
-use std::collections::HashMap;
-
-use ussdframework::prelude::{HashStrAny, USSDRequest};
+use serde_json::json;
+use ussdframework::prelude::USSDRequest;
+use ussdframework::types::HashStrAny;
 
 pub fn buy_airtime(_request: &USSDRequest, _url: &str) -> HashStrAny {
-    let mut response = HashMap::new();
-    
-    response.insert("status".to_string(), HashStrAny::Str("success".to_string()));
-    response.insert("message".to_string(), HashStrAny::Str("Airtime bought successfully".to_string()));
-    
-    HashStrAny::Dict(response)
+    let json = json!({
+        "status": "success",
+        "message": "Airtime bought successfully"
+    });
+
+    let data = HashStrAny::new();
+
+    data.json_to_hash_str_any(json)
 }
 
 pub fn get_balance(_request: &USSDRequest, _url: &str) -> HashStrAny {
-    let mut response = HashMap::new();
-    
-    response.insert("status".to_string(), HashStrAny::Str("success".to_string()));
-    response.insert("message".to_string(), HashStrAny::Str("Balance fetched successfully".to_string()));
+    let json = json!({
+        "status": "success",
+        "message": "Balance fetched successfully"
+    });
 
-    HashStrAny::Dict(response)
+    let data = HashStrAny::new();
+
+    data.json_to_hash_str_any(json)
 }
