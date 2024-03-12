@@ -4,7 +4,7 @@
 
 ## Overview
 
-The USSD Framework is a powerful and flexible framework for building USSD applications in Rust. It provides a set of tools and utilities to simplify the development of USSD menus, navigation, and user interactions.
+The USSD Framework is a powerful and flexible framework designed to be easy to use and extensible for building USSD applications. It provides a set of tools and utilities to simplify the development of USSD menus, navigation, and user interactions. With a simple API for creating USSD menus and handling user input. It supports session management and stateful interactions, with built-in validation and error handling mechanisms.
 
 ## Features
 
@@ -12,6 +12,7 @@ The USSD Framework is a powerful and flexible framework for building USSD applic
 - Support for session management and stateful interactions
 - Built-in validation and error handling mechanisms
 - Extensible architecture to support custom USSD applications
+- Menu builder for creating custom menus in the application and storing them in a database (Optional)
 - Cross-platform compatibility for users from other programming languages
 
 ## Installation
@@ -70,8 +71,6 @@ The services that can be called from the menu are also defined in the configurat
 - **data_key**: The key to use for the data returned from the function call.
 
 You can find an example of a menu configuration [here](examples/data/menu.json).
-
-
 
 It contains the menu items and the services that can be called from the menu.
 
