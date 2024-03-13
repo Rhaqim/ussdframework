@@ -1,5 +1,5 @@
 use crate::{
-    debug, error, info,
+    debug, error, info, trace,
     types::HashStrAny,
     ussd_request::USSDRequest,
     ussd_response::USSDResponse,
@@ -295,8 +295,6 @@ impl USSDAction for Screen {
                 if let Some(selected_option) = input.parse::<usize>().ok() {
                     let menu_items_ref_unwrapped = self.menu_items.as_ref().unwrap();
 
-                    debug!("Menu Items: {:?}", menu_items_ref_unwrapped);
-
                     let menu_items_len = menu_items_ref_unwrapped.len();
 
                     if 0 < selected_option && selected_option <= menu_items_len {
@@ -305,7 +303,7 @@ impl USSDAction for Screen {
                             .values()
                             .find(|item| item.option == selected_option.to_string());
 
-                        debug!("Selected Items: {:?}", selected_item);
+                        trace!("Selected Items: {:?}", selected_item);
 
                         if let Some(selected_item) = selected_item {
                             let next_screen = selected_item.next_screen.clone();
