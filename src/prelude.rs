@@ -1,4 +1,4 @@
-pub use crate::menu::USSDMenu;
+pub use crate::menu::{USSDMenu, menubuilder};
 pub use crate::UssdApp;
 pub use crate::ussd_request::USSDRequest;
 pub use crate::ussd_response::USSDResponse;
