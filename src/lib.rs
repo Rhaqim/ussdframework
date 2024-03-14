@@ -34,7 +34,19 @@ impl UssdApp {
     /// # Returns
     ///
     /// A new instance of `UssdApp`.
-    pub fn new(functions_path: String, session_cache: Box<dyn SessionCache>) -> Self {
+    pub fn new(
+        functions_path: String,
+        built_in_session_manager: bool,
+        session_manager: Option<Box<dyn SessionCache>>,
+    ) -> UssdApp {
+        let session_cache: Box<dyn SessionCache>;
+
+        if built_in_session_manager || session_manager.is_none() {
+            session_cache = Box::new(ussd_session::InMemorySessionStore::new());
+        } else {
+            session_cache = session_manager.unwrap();
+        }
+
         UssdApp {
             functions_path,
             session_cache,
