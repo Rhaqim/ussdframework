@@ -11,6 +11,10 @@ name = "ussdframework"
 path = "src/lib.rs"
 crate-type = ["lib"]
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
 [dependencies]
 actix-web = "4.0"
 chrono = { version = "0.4", features = ["serde"] }
