@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::prelude::USSDRequest;
 use crate::types::HashStrAny;
-use crate::ussd_session::USSDSession;
+use crate::core::USSDSession;
 use crate::{debug, info};
 use std::sync::Mutex;
 

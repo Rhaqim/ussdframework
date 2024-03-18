@@ -1,21 +1,17 @@
+mod admin;
+mod core;
 mod log;
 mod menu;
 pub mod prelude;
 pub mod types;
-mod ussd_request;
-mod ussd_response;
-mod ussd_screens;
-mod ussd_service;
-mod ussd_session;
 mod utils;
 
 extern crate serde;
 
-use prelude::USSDMenu;
-use ussd_request::USSDRequest;
-use ussd_response::USSDResponse;
-use ussd_screens::process_request;
-use ussd_session::SessionCache;
+use core::{
+    process_request, InMemorySessionStore, SessionCache, USSDRequest, USSDResponse,
+};
+use menu::USSDMenu;
 
 /// Represents a USSD application.
 pub struct UssdApp {
@@ -42,7 +38,7 @@ impl UssdApp {
         let session_cache: Box<dyn SessionCache>;
 
         if built_in_session_manager || session_manager.is_none() {
-            session_cache = Box::new(ussd_session::InMemorySessionStore::new());
+            session_cache = Box::new(InMemorySessionStore::new());
         } else {
             session_cache = session_manager.unwrap();
         }
@@ -63,7 +59,7 @@ impl UssdApp {
     /// # Returns
     ///
     /// The USSD response.
-    pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> ussd_response::USSDResponse {
+    pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
         process_request(
             &request,
             &self.functions_path,
