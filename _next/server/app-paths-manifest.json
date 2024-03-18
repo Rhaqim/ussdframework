@@ -1,5 +1,11 @@
 {
   "/_not-found": "app/_not-found.js",
   "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/admin/build/page": "app/admin/build/page.js",
+  "/admin/export/page": "app/admin/export/page.js",
+  "/admin/screens/page": "app/admin/screens/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/services/page": "app/admin/services/page.js",
+  "/admin/migration/page": "app/admin/migration/page.js"
 }

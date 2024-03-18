@@ -5,6 +5,7 @@ build-frontend:
 	cd frontend && npm install && npm run build
 
 copy-frontend:
-	cp -r frontend/.next/* static/
+	cp -r frontend/.next/* _next/
 
-build-copy-frontend: build-frontend copy-frontend
+start-frontend:
+	cd frontend && npm run dev
