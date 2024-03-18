@@ -11,7 +11,7 @@ pub async fn start_server() -> std::io::Result<()> {
         App::new()
             .service(web::resource("/api/data").route(web::get().to(get_data)))
             .default_service(web::get().to(index)) // Serve the index.html for all other routes
-            .service(Files::new("/", "./_next").index_file("/server/app/index.html"))
+            .service(Files::new("/_next", "./_next").index_file("/server/app/index.html"))
         // Serve all files under the static directory
     })
     .bind("127.0.0.1:8080")?
