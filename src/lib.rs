@@ -1,5 +1,7 @@
 mod admin;
 mod core;
+mod database;
+mod interface;
 mod log;
 mod menu;
 pub mod prelude;
@@ -8,9 +10,7 @@ mod utils;
 
 extern crate serde;
 
-use core::{
-    process_request, InMemorySessionStore, SessionCache, USSDRequest, USSDResponse,
-};
+use core::{process_request, InMemorySessionStore, SessionCache, USSDRequest, USSDResponse};
 use menu::USSDMenu;
 
 /// Represents a USSD application.
