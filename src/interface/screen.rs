@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::error::Error;
 
 use diesel::{deserialize::FromSql, prelude::*, sqlite::SqliteValue};
 use serde::{Deserialize, Serialize};
 
-use crate::database::{Database, DatabaseManager};
 use diesel::sqlite::Sqlite;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -75,7 +73,6 @@ impl FromSql<diesel::sql_types::Text, Sqlite> for MenuItem {
 table! {
     menu_items (id) {
         id -> Integer,
-        name -> Text,
         option -> Text,
         display_name -> Text,
         next_screen -> Text,
