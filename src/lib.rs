@@ -35,13 +35,11 @@ impl UssdApp {
         built_in_session_manager: bool,
         session_manager: Option<Box<dyn SessionCache>>,
     ) -> UssdApp {
-        let session_cache: Box<dyn SessionCache>;
-
-        if built_in_session_manager || session_manager.is_none() {
-            session_cache = Box::new(InMemorySessionStore::new());
+        let session_cache: Box<dyn SessionCache> = if built_in_session_manager || session_manager.is_none() {
+            Box::new(InMemorySessionStore::new())
         } else {
-            session_cache = session_manager.unwrap();
-        }
+            session_manager.unwrap()
+        };
 
         UssdApp {
             functions_path,
