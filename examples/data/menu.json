@@ -79,44 +79,87 @@
 				"OtherNumberOption": {
 					"option": "2",
 					"display_name": "Other Number",
-					"next_screen": "OtherNumberAmountScreen"
+					"next_screen": "OtherNumberPhoneScreen"
 				}
 			}
 		},
-		"OwnNumberAmountScreen": {
+		"OtherNumberPhoneScreen": {
+			"text": "Enter phone number",
+			"screen_type": "Input",
+			"input_identifier": "phone_number",
+			"default_next_screen": "OtherNumberAmountScreen"
+		},
+		"OtherNumberAmountScreen": {
 			"text": "Enter amount",
 			"screen_type": "Input",
-            "input_identifier": "amount",
-			"default_next_screen": "OwnNumberFunctionScreen"
+			"input_identifier": "amount",
+			"default_next_screen": "OtherNumberFunctionScreen"
 		},
-        "OwnNumberFunctionScreen": {
-            "text": "Processing...",
-            "screen_type": "Function",
-            "function": "buy_airtime",
-            "default_next_screen": "OwnNumberRouterScreen"
-        },
-        "OwnNumberRouterScreen": {
-            "text": "Selecting...",
-            "screen_type": "Router",
-            "router": "AirtimeScreen",
-            "router_options": [
+		"OtherNumberFunctionScreen": {
+			"text": "Processing...",
+			"screen_type": "Function",
+			"function": "buy_airtime",
+			"default_next_screen": "OtherNumberRouterScreen"
+		},
+		"OtherNumberRouterScreen": {
+			"text": "Selecting...",
+			"screen_type": "Router",
+			"router": "AirtimeScreen",
+			"router_options": [
 				{
 					"router_option": "{{airtime.status == 'success'}}",
 					"next_screen": "SuccessScreen"
 				},
 				{
 					"router_option": "{{airtime.status == 'failed'}}",
-					"next_screen": "OwnNumberAmountScreen"
+					"next_screen": "FailureScreen"
 				},
 				{
 					"router_option": "{{airtime.status == 'error'}}",
-					"next_screen": "OtherNumberAmountScreen"
+					"next_screen": "FailureScreen"
 				}
 			],
-            "default_next_screen": "DefaultNoneScreen"
-        },
+			"default_next_screen": "DefaultNoneScreen"
+		},
+		"OwnNumberAmountScreen": {
+			"text": "Enter amount",
+			"screen_type": "Input",
+			"input_identifier": "amount",
+			"default_next_screen": "OwnNumberFunctionScreen"
+		},
+		"OwnNumberFunctionScreen": {
+			"text": "Processing...",
+			"screen_type": "Function",
+			"function": "buy_airtime",
+			"default_next_screen": "OwnNumberRouterScreen"
+		},
+		"OwnNumberRouterScreen": {
+			"text": "Selecting...",
+			"screen_type": "Router",
+			"router": "AirtimeScreen",
+			"router_options": [
+				{
+					"router_option": "{{airtime.status == 'success'}}",
+					"next_screen": "SuccessScreen"
+				},
+				{
+					"router_option": "{{airtime.status == 'failed'}}",
+					"next_screen": "FailureScreen"
+				},
+				{
+					"router_option": "{{airtime.status == 'error'}}",
+					"next_screen": "FailureScreen"
+				}
+			],
+			"default_next_screen": "DefaultNoneScreen"
+		},
 		"SuccessScreen": {
 			"text": "Transaction Successful {{airtime.message}}",
+			"screen_type": "Quit",
+			"default_next_screen": "MainScreen"
+		},
+		"FailureScreen": {
+			"text": "Transaction Failed {{airtime.message}}",
 			"screen_type": "Quit",
 			"default_next_screen": "MainScreen"
 		}

@@ -100,11 +100,11 @@ impl USSDSession {
         let retrieved_session = USSDSession::retrieve_session(&request.session_id, &cache);
 
         match retrieved_session {
-            Ok(session) => {
+            Ok(sesh) => {
                 // Update last interaction time for existing session
-                info!("Retrieved session {:?}", session);
+                info!("Retrieved session {:?}", sesh);
 
-                let mut session = session;
+                let mut session = sesh;
                 session.update_last_interaction_time();
                 session
             }

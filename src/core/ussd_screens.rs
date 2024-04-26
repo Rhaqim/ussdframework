@@ -8,7 +8,10 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::{ussd_service::USSDServiceTrait, SessionCache, USSDRequest, USSDResponse, USSDService, USSDSession};
+use super::{
+    ussd_service::USSDServiceTrait, SessionCache, USSDRequest, USSDResponse, USSDService,
+    USSDSession,
+};
 
 // Define types of screens
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -113,66 +116,48 @@ pub fn process_request(
     let mut current_screen = session.current_screen.clone();
 
     loop {
-        match screens.menus.get(&current_screen) {
-            Some(screen) => match screen.screen_type {
-                // Execute the screen action for Function, Router, and Initial screen types
-                // They contain no display message
-                // They are used to execute a function, route to another screen, or set the initial screen
-                // The next screen is set based on the action
-                ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
-                    info!(
-                        "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
-                        current_screen, screen.screen_type, request
-                    );
+        if let Some(screen) = screens.menus.get(&current_screen) {
+            info!(
+                "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
+                current_screen, screen.screen_type, request
+            );
 
+            // Execute the screen action for Function, Router, and Initial screen types
+            // They contain no display message
+            // They are used to execute a function, route to another screen, or set the initial screen
+            // The next screen is set based on the action
+            match screen.screen_type {
+                ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
                     screen.execute(
                         &mut session,
                         request,
                         functions_path.clone(),
                         &screens.services,
                     );
-
-                    session.update_session(session_cache);
-
-                    current_screen = session.current_screen.clone();
-
-                    continue;
                 }
+
                 // Display the screen message and execute the screen action for Menu and Input screen types
                 // They contain a display message
                 // The next screen is set based on the action
                 // It checks if the current screen has been displayed
                 // If not, it displays the message and sets the current screen as displayed and also routes back to the current screen
                 _ => {
-                    info!(
-                        "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
-                        current_screen, screen.screen_type, request
-                    );
+                    let current_screen_displayed = session
+                        .displayed
+                        .entry(current_screen.clone())
+                        .or_insert(false);
 
-                    // Represents the current screen being displayed in the session.
-                    let current_screen_displayed = session.displayed.get(&current_screen);
-
-                    if current_screen_displayed.is_none()
-                        || current_screen_displayed.unwrap() == &false
-                    {
+                    if !*current_screen_displayed {
                         debug!("Displaying message for screen: {}", current_screen);
 
-                        let message = screen.display(&session);
-
-                        match message {
-                            Some(message) => {
-                                response.message = message;
-                            }
-                            None => {
-                                response.message = "Something went wrong, please stop".to_string();
-                            }
-                        }
+                        response.message = screen.display(&session).unwrap_or_else(|| {
+                            error!("Failed to display message for screen: {} please ensure the screen has a message", current_screen);
+                            "Something went wrong, please stop".to_string()
+                        });
 
                         session.displayed.insert(current_screen.clone(), true);
-
-                        session.update_session(session_cache);
-
                         session.current_screen = current_screen.clone();
+                        session.update_session(session_cache);
 
                         break;
                     } else {
@@ -185,17 +170,16 @@ pub fn process_request(
                             &screens.services,
                         );
 
-                        session.update_session(session_cache);
-
-                        current_screen = session.current_screen.clone();
-
-                        continue;
+                        // remove from displayed
+                        session.displayed.remove(&current_screen);
                     }
                 }
-            },
-            None => {
-                break;
             }
+
+            current_screen = session.current_screen.clone();
+            continue;
+        } else {
+            break;
         }
     }
 
