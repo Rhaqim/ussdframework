@@ -142,7 +142,7 @@ impl USSDSession {
     }
 }
 
-pub trait SessionCache {
+pub trait SessionCache: Send + Sync {
     fn store_session(&self, session: &USSDSession) -> Result<(), String>;
     fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String>;
 }
@@ -150,6 +150,10 @@ pub trait SessionCache {
 pub struct InMemorySessionStore {
     data: Mutex<HashMap<String, String>>,
 }
+
+unsafe impl Send for InMemorySessionStore {}
+unsafe impl Sync for InMemorySessionStore {}
+
 
 impl InMemorySessionStore {
     pub fn new() -> Self {
