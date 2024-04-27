@@ -3,6 +3,12 @@ use std::{collections::HashMap, fmt::Display};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::core::USSDRequest;
+
+// Define a type to store registered functions
+pub type USSDFunction = fn(&USSDRequest, &str) -> HashStrAny;
+pub type FunctionMap = HashMap<String, USSDFunction>;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum RouterOptions {
     List(Vec<RouterOptions>),

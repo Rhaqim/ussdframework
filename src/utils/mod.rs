@@ -1,14 +1,9 @@
 use std::collections::HashMap;
 
-use crate::core::USSDSession;
-use crate::prelude::USSDRequest;
-use crate::types::HashStrAny;
+use crate::core::{USSDRequest, USSDSession};
+use crate::types::{FunctionMap, HashStrAny, USSDFunction};
 use crate::{debug, info};
 use std::sync::Mutex;
-
-// Define a type to store registered functions
-pub type USSDFunction = fn(&USSDRequest, &str) -> HashStrAny;
-pub type FunctionMap = HashMap<String, USSDFunction>;
 
 lazy_static::lazy_static! {
     // Define a lazy static variable to store registered functions
@@ -16,13 +11,14 @@ lazy_static::lazy_static! {
 }
 
 // Function to register functions
-pub fn register_function(path: &str, function_ptr: fn(&USSDRequest, &str) -> HashStrAny) {
+pub fn register_function(path: &str, function_ptr: USSDFunction) {
     info!("Registering function: {}", path);
+
     let function_name = path.to_string();
-    FUNCTION_MAP
-        .lock()
-        .unwrap()
-        .insert(function_name, function_ptr);
+
+    let mut function_map_guard = FUNCTION_MAP.lock().expect("Failed to lock function map");
+
+    function_map_guard.insert(function_name, function_ptr);
 }
 
 /// Function to register functions
