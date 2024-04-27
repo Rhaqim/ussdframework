@@ -30,7 +30,7 @@ Here's a simple example of how to create a USSD menu using the USSD Framework wi
 
 ### Example
 
-You can find a complete example of a USSD application built with the USSD Framework [EXAMPLE](examples/basic_usage.rs). or buy running the following command:
+You can find a complete example of a USSD application built with the USSD Framework [EXAMPLE](examples). or buy running the following command:
 
 ```bash
 cargo run --example basic_usage
