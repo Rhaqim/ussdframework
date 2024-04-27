@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use crate::core::{USSDRequest, USSDSession};
+use crate::core::USSDSession;
 use crate::types::{FunctionMap, HashStrAny, USSDFunction};
 use crate::{debug, info};
 use std::sync::Mutex;
@@ -33,7 +31,7 @@ pub fn register_function(path: &str, function_ptr: USSDFunction) {
 /// # Example
 ///
 /// ```rust
-/// use crate::utils::register_functions;
+/// use ussdframework::utils::register_functions;
 ///
 /// use std::collections::HashMap;
 ///
@@ -47,7 +45,7 @@ pub fn register_function(path: &str, function_ptr: USSDFunction) {
 /// register_functions(functions_map);
 ///
 /// ```
-pub fn register_functions(functions_map: HashMap<String, fn(&USSDRequest, &str) -> HashStrAny>) {
+pub fn register_functions(functions_map: FunctionMap) {
     for (path, function) in functions_map {
         register_function(&path, function);
     }
