@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 
+use crate::core::USSDSession;
 use crate::prelude::USSDRequest;
 use crate::types::HashStrAny;
-use crate::core::USSDSession;
 use crate::{debug, info};
 use std::sync::Mutex;
 
 // Define a type to store registered functions
-type FunctionMap = HashMap<String, fn(&USSDRequest, &str) -> HashStrAny>;
+pub type USSDFunction = fn(&USSDRequest, &str) -> HashStrAny;
+pub type FunctionMap = HashMap<String, USSDFunction>;
 
 lazy_static::lazy_static! {
     // Define a lazy static variable to store registered functions
@@ -28,27 +29,27 @@ pub fn register_function(path: &str, function_ptr: fn(&USSDRequest, &str) -> Has
 /// This function takes a HashMap of functions and registers them
 /// The function_map is a HashMap with the key as the function path and the value as the function pointer
 /// The function path is a string that represents the path to the function, should also be the key in the menu config service
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `functions_map` - A HashMap of functions: key is the function path, value is the function pointer
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
 /// use crate::utils::register_functions;
-/// 
+///
 /// use std::collections::HashMap;
-/// 
+///
 /// fn my_function(request: &USSDRequest, url: &str) -> HashStrAny {
 ///    // Your function logic here
 /// }
-/// 
+///
 /// let mut functions_map = HashMap::new();
 /// functions_map.insert("my_function".to_string(), my_function);
-/// 
+///
 /// register_functions(functions_map);
-/// 
+///
 /// ```
 pub fn register_functions(functions_map: HashMap<String, fn(&USSDRequest, &str) -> HashStrAny>) {
     for (path, function) in functions_map {
