@@ -91,7 +91,7 @@ impl USSDSession {
         }
     }
 
-    // Get or create session
+    /// Get or create a session
     pub fn get_or_create_session(
         request: &USSDRequest,
         initial_screen: &str,
@@ -130,6 +130,7 @@ impl USSDSession {
         }
     }
 
+    /// Update the session with the current screen and last interaction time
     pub fn update_session(&mut self, session_cache: &Box<dyn SessionCache>) {
         // Store the current screen in the session's visited screens
         self.visited_screens.push(self.current_screen.clone());
