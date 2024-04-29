@@ -14,6 +14,20 @@ use core::{process_request, InMemorySessionStore, SessionCache, USSDRequest, USS
 use menu::USSDMenu;
 
 /// Represents a USSD application.
+/// The USSD application is responsible for processing USSD requests and responses.
+/// 
+/// # Fields
+/// 
+/// * `functions_path` - The path to the functions used by the USSD application.
+/// * `session_cache` - The session cache implementation used by the USSD application.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ussdframework::prelude::*;
+/// 
+/// let app = UssdApp::new("functions".to_string(), false, None);
+/// ```
 pub struct UssdApp {
     functions_path: String,
     pub session_cache: Box<dyn SessionCache>,

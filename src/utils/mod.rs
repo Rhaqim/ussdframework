@@ -19,8 +19,8 @@ pub fn register_function(path: &str, function_ptr: USSDFunction) {
     function_map_guard.insert(function_name, function_ptr);
 }
 
-/// Function to register functions
-/// This function takes a HashMap of functions and registers them
+/// Registers application functions
+/// Takes a HashMap of functions that would be called through the journey of the USSD application
 /// The function_map is a HashMap with the key as the function path and the value as the function pointer
 /// The function path is a string that represents the path to the function, should also be the key in the menu config service
 ///
@@ -31,18 +31,24 @@ pub fn register_function(path: &str, function_ptr: USSDFunction) {
 /// # Example
 ///
 /// ```rust
-/// use ussdframework::utils::register_functions;
+/// use ussdframework::prelude::*;
 ///
 /// use std::collections::HashMap;
 ///
 /// fn my_function(request: &USSDRequest, url: &str) -> HashStrAny {
 ///    // Your function logic here
+///    return HashStrAny::Str("Hello".to_string());
 /// }
 ///
-/// let mut functions_map = HashMap::new();
-/// functions_map.insert("my_function".to_string(), my_function);
+/// fn functions () -> FunctionMap {
+///   let mut functions_map = HashMap::new();
+/// 
+///   functions_map.insert("my_function".to_string(), my_function as USSDFunction);
+/// 
+///   functions_map
+/// }
 ///
-/// register_functions(functions_map);
+/// register_functions(functions());
 ///
 /// ```
 pub fn register_functions(functions_map: FunctionMap) {

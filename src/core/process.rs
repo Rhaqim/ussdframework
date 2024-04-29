@@ -14,27 +14,6 @@ use super::{ScreenType, SessionCache, USSDAction, USSDRequest, USSDResponse, USS
 /// # Returns
 ///
 /// The USSD response.
-///
-/// # Example
-///
-/// ```
-/// use crate::ussd_service::process_request;
-/// use crate::ussd_request::USSDRequest;
-/// use crate::ussd_response::USSDResponse;
-/// use crate::ussd_session::SessionCache;
-///
-/// let request = USSDRequest {
-///    msisdn
-///    session_id
-///    input
-/// };
-///
-/// let functions_path = "path/to/functions".to_string();
-/// let session_cache = Box::new(SessionCacheImpl::new());
-/// let screens = USSDMenu::new();
-///
-/// let response = process_request(&request, &functions_path, &session_cache, &screens);
-/// ```
 pub fn process_request(
     request: &USSDRequest,
     functions_path: &String,

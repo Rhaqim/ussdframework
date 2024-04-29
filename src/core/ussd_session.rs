@@ -143,6 +143,13 @@ impl USSDSession {
     }
 }
 
+/// Implement this trait for storing and retrieving USSD sessions
+/// from a cache.
+/// The cache can be an in-memory store, a database, or any other
+/// storage mechanism.
+/// The cache should be thread-safe and allow for concurrent access.
+/// The cache should also be able to store and retrieve USSD sessions.
+/// The cache should be able to store and retrieve USSD sessions.
 pub trait SessionCache: Send + Sync {
     fn store_session(&self, session: &USSDSession) -> Result<(), String>;
     fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String>;

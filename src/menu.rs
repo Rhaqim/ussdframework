@@ -10,7 +10,21 @@ use crate::core::{
     ussd_service::USSDService,
 };
 
-// Define a structure to hold the USSD menu data
+/// Represents a USSD menu.
+/// The USSD menu is responsible for managing the USSD menu structure.
+/// 
+/// # Fields
+/// 
+/// * `menus` - The USSD menu screens.
+/// * `services` - The USSD services.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use ussdframework::prelude::*;
+/// 
+/// let menu = USSDMenu::new();
+/// ```
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDMenu {
     pub menus: HashMap<String, Screen>,
@@ -18,6 +32,13 @@ pub struct USSDMenu {
 }
 
 impl USSDMenu {
+    pub fn new() -> Self {
+        USSDMenu {
+            menus: HashMap::new(),
+            services: HashMap::new(),
+        }
+    }
+
     // Load menu structure from JSON file
     pub fn load_from_json(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let mut file = File::open(file_path)?;

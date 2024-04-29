@@ -5,8 +5,29 @@ use serde_json::Value;
 
 use crate::core::USSDRequest;
 
-// Define a type to store registered functions
+/// Function signature for USSD functions
+/// The function signature is a function that takes a USSDRequest and a string as arguments
+/// 
+/// # Arguments
+/// 
+/// * `request` - The USSD request
+/// * `args` - Additional arguments
+/// 
+/// # Returns
+/// 
+/// A HashStrAny value
+/// 
+/// # Example
+/// 
+/// ```
+/// use ussdframework::prelude::*;
+/// 
+/// fn buy_airtime(request: &USSDRequest, args: &str) -> HashStrAny {
+///    HashStrAny::Str("Airtime bought".to_string())
+/// }
 pub type USSDFunction = fn(&USSDRequest, &str) -> HashStrAny;
+
+/// Key-value map of USSD functions
 pub type FunctionMap = HashMap<String, USSDFunction>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
