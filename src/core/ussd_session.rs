@@ -6,20 +6,21 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{
-    info,
-    types::{HashStrAny, Stack},
-};
+use crate::{info, types::HashStrAny};
 
 use super::USSDRequest;
 
+/// Structure for USSD session
+/// The session stores the current screen, session data, and other session-related information.
+/// It is used to maintain the state of the USSD session.
+/// It can be stored and retrieved from a cache.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
     pub current_screen: String,
     pub displayed: HashMap<String, bool>,
-    pub visited_screens: Stack<String>,
+    pub visited_screens: Vec<String>,
     pub last_interaction_time: SystemTime,
     pub end_session: bool,
     pub language: String,
@@ -38,7 +39,7 @@ impl USSDSession {
             data: HashMap::new(),
             current_screen,
             displayed: HashMap::new(),
-            visited_screens: Stack::new(),
+            visited_screens: Vec::new(),
             last_interaction_time: SystemTime::now(),
             end_session: false,
             language,
@@ -115,7 +116,7 @@ impl USSDSession {
                     data: HashMap::new(),
                     current_screen: initial_screen.to_string(),
                     displayed: HashMap::new(),
-                    visited_screens: Stack::new(),
+                    visited_screens: Vec::new(),
                     last_interaction_time: SystemTime::now(),
                     end_session: false,
                     language: request.language.clone(),
@@ -140,6 +141,12 @@ impl USSDSession {
 
         // Store the session
         self.store_session(&session_cache).unwrap();
+    }
+
+    /// Fetches an item from the session data based on the given key.
+    /// Returns None if the key does not exist in the session data.
+    pub fn fetch_session_data<'a>(&'a self, key: &str) -> Option<&'a HashStrAny> {
+        self.data.get(key)
     }
 }
 

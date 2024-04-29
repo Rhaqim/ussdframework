@@ -178,7 +178,7 @@ impl USSDAction for Screen {
                     }
                     ScreenType::Function => {
                         if let Some(function_name) = &self.function {
-                            call_function(session, request, services, function_name, function_path);
+                            call_function(session, services, function_name, function_path);
                         }
                         self.default_next_screen.clone()
                     }
@@ -233,16 +233,15 @@ impl USSDAction for Screen {
 /// let function_name = "function_name".to_string();
 /// let functions_path = "path/to/functions".to_string();
 ///
-/// call_function(&mut session, &request, &services, &function_name, &functions_path);
+/// call_function(&mut session, &services, &function_name, &functions_path);
 /// ```
 fn call_function(
     session: &mut USSDSession,
-    request: &USSDRequest,
     services: &HashMap<String, USSDService>,
     function_name: &str,
     functions_path: String,
 ) {
     let service = services.get(function_name).unwrap();
 
-    service.call(session, request, functions_path);
+    service.call(session, functions_path);
 }

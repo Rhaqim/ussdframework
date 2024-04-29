@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error, info, types::HashStrAny, utils::FUNCTION_MAP};
 
-use super::{USSDRequest, USSDSession};
+use super::USSDSession;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDService {
@@ -23,7 +23,7 @@ pub trait USSDServiceTrait {
         data_key: String,
         service_code: Option<String>,
     ) -> Self;
-    fn call(&self, session: &mut USSDSession, request: &USSDRequest, functions_path: String);
+    fn call(&self, session: &mut USSDSession, functions_path: String);
     fn load_function(
         &self,
         base_functions_path: String,
@@ -47,7 +47,7 @@ impl USSDServiceTrait for USSDService {
         }
     }
 
-    fn call(&self, session: &mut USSDSession, _request: &USSDRequest, functions_path: String) {
+    fn call(&self, session: &mut USSDSession, functions_path: String) {
         // Find and load the function from the functions_path
         // Logic to load the function from the function_path (You need to implement this logic)
         let loaded_function = self.load_function(functions_path);

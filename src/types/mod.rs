@@ -68,6 +68,14 @@ impl HashStrAny {
     pub fn new() -> HashStrAny {
         HashStrAny::None
     }
+
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            HashStrAny::Str(s) => Some(s),
+            _ => None,
+        }
+    }
+
     // Helper function to create a new HashStrAny::Dict variant
     pub fn new_dict(dict: HashMap<String, HashStrAny>) -> HashStrAny {
         HashStrAny::Dict(dict)
@@ -310,53 +318,6 @@ pub struct Stack<T> {
     pub items: Vec<T>,
 }
 
-impl<T> Stack<T> {
-    // Create a new empty stack
-    pub fn new() -> Self {
-        Stack { items: Vec::new() }
-    }
-
-    // Check if the stack is empty
-    pub fn _is_empty(&self) -> bool {
-        self.items.is_empty()
-    }
-
-    // Clear the stack
-    pub fn clear(&mut self) {
-        self.items.clear();
-    }
-
-    // Push an item onto the stack
-    pub fn push(&mut self, item: T) {
-        self.items.push(item);
-    }
-
-    // Pop an item from the stack
-    pub fn pop(&mut self) -> Option<T> {
-        self.items.pop()
-    }
-
-    // Peek at the top item of the stack without removing it
-    pub fn _peek(&self) -> Option<&T> {
-        self.items.last()
-    }
-
-    // Get the number of items in the stack
-    pub fn _len(&self) -> usize {
-        self.items.len()
-    }
-
-    // Iterate over the items in the stack
-    pub fn iter(&self) -> std::slice::Iter<T> {
-        self.items.iter()
-    }
-
-    // First item in the stack
-    pub fn first(&self) -> Option<&T> {
-        self.items.first()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -417,17 +378,5 @@ mod tests {
             "two": "2"
         });
         assert_eq!(json, expected_json);
-    }
-
-    #[test]
-    fn test_stack() {
-        let mut stack = Stack::new();
-        stack.push(1);
-        stack.push(2);
-        stack.push(3);
-        assert_eq!(stack.pop(), Some(3));
-        assert_eq!(stack.pop(), Some(2));
-        assert_eq!(stack.pop(), Some(1));
-        assert_eq!(stack.pop(), None);
     }
 }
