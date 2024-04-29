@@ -1,5 +1,5 @@
 use crate::{
-    error, trace,
+    error,
     types::HashStrAny,
     utils::{evaluate_expression, evaluate_expression_op},
 };
@@ -142,88 +142,137 @@ impl USSDAction for Screen {
     ) {
         let input = request.input.trim();
 
-        // if input is 0, go back
-        if input == "0" {
-            back(session);
-        }
-
-        // if input is 00, go home
-        if input == "00" {
-            home(session);
-        }
-
-        match self.screen_type {
-            ScreenType::Initial => {
-                session.current_screen = self.default_next_screen.clone();
-            }
-            ScreenType::Menu => {
-                if let Some(selected_option) = input.parse::<usize>().ok() {
-                    let menu_items_ref_unwrapped = self.menu_items.as_ref().unwrap();
-
-                    let menu_items_len = menu_items_ref_unwrapped.len();
-
-                    if 0 < selected_option && selected_option <= menu_items_len {
-                        // Find the selected menu item by its option number
-                        let selected_item = menu_items_ref_unwrapped
-                            .values()
-                            .find(|item| item.option == selected_option.to_string());
-
-                        trace!("Selected Items: {:?}", selected_item);
-
-                        if let Some(selected_item) = selected_item {
-                            let next_screen = selected_item.next_screen.clone();
-                            session.current_screen = next_screen;
-                        } else {
-                            error!("Selected menu item not found");
-                            session.current_screen = self.default_next_screen.clone();
+        match input {
+            "0" => back(session),
+            "00" => home(session),
+            _ => {
+                session.current_screen = match self.screen_type {
+                    ScreenType::Initial => self.default_next_screen.clone(),
+                    ScreenType::Menu => {
+                        match input.parse::<usize>() {
+                            Ok(selected_option) if selected_option > 0 => {
+                                if let Some(menu_items_ref_unwrapped) = self.menu_items.as_ref() {
+                                    if let Some(selected_item) = menu_items_ref_unwrapped
+                                        .values()
+                                        .find(|item| item.option == selected_option.to_string())
+                                    {
+                                        session.current_screen = selected_item.next_screen.clone();
+                                        return;
+                                    } else {
+                                        error!("Selected menu item not found");
+                                    }
+                                }
+                            }
+                            _ => error!("Invalid menu option"),
                         }
-                    } else {
-                        error!("Invalid menu option");
-                        session.current_screen = self.default_next_screen.clone();
+                        self.default_next_screen.clone()
                     }
-                } else {
-                    error!("Invalid input");
-                    session.current_screen = self.default_next_screen.clone();
-                }
-            }
-            ScreenType::Input => {
-                if let Some(input_identifier) = &self.input_identifier {
-                    session.data.insert(
-                        input_identifier.to_string(),
-                        HashStrAny::Str(input.to_string()),
-                    );
-                }
-                session.current_screen = self.default_next_screen.clone();
-            }
-            ScreenType::Function => {
-                if let Some(function_name) = &self.function {
-                    // Call the function
-                    call_function(session, &request, services, function_name, function_path);
-                }
-                session.current_screen = self.default_next_screen.clone();
-            }
-            ScreenType::Router => {
-                if let Some(router_options) = &self.router_options {
-                    for option in router_options {
-                        if evaluate_expression_op(session, &option.router_option) {
-                            // Navigate to the next screen based on the router option
-                            session.current_screen = option.next_screen.clone();
+                    ScreenType::Input => {
+                        if let Some(input_identifier) = &self.input_identifier {
+                            session.data.insert(
+                                input_identifier.to_string(),
+                                HashStrAny::Str(input.to_string()),
+                            );
                         }
-                        // if evaluate_router_option(session, &option.router_option) {
-                        //     // Navigate to the next screen based on the router option
-                        //     session.current_screen = option.next_screen.clone();
-                        // }
+                        self.default_next_screen.clone()
                     }
-                } else {
-                    // Navigate to the default next screen
-                    session.current_screen = self.default_next_screen.clone();
+                    ScreenType::Function => {
+                        if let Some(function_name) = &self.function {
+                            call_function(session, request, services, function_name, function_path);
+                        }
+                        self.default_next_screen.clone()
+                    }
+                    ScreenType::Router => {
+                        if let Some(router_options) = &self.router_options {
+                            for option in router_options {
+                                if evaluate_expression_op(session, &option.router_option) {
+                                    session.current_screen = option.next_screen.clone();
+                                    return;
+                                }
+                            }
+                        }
+                        self.default_next_screen.clone()
+                    }
+                    ScreenType::Quit => {
+                        session.end_session = true;
+                        self.default_next_screen.clone()
+                    }
                 }
-            }
-            ScreenType::Quit => {
-                // Quit the session
-                session.end_session = true;
             }
         }
+
+        // match self.screen_type {
+        //     ScreenType::Initial => {
+        //         session.current_screen = self.default_next_screen.clone();
+        //     }
+        //     ScreenType::Menu => {
+        //         if let Some(selected_option) = input.parse::<usize>().ok() {
+        //             let menu_items_ref_unwrapped = self.menu_items.as_ref().unwrap();
+
+        //             let menu_items_len = menu_items_ref_unwrapped.len();
+
+        //             if 0 < selected_option && selected_option <= menu_items_len {
+        //                 // Find the selected menu item by its option number
+        //                 let selected_item = menu_items_ref_unwrapped
+        //                     .values()
+        //                     .find(|item| item.option == selected_option.to_string());
+
+        //                 trace!("Selected Items: {:?}", selected_item);
+
+        //                 if let Some(selected_item) = selected_item {
+        //                     let next_screen = selected_item.next_screen.clone();
+        //                     session.current_screen = next_screen;
+        //                 } else {
+        //                     error!("Selected menu item not found");
+        //                     session.current_screen = self.default_next_screen.clone();
+        //                 }
+        //             } else {
+        //                 error!("Invalid menu option");
+        //                 session.current_screen = self.default_next_screen.clone();
+        //             }
+        //         } else {
+        //             error!("Invalid input");
+        //             session.current_screen = self.default_next_screen.clone();
+        //         }
+        //     }
+        //     ScreenType::Input => {
+        //         if let Some(input_identifier) = &self.input_identifier {
+        //             session.data.insert(
+        //                 input_identifier.to_string(),
+        //                 HashStrAny::Str(input.to_string()),
+        //             );
+        //         }
+        //         session.current_screen = self.default_next_screen.clone();
+        //     }
+        //     ScreenType::Function => {
+        //         if let Some(function_name) = &self.function {
+        //             // Call the function
+        //             call_function(session, &request, services, function_name, function_path);
+        //         }
+        //         session.current_screen = self.default_next_screen.clone();
+        //     }
+        //     ScreenType::Router => {
+        //         if let Some(router_options) = &self.router_options {
+        //             for option in router_options {
+        //                 if evaluate_expression_op(session, &option.router_option) {
+        //                     // Navigate to the next screen based on the router option
+        //                     session.current_screen = option.next_screen.clone();
+        //                 }
+        //                 // if evaluate_router_option(session, &option.router_option) {
+        //                 //     // Navigate to the next screen based on the router option
+        //                 //     session.current_screen = option.next_screen.clone();
+        //                 // }
+        //             }
+        //         } else {
+        //             // Navigate to the default next screen
+        //             session.current_screen = self.default_next_screen.clone();
+        //         }
+        //     }
+        //     ScreenType::Quit => {
+        //         // Quit the session
+        //         session.end_session = true;
+        //     }
+        // }
     }
 }
 
