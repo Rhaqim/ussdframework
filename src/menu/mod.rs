@@ -12,17 +12,17 @@ use crate::core::{
 
 /// Represents a USSD menu.
 /// The USSD menu is responsible for managing the USSD menu structure.
-/// 
+///
 /// # Fields
-/// 
+///
 /// * `menus` - The USSD menu screens.
 /// * `services` - The USSD services.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use ussdframework::prelude::*;
-/// 
+///
 /// let menu = USSDMenu::new();
 /// ```
 #[derive(Debug, Clone, Deserialize, Serialize)]

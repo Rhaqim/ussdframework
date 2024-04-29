@@ -8,6 +8,6 @@ pub mod ussd_session;
 pub use process::process_request;
 pub use ussd_request::USSDRequest;
 pub use ussd_response::USSDResponse;
-pub use ussd_screens::{USSDAction, ScreenType};
+pub use ussd_screens::{ScreenType, USSDAction};
 pub use ussd_service::USSDService;
 pub use ussd_session::{InMemorySessionStore, SessionCache, USSDSession};

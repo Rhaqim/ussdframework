@@ -1,5 +1,5 @@
-use std::error::Error;
 use diesel::{sqlite::SqliteConnection, Connection};
+use std::error::Error;
 
 pub fn establish_connection() -> SqliteConnection {
     let database_url = "database.db";

@@ -27,7 +27,7 @@ pub trait USSDServiceTrait {
     fn load_function(
         &self,
         base_functions_path: String,
-    ) -> Box<dyn Fn(&USSDRequest, &str) -> HashStrAny>;
+    ) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny>;
 }
 
 impl USSDServiceTrait for USSDService {
@@ -47,16 +47,18 @@ impl USSDServiceTrait for USSDService {
         }
     }
 
-    fn call(&self, session: &mut USSDSession, request: &USSDRequest, functions_path: String) {
+    fn call(&self, session: &mut USSDSession, _request: &USSDRequest, functions_path: String) {
         // Find and load the function from the functions_path
         // Logic to load the function from the function_path (You need to implement this logic)
         let loaded_function = self.load_function(functions_path);
 
+        let new_session: USSDSession = session.clone();
+
         // Pass the function_url as an argument to the loaded function
         let result = if let Some(url) = &self.function_url {
-            loaded_function(&request, url)
+            loaded_function(&new_session, url)
         } else {
-            loaded_function(&request, "")
+            loaded_function(&new_session, "")
         };
 
         // Save the returned result in the session data with the data_key
@@ -66,7 +68,7 @@ impl USSDServiceTrait for USSDService {
     fn load_function(
         &self,
         _base_functions_path: String,
-    ) -> Box<dyn Fn(&USSDRequest, &str) -> HashStrAny> {
+    ) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny> {
         // Load the function from the functions_path
         let func = FUNCTION_MAP
             .lock()
@@ -81,7 +83,7 @@ impl USSDServiceTrait for USSDService {
             }
             None => {
                 error!("Function not found: {}", self.function_name);
-                Box::new(|_request: &USSDRequest, _url: &str| {
+                Box::new(|_session: &USSDSession, _url: &str| {
                     let mut result = HashMap::new();
                     result.insert(
                         "error".to_string(),

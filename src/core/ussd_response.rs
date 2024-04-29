@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 // Define structure for USSD response
 #[derive(Debug, Serialize, Deserialize)]
 pub struct USSDResponse {

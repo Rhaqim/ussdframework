@@ -13,7 +13,7 @@ use crate::{
 
 use super::USSDRequest;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, HashStrAny>,
@@ -161,7 +161,6 @@ pub struct InMemorySessionStore {
 
 unsafe impl Send for InMemorySessionStore {}
 unsafe impl Sync for InMemorySessionStore {}
-
 
 impl InMemorySessionStore {
     pub fn new() -> Self {
