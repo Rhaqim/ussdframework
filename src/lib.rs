@@ -58,20 +58,6 @@ impl UssdApp {
         UssdApp { session_cache }
     }
 
-    /// Runs the USSD application with the given request and screens.
-    ///
-    /// # Arguments
-    ///
-    /// * `request` - The USSD request.
-    /// * `screens` - The USSD menu screens.
-    ///
-    /// # Returns
-    ///
-    /// The USSD response.
-    pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
-        process_request(&request, &self.session_cache, &screens)
-    }
-
     /// Registers application functions
     /// Takes a HashMap of functions that would be called through the journey of the USSD application
     /// The function_map is a HashMap with the key as the function path and the value as the function pointer
@@ -108,6 +94,20 @@ impl UssdApp {
         for (path, function) in functions_map {
             register_function(&path, function);
         }
+    }
+
+    /// Runs the USSD application with the given request and screens.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The USSD request.
+    /// * `screens` - The USSD menu screens.
+    ///
+    /// # Returns
+    ///
+    /// The USSD response.
+    pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
+        process_request(&request, &self.session_cache, &screens)
     }
 
     /// Displays the menu to the user.
