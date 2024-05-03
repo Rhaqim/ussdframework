@@ -167,7 +167,6 @@
 	"services": {
 		"buy_airtime": {
 			"function_name": "buy_airtime",
-			"functions_path": "services/buy_airtime.js",
 			"function_url": "http://localhost:3000/buy_airtime",
 			"data_key": "airtime"
 		}

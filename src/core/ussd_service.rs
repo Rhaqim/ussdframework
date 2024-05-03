@@ -8,7 +8,6 @@ use super::USSDSession;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDService {
-    pub functions_path: String,
     pub function_name: String,
     pub function_url: Option<String>,
     pub data_key: String,
@@ -17,7 +16,6 @@ pub struct USSDService {
 
 pub trait USSDServiceTrait {
     fn new(
-        functions_path: String,
         function_name: String,
         function_url: Option<String>,
         data_key: String,
@@ -29,14 +27,12 @@ pub trait USSDServiceTrait {
 
 impl USSDServiceTrait for USSDService {
     fn new(
-        functions_path: String,
         function_name: String,
         function_url: Option<String>,
         data_key: String,
         service_code: Option<String>,
     ) -> Self {
         Self {
-            functions_path,
             function_name,
             function_url,
             data_key,
