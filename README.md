@@ -149,10 +149,25 @@ The USSD Framework supports calling functions from the menu configuration. You c
     use ussdframework::prelude::*;
 
     fn my_function(session: &USSDSession, input: &str) -> USSDData {
-        let data = USSDData {
-            text: "Hello, World!".to_string(),
-            next_screen: "menu".to_string(),
-        };
+         let json = json!({
+            "status": "success",
+            "message": "Function called"
+        });
+
+        let data = USSDData::new();
+
+        // Convert the JSON data to USSDData by passing the JSON data to the USSDData.json_to_hash_str_any() method
+        data.json_to_hash_str_any(json)
+    }
+    
+    fn my_function2(session: &USSDSession, input: &str) -> USSDData {
+         let json = json!({
+            "status": "success",
+            "message": "Function2 called"
+        });
+
+        // Convert the JSON data to USSDData by passing the JSON data to the USSDData::new() method
+        let data = USSDData::new(Some(json));
 
         data
     }
@@ -160,6 +175,7 @@ The USSD Framework supports calling functions from the menu configuration. You c
     fn functions() -> FunctionMap {
         let mut functions = HashMap::new();
         functions.insert("my_function".to_string(), my_function);
+        functions.insert("my_function2".to_string(), my_function2);
 
         functions
     }

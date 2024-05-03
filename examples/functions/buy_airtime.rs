@@ -16,9 +16,9 @@ pub fn buy_airtime(session: &USSDSession, url: &str) -> USSDData {
         "message": "You successful bought airtime worth ".to_owned() + amount
     });
 
-    let data = USSDData::new();
+    let data = USSDData::new(Some(json));
 
-    data.json_to_hash_str_any(json)
+    data
 }
 
 pub fn get_balance(_session: &USSDSession, _url: &str) -> USSDData {
@@ -27,7 +27,7 @@ pub fn get_balance(_session: &USSDSession, _url: &str) -> USSDData {
         "message": "Balance fetched successfully"
     });
 
-    let data = USSDData::new();
+    let data = USSDData::new(None);
 
     data.json_to_hash_str_any(json)
 }

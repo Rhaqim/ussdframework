@@ -27,7 +27,7 @@ use utils::register_function;
 /// ```
 /// use ussdframework::prelude::*;
 ///
-/// let app = UssdApp::new("functions".to_string(), false, None);
+/// let app = UssdApp::new(false, None);
 /// ```
 pub struct UssdApp {
     pub session_cache: Box<dyn SessionCache>,

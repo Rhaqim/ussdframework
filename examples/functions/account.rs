@@ -16,7 +16,7 @@ pub fn get_account(session: &USSDSession, url: &str) -> USSDData {
         "message": "Account fetched successfully"
     });
 
-    let data = USSDData::new();
+    let data = USSDData::new(Some(json));
 
-    data.json_to_hash_str_any(json)
+    data
 }

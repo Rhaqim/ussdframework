@@ -65,8 +65,11 @@ pub enum USSDData {
 }
 
 impl USSDData {
-    pub fn new() -> USSDData {
-        USSDData::None
+    pub fn new(value: Option<Value>) -> Self {
+        match value {
+            Some(val) => json_to_hash_str_any(val),
+            None => USSDData::None,
+        }
     }
 
     pub fn as_str(&self) -> Option<&str> {
@@ -121,34 +124,35 @@ impl USSDData {
     /// let hash_str_any = json_to_hash_str_any(json);
     /// ```
     pub fn json_to_hash_str_any(&self, json: Value) -> Self {
-        match json {
-            Value::Null => USSDData::None,
-            Value::Bool(b) => USSDData::Str(b.to_string()),
-            Value::Number(n) => {
-                if let Some(i) = n.as_i64() {
-                    USSDData::Int(i as i64)
-                } else if let Some(f) = n.as_f64() {
-                    USSDData::Float(f as f64)
-                } else {
-                    USSDData::None
-                }
-            }
-            Value::String(s) => USSDData::Str(s),
-            Value::Array(arr) => {
-                let mut list = Vec::new();
-                for val in arr {
-                    list.push(self.json_to_hash_str_any(val));
-                }
-                USSDData::List(list)
-            }
-            Value::Object(obj) => {
-                let mut dict = HashMap::new();
-                for (key, val) in obj {
-                    dict.insert(key, self.json_to_hash_str_any(val));
-                }
-                USSDData::Dict(dict)
-            }
-        }
+        json_to_hash_str_any(json)
+        // match json {
+        //     Value::Null => USSDData::None,
+        //     Value::Bool(b) => USSDData::Str(b.to_string()),
+        //     Value::Number(n) => {
+        //         if let Some(i) = n.as_i64() {
+        //             USSDData::Int(i as i64)
+        //         } else if let Some(f) = n.as_f64() {
+        //             USSDData::Float(f as f64)
+        //         } else {
+        //             USSDData::None
+        //         }
+        //     }
+        //     Value::String(s) => USSDData::Str(s),
+        //     Value::Array(arr) => {
+        //         let mut list = Vec::new();
+        //         for val in arr {
+        //             list.push(self.json_to_hash_str_any(val));
+        //         }
+        //         USSDData::List(list)
+        //     }
+        //     Value::Object(obj) => {
+        //         let mut dict = HashMap::new();
+        //         for (key, val) in obj {
+        //             dict.insert(key, self.json_to_hash_str_any(val));
+        //         }
+        //         USSDData::Dict(dict)
+        //     }
+        // }
     }
 
     /// Convert a USSDData value to a JSON value
