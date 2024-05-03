@@ -1,8 +1,8 @@
 use serde_json::json;
 use ussdframework::prelude::USSDSession;
-use ussdframework::types::HashStrAny;
+use ussdframework::types::USSDData;
 
-pub fn buy_airtime(session: &USSDSession, url: &str) -> HashStrAny {
+pub fn buy_airtime(session: &USSDSession, url: &str) -> USSDData {
     let amount = session
         .fetch_session_data("amount")
         .unwrap()
@@ -16,18 +16,18 @@ pub fn buy_airtime(session: &USSDSession, url: &str) -> HashStrAny {
         "message": "You successful bought airtime worth ".to_owned() + amount
     });
 
-    let data = HashStrAny::new();
+    let data = USSDData::new();
 
     data.json_to_hash_str_any(json)
 }
 
-pub fn get_balance(_session: &USSDSession, _url: &str) -> HashStrAny {
+pub fn get_balance(_session: &USSDSession, _url: &str) -> USSDData {
     let json = json!({
         "status": "success",
         "message": "Balance fetched successfully"
     });
 
-    let data = HashStrAny::new();
+    let data = USSDData::new();
 
     data.json_to_hash_str_any(json)
 }

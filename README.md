@@ -26,11 +26,131 @@ ussdframework = "0.1.0"
 
 ## Usage
 
-Here's a simple example of how to create a USSD menu using the USSD Framework with actix-web:
+### Initialization
+
+To create a new USSD application, you need to create a new instance of the USSD Framework and configure it with the necessary settings. You can then start the application by calling the `run` method.
+
+```rust
+    use ussdframework::prelude::*;
+
+    fn main() {
+        // Create a new instance of the USSD Framework
+        let mut ussd = UssdApp::new(true, None);
+
+        // Fetch the menu configuration from a file
+        let content = include_str!("../examples/data/menu.json");
+        let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+
+        let request = UssdRequest {
+            msisdn: "1234567890".to_string(),
+            session_id: "1234567890".to_string(),
+            input: 0,
+            service_code: "*123#".to_string(),
+            language: "en".to_string(),
+        };
+
+        ussd.run(request, menus);
+    }
+```
+
+### Session Management
+
+The USSD Framework supports session management and stateful interactions. It keeps track of the user's session and navigates to the next screen based on the user's input. The `UssdSession` struct stores the user's session data and update it as needed. If the built-in session management is not sufficient, you can implement your own session management logic. The session must implement the `SessionCache` trait.
+
+```rust
+    use ussdframework::prelude::*;
+
+    pub struct RedisSession {
+        client: redis::Client,
+        connection: redis::Connection,
+    }
+
+    impl RedisSession {
+        pub fn new() -> Self {
+            let client = redis::Client::open("redis://<username>:<password>@localhost/").unwrap();
+            let connection = client.get_connection().unwrap();
+
+            RedisSession { client, connection }
+        }
+    }
+
+    impl SessionCache for RedisSession {
+        fn retrieve_session(&self, key: &str) -> Option<String> {
+            let result: redis::RedisResult<String> = redis::cmd("GET").arg(key).query(&self.connection);
+            match result {
+                Ok(value) => Some(value),
+                Err(_) => None,
+            }
+        }
+
+        fn store_session(&self, key: &str, value: &str) {
+            let _: redis::RedisResult<()> = redis::cmd("SET").arg(key).arg(value).query(&self.connection);
+        }
+    }
+
+    fn main() {
+        // Create a new instance of the USSD Framework
+        let mut ussd = UssdApp::new(false, Some(Box::new(RedisSession::new())));
+
+        // Fetch the menu configuration from a file
+        let content = include_str!("../examples/data/menu.json");
+        let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+
+        let request = UssdRequest {
+            msisdn: "1234567890".to_string(),
+            session_id: "1234567890".to_string(),
+            input: 0,
+            service_code: "*123#".to_string(),
+            language: "en".to_string(),
+        };
+
+        ussd.run(request, menus);
+    }
+
+```
+
+### Functions
+
+The USSD Framework supports calling functions from the menu configuration. You can define a function to call in the menu configuration and implement it in your application. The function must implement the `UssdFunction` trait.
+
+```rust
+    use ussdframework::prelude::*;
+
+    pub struct MyFunction;
+
+    impl UssdFunction for MyFunction {
+        fn call(&self, _request: &UssdRequest, _data: &USSDData) -> USSDData {
+            let mut data = USSDData::new();
+            data.insert("message".to_string(), "Hello, World!".to_string());
+
+            data
+        }
+    }
+
+    fn main() {
+        // Create a new instance of the USSD Framework
+        let mut ussd = UssdApp::new(true, None);
+
+        // Fetch the menu configuration from a file
+        let content = include_str!("../examples/data/menu.json");
+        let menus: USSDMenu = serde_json::from_str(&content).unwrap();
+
+        let request = UssdRequest {
+            msisdn: "1234567890".to_string(),
+            session_id: "1234567890".to_string(),
+            input: 0,
+            service_code: "*123#".to_string(),
+            language: "en".to_string(),
+        };
+
+        ussd.add_function("my_function".to_string(), Box::new(MyFunction));
+        ussd.run(request, menus);
+    }
+```
 
 ### Example
 
-You can find a complete example of a USSD application built with the USSD Framework [EXAMPLE](examples). or buy running the following command:
+You can find a complete example of a USSD application built with the USSD Framework and actix-web [EXAMPLE](examples). or buy running the following command:
 
 ```bash
 cargo run --example basic_usage
@@ -66,7 +186,6 @@ Each menu can be of the following types:
 The services that can be called from the menu are also defined in the configuration. Each service has the following properties:
 
 - **function_name**: The name of the function to call.
-- **functions_path**: The path to the function to call.
 - **function_url**: The URL the function calls for other services.
 - **data_key**: The key to use for the data returned from the function call.
 

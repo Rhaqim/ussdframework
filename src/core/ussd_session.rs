@@ -6,7 +6,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{info, types::HashStrAny};
+use crate::{info, types::USSDData};
 
 use super::USSDRequest;
 
@@ -17,7 +17,7 @@ use super::USSDRequest;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct USSDSession {
     pub session_id: String,
-    pub data: HashMap<String, HashStrAny>,
+    pub data: HashMap<String, USSDData>,
     pub current_screen: String,
     pub displayed: HashMap<String, bool>,
     pub visited_screens: Vec<String>,
@@ -145,7 +145,7 @@ impl USSDSession {
 
     /// Fetches an item from the session data based on the given key.
     /// Returns None if the key does not exist in the session data.
-    pub fn fetch_session_data<'a>(&'a self, key: &str) -> Option<&'a HashStrAny> {
+    pub fn fetch_session_data<'a>(&'a self, key: &str) -> Option<&'a USSDData> {
         self.data.get(key)
     }
 }

@@ -14,13 +14,17 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let session_store = InMemorySessionStore::new();
 
+        // Create a new instance of UssdApp
         let app = UssdApp::new(false, Some(Box::new(session_store)));
 
+        // Register functions
+        app.register_functions(functions::get_functions());
+
+        // Load menus
         let content = include_str!("../examples/data/menu.json");
         let menus: USSDMenu = serde_json::from_str(&content).unwrap();
 
-        register_functions(functions::get_functions());
-
+        // Create a new instance of the Actix web application
         App::new()
             .app_data(web::Data::new(app))
             .app_data(web::Data::new(menus))

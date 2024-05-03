@@ -15,17 +15,17 @@ use crate::core::USSDSession;
 ///
 /// # Returns
 ///
-/// A HashStrAny value
+/// A USSDData value
 ///
 /// # Example
 ///
 /// ```
 /// use ussdframework::prelude::*;
 ///
-/// fn buy_airtime(request: &USSDRequest, args: &str) -> HashStrAny {
-///    HashStrAny::Str("Airtime bought".to_string())
+/// fn buy_airtime(request: &USSDRequest, args: &str) -> USSDData {
+///    USSDData::Str("Airtime bought".to_string())
 /// }
-pub type USSDFunction = fn(&USSDSession, &str) -> HashStrAny;
+pub type USSDFunction = fn(&USSDSession, &str) -> USSDData;
 
 /// Key-value map of USSD functions
 pub type FunctionMap = HashMap<String, USSDFunction>;
@@ -54,50 +54,50 @@ impl Display for RouterOptions {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum HashStrAny {
+pub enum USSDData {
     Str(String),
     Int(i64),
     Float(f64),
-    List(Vec<HashStrAny>),
+    List(Vec<USSDData>),
     ListStr(Vec<String>),
-    Dict(HashMap<String, HashStrAny>),
+    Dict(HashMap<String, USSDData>),
     None,
 }
 
-impl HashStrAny {
-    pub fn new() -> HashStrAny {
-        HashStrAny::None
+impl USSDData {
+    pub fn new() -> USSDData {
+        USSDData::None
     }
 
     pub fn as_str(&self) -> Option<&str> {
         match self {
-            HashStrAny::Str(s) => Some(s),
+            USSDData::Str(s) => Some(s),
             _ => None,
         }
     }
 
-    pub fn as_hash_str_any(&self) -> Option<&HashMap<String, HashStrAny>> {
+    pub fn as_hash_str_any(&self) -> Option<&HashMap<String, USSDData>> {
         match self {
-            HashStrAny::Dict(d) => Some(d),
+            USSDData::Dict(d) => Some(d),
             _ => None,
         }
     }
 
-    pub fn as_list(&self) -> Option<&Vec<HashStrAny>> {
+    pub fn as_list(&self) -> Option<&Vec<USSDData>> {
         match self {
-            HashStrAny::List(l) => Some(l),
+            USSDData::List(l) => Some(l),
             _ => None,
         }
     }
 
-    // Helper function to create a new HashStrAny::Dict variant
-    pub fn new_dict(dict: HashMap<String, HashStrAny>) -> HashStrAny {
-        HashStrAny::Dict(dict)
+    // Helper function to create a new USSDData::Dict variant
+    pub fn new_dict(dict: HashMap<String, USSDData>) -> USSDData {
+        USSDData::Dict(dict)
     }
 
-    /// Convert a JSON value to a HashStrAny value
-    /// This function is recursive and will convert nested JSON values to HashStrAny values
-    /// The HashStrAny type is a custom enum type that can represent any JSON value
+    /// Convert a JSON value to a USSDData value
+    /// This function is recursive and will convert nested JSON values to USSDData values
+    /// The USSDData type is a custom enum type that can represent any JSON value
     ///
     /// # Arguments
     ///
@@ -105,7 +105,7 @@ impl HashStrAny {
     ///
     /// # Returns
     ///
-    /// A HashStrAny value
+    /// A USSDData value
     ///
     /// # Example
     ///
@@ -122,42 +122,42 @@ impl HashStrAny {
     /// ```
     pub fn json_to_hash_str_any(&self, json: Value) -> Self {
         match json {
-            Value::Null => HashStrAny::None,
-            Value::Bool(b) => HashStrAny::Str(b.to_string()),
+            Value::Null => USSDData::None,
+            Value::Bool(b) => USSDData::Str(b.to_string()),
             Value::Number(n) => {
                 if let Some(i) = n.as_i64() {
-                    HashStrAny::Int(i as i64)
+                    USSDData::Int(i as i64)
                 } else if let Some(f) = n.as_f64() {
-                    HashStrAny::Float(f as f64)
+                    USSDData::Float(f as f64)
                 } else {
-                    HashStrAny::None
+                    USSDData::None
                 }
             }
-            Value::String(s) => HashStrAny::Str(s),
+            Value::String(s) => USSDData::Str(s),
             Value::Array(arr) => {
                 let mut list = Vec::new();
                 for val in arr {
                     list.push(self.json_to_hash_str_any(val));
                 }
-                HashStrAny::List(list)
+                USSDData::List(list)
             }
             Value::Object(obj) => {
                 let mut dict = HashMap::new();
                 for (key, val) in obj {
                     dict.insert(key, self.json_to_hash_str_any(val));
                 }
-                HashStrAny::Dict(dict)
+                USSDData::Dict(dict)
             }
         }
     }
 
-    /// Convert a HashStrAny value to a JSON value
-    /// This function is recursive and will convert nested HashStrAny values to JSON values
-    /// The HashStrAny type is a custom enum type that can represent any JSON value
+    /// Convert a USSDData value to a JSON value
+    /// This function is recursive and will convert nested USSDData values to JSON values
+    /// The USSDData type is a custom enum type that can represent any JSON value
     ///
     /// # Arguments
     ///
-    /// * `hash_any` - A HashStrAny value
+    /// * `hash_any` - A USSDData value
     ///
     /// # Returns
     ///
@@ -169,60 +169,60 @@ impl HashStrAny {
     /// use serde_json::json;
     /// use serde_json::Value;
     ///
-    /// let hash_str_any = HashStrAny::Dict({
+    /// let hash_str_any = USSDData::Dict({
     ///    let mut dict = HashMap::new();
-    ///   dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
-    ///  dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
+    ///   dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+    ///  dict.insert("two".to_string(), USSDData::Str("2".to_string()));
     /// dict
     /// });
     ///
     /// let json = hash_str_any_to_json(hash_str_any);
     /// `
-    pub fn hash_str_any_to_json(&self, hash_any: HashStrAny) -> Value {
+    pub fn hash_str_any_to_json(&self, hash_any: USSDData) -> Value {
         match hash_any {
-            HashStrAny::Str(s) => Value::String(s),
-            HashStrAny::Int(i) => Value::Number(i.into()),
-            HashStrAny::Float(f) => Value::Number((f as i64).into()),
-            HashStrAny::List(list) => {
+            USSDData::Str(s) => Value::String(s),
+            USSDData::Int(i) => Value::Number(i.into()),
+            USSDData::Float(f) => Value::Number((f as i64).into()),
+            USSDData::List(list) => {
                 let items: Vec<Value> = list
                     .into_iter()
                     .map(|item| self.hash_str_any_to_json(item))
                     .collect();
                 Value::Array(items)
             }
-            HashStrAny::ListStr(list) => {
+            USSDData::ListStr(list) => {
                 Value::Array(list.into_iter().map(Value::String).collect())
             }
-            HashStrAny::Dict(dict) => {
+            USSDData::Dict(dict) => {
                 let mut obj = serde_json::Map::new();
                 for (key, value) in dict {
                     obj.insert(key, self.hash_str_any_to_json(value));
                 }
                 Value::Object(obj)
             }
-            HashStrAny::None => Value::Null,
+            USSDData::None => Value::Null,
         }
     }
 }
 
-// Formatter for HashStrAny to convert JSON to HashStrAny
-impl Display for HashStrAny {
+// Formatter for USSDData to convert JSON to USSDData
+impl Display for USSDData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            HashStrAny::Str(s) => write!(f, "{}", s),
-            HashStrAny::Int(i) => write!(f, "{}", i),
-            HashStrAny::Float(fl) => write!(f, "{}", fl),
-            HashStrAny::List(l) => write!(f, "{:?}", l),
-            HashStrAny::ListStr(l) => write!(f, "{:?}", l),
-            HashStrAny::Dict(d) => write!(f, "{:?}", d),
-            HashStrAny::None => write!(f, "None"),
+            USSDData::Str(s) => write!(f, "{}", s),
+            USSDData::Int(i) => write!(f, "{}", i),
+            USSDData::Float(fl) => write!(f, "{}", fl),
+            USSDData::List(l) => write!(f, "{:?}", l),
+            USSDData::ListStr(l) => write!(f, "{:?}", l),
+            USSDData::Dict(d) => write!(f, "{:?}", d),
+            USSDData::None => write!(f, "None"),
         }
     }
 }
 
-/// Convert a JSON value to a HashStrAny value
-/// This function is recursive and will convert nested JSON values to HashStrAny values
-/// The HashStrAny type is a custom enum type that can represent any JSON value
+/// Convert a JSON value to a USSDData value
+/// This function is recursive and will convert nested JSON values to USSDData values
+/// The USSDData type is a custom enum type that can represent any JSON value
 ///
 /// # Arguments
 ///
@@ -230,7 +230,7 @@ impl Display for HashStrAny {
 ///
 /// # Returns
 ///
-/// A HashStrAny value
+/// A USSDData value
 ///
 /// # Example
 ///
@@ -245,44 +245,44 @@ impl Display for HashStrAny {
 ///
 /// let hash_str_any = json_to_hash_str_any(json);
 /// ```
-pub fn json_to_hash_str_any(json: Value) -> HashStrAny {
+pub fn json_to_hash_str_any(json: Value) -> USSDData {
     match json {
-        Value::Null => HashStrAny::None,
-        Value::Bool(b) => HashStrAny::Str(b.to_string()),
+        Value::Null => USSDData::None,
+        Value::Bool(b) => USSDData::Str(b.to_string()),
         Value::Number(n) => {
             if let Some(i) = n.as_i64() {
-                HashStrAny::Int(i as i64)
+                USSDData::Int(i as i64)
             } else if let Some(f) = n.as_f64() {
-                HashStrAny::Float(f as f64)
+                USSDData::Float(f as f64)
             } else {
-                HashStrAny::None
+                USSDData::None
             }
         }
-        Value::String(s) => HashStrAny::Str(s),
+        Value::String(s) => USSDData::Str(s),
         Value::Array(arr) => {
             let mut list = Vec::new();
             for val in arr {
                 list.push(json_to_hash_str_any(val));
             }
-            HashStrAny::List(list)
+            USSDData::List(list)
         }
         Value::Object(obj) => {
             let mut dict = HashMap::new();
             for (key, val) in obj {
                 dict.insert(key, json_to_hash_str_any(val));
             }
-            HashStrAny::Dict(dict)
+            USSDData::Dict(dict)
         }
     }
 }
 
-/// Convert a HashStrAny value to a JSON value
-/// This function is recursive and will convert nested HashStrAny values to JSON values
-/// The HashStrAny type is a custom enum type that can represent any JSON value
+/// Convert a USSDData value to a JSON value
+/// This function is recursive and will convert nested USSDData values to JSON values
+/// The USSDData type is a custom enum type that can represent any JSON value
 ///
 /// # Arguments
 ///
-/// * `hash_any` - A HashStrAny value
+/// * `hash_any` - A USSDData value
 ///
 /// # Returns
 ///
@@ -294,36 +294,36 @@ pub fn json_to_hash_str_any(json: Value) -> HashStrAny {
 /// use serde_json::json;
 /// use serde_json::Value;
 ///
-/// let hash_str_any = HashStrAny::Dict({
+/// let hash_str_any = USSDData::Dict({
 ///    let mut dict = HashMap::new();
-///   dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
-///  dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
+///   dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+///  dict.insert("two".to_string(), USSDData::Str("2".to_string()));
 /// dict
 /// });
 ///
 /// let json = hash_str_any_to_json(hash_str_any);
 /// `
-pub fn hash_str_any_to_json(hash_any: HashStrAny) -> Value {
+pub fn hash_str_any_to_json(hash_any: USSDData) -> Value {
     match hash_any {
-        HashStrAny::Str(s) => Value::String(s),
-        HashStrAny::Int(i) => Value::Number(i.into()),
-        HashStrAny::Float(f) => Value::Number((f as i64).into()),
-        HashStrAny::List(list) => {
+        USSDData::Str(s) => Value::String(s),
+        USSDData::Int(i) => Value::Number(i.into()),
+        USSDData::Float(f) => Value::Number((f as i64).into()),
+        USSDData::List(list) => {
             let items: Vec<Value> = list
                 .into_iter()
                 .map(|item| hash_str_any_to_json(item))
                 .collect();
             Value::Array(items)
         }
-        HashStrAny::ListStr(list) => Value::Array(list.into_iter().map(Value::String).collect()),
-        HashStrAny::Dict(dict) => {
+        USSDData::ListStr(list) => Value::Array(list.into_iter().map(Value::String).collect()),
+        USSDData::Dict(dict) => {
             let mut obj = serde_json::Map::new();
             for (key, value) in dict {
                 obj.insert(key, hash_str_any_to_json(value));
             }
             Value::Object(obj)
         }
-        HashStrAny::None => Value::Null,
+        USSDData::None => Value::Null,
     }
 }
 
@@ -347,9 +347,9 @@ mod tests {
     #[test]
     fn test_hash_str_any() {
         let mut dict = HashMap::new();
-        dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
-        dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
-        let hash_str_any = HashStrAny::new_dict(dict);
+        dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+        dict.insert("two".to_string(), USSDData::Str("2".to_string()));
+        let hash_str_any = USSDData::new_dict(dict);
         let expected_json = json!({
             "one": "1",
             "two": "2"
@@ -372,10 +372,10 @@ mod tests {
         let hash_str_any = json_to_hash_str_any(json);
 
         let mut expected_dict = HashMap::new();
-        expected_dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
-        expected_dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
+        expected_dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+        expected_dict.insert("two".to_string(), USSDData::Str("2".to_string()));
 
-        let expected_hash_str_any = HashStrAny::Dict(expected_dict);
+        let expected_hash_str_any = USSDData::Dict(expected_dict);
 
         assert_eq!(hash_str_any, expected_hash_str_any);
     }
@@ -383,9 +383,9 @@ mod tests {
     #[test]
     fn test_hash_str_any_to_json() {
         let mut dict = HashMap::new();
-        dict.insert("one".to_string(), HashStrAny::Str("1".to_string()));
-        dict.insert("two".to_string(), HashStrAny::Str("2".to_string()));
-        let hash_str_any = HashStrAny::new_dict(dict);
+        dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+        dict.insert("two".to_string(), USSDData::Str("2".to_string()));
+        let hash_str_any = USSDData::new_dict(dict);
         let json = hash_str_any_to_json(hash_str_any);
         let expected_json = json!({
             "one": "1",

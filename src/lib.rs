@@ -12,6 +12,7 @@ extern crate serde;
 
 use core::{process_request, InMemorySessionStore, SessionCache, USSDRequest, USSDResponse};
 use menu::USSDMenu;
+use utils::register_function;
 
 /// Represents a USSD application.
 /// The USSD application is responsible for processing USSD requests and responses.
@@ -37,7 +38,7 @@ impl UssdApp {
     ///
     /// # Arguments
     ///
-    /// * `functions_path` - The path to the functions used by the USSD application.
+    /// * `built_in_session_manager` - A boolean value indicating whether to use the built-in session manager.
     /// * `session_cache` - The session cache implementation used by the USSD application.
     ///
     /// # Returns
@@ -69,6 +70,44 @@ impl UssdApp {
     /// The USSD response.
     pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
         process_request(&request, &self.session_cache, &screens)
+    }
+
+    /// Registers application functions
+    /// Takes a HashMap of functions that would be called through the journey of the USSD application
+    /// The function_map is a HashMap with the key as the function path and the value as the function pointer
+    /// The function path is a string that represents the path to the function, should also be the key in the menu config service
+    ///
+    /// # Arguments
+    ///
+    /// * `functions_map` - A HashMap of functions: key is the function path, value is the function pointer
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ussdframework::prelude::*;
+    ///
+    /// use std::collections::HashMap;
+    ///
+    /// fn my_function(request: &USSDRequest, url: &str) -> USSDData {
+    ///    // Your function logic here
+    ///    return USSDData::Str("Hello".to_string());
+    /// }
+    ///
+    /// fn functions () -> FunctionMap {
+    ///   let mut functions_map = HashMap::new();
+    ///
+    ///   functions_map.insert("my_function".to_string(), my_function as USSDFunction);
+    ///
+    ///   functions_map
+    /// }
+    ///
+    /// register_functions(functions());
+    ///
+    /// ```
+    pub fn register_functions(&self, functions_map: types::FunctionMap) {
+        for (path, function) in functions_map {
+            register_function(&path, function);
+        }
     }
 
     /// Displays the menu to the user.

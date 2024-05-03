@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{error, info, types::HashStrAny, utils::FUNCTION_MAP};
+use crate::{error, info, types::USSDData, utils::FUNCTION_MAP};
 
 use super::USSDSession;
 
@@ -22,7 +22,7 @@ pub trait USSDServiceTrait {
         service_code: Option<String>,
     ) -> Self;
     fn call(&self, session: &mut USSDSession);
-    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny>;
+    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> USSDData>;
 }
 
 impl USSDServiceTrait for USSDService {
@@ -58,7 +58,7 @@ impl USSDServiceTrait for USSDService {
         session.data.insert(self.data_key.clone(), result.clone());
     }
 
-    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny> {
+    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> USSDData> {
         // Load the function from the functions_path
         let func = FUNCTION_MAP
             .lock()
@@ -77,9 +77,9 @@ impl USSDServiceTrait for USSDService {
                     let mut result = HashMap::new();
                     result.insert(
                         "error".to_string(),
-                        HashStrAny::Str("Function not found".to_string()),
+                        USSDData::Str("Function not found".to_string()),
                     );
-                    HashStrAny::Dict(result)
+                    USSDData::Dict(result)
                 })
             }
         }

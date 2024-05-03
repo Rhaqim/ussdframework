@@ -1,5 +1,5 @@
 use crate::core::USSDSession;
-use crate::types::{FunctionMap, HashStrAny, USSDFunction};
+use crate::types::{FunctionMap, USSDData, USSDFunction};
 use crate::{debug, info};
 use std::sync::Mutex;
 
@@ -17,44 +17,6 @@ pub fn register_function(path: &str, function_ptr: USSDFunction) {
     let mut function_map_guard = FUNCTION_MAP.lock().expect("Failed to lock function map");
 
     function_map_guard.insert(function_name, function_ptr);
-}
-
-/// Registers application functions
-/// Takes a HashMap of functions that would be called through the journey of the USSD application
-/// The function_map is a HashMap with the key as the function path and the value as the function pointer
-/// The function path is a string that represents the path to the function, should also be the key in the menu config service
-///
-/// # Arguments
-///
-/// * `functions_map` - A HashMap of functions: key is the function path, value is the function pointer
-///
-/// # Example
-///
-/// ```rust
-/// use ussdframework::prelude::*;
-///
-/// use std::collections::HashMap;
-///
-/// fn my_function(request: &USSDRequest, url: &str) -> HashStrAny {
-///    // Your function logic here
-///    return HashStrAny::Str("Hello".to_string());
-/// }
-///
-/// fn functions () -> FunctionMap {
-///   let mut functions_map = HashMap::new();
-/// 
-///   functions_map.insert("my_function".to_string(), my_function as USSDFunction);
-/// 
-///   functions_map
-/// }
-///
-/// register_functions(functions());
-///
-/// ```
-pub fn register_functions(functions_map: FunctionMap) {
-    for (path, function) in functions_map {
-        register_function(&path, function);
-    }
 }
 
 /// Function to evaluate an expression
@@ -100,17 +62,17 @@ pub fn evaluate_expression(text: &str, session: &USSDSession) -> String {
 
         if let Some(data_object) = session.data.get(object) {
             match data_object {
-                HashStrAny::Dict(inner_data) => {
+                USSDData::Dict(inner_data) => {
                     if field.is_empty() {
                         // If field is empty, directly look up the object key
-                        if let Some(HashStrAny::Str(value)) = inner_data.get(object) {
+                        if let Some(USSDData::Str(value)) = inner_data.get(object) {
                             return value.to_string(); // Replace with value if found
                         }
                     } else {
                         // If field is not empty, look up object key first, then field key
                         if let Some(inner_value) = inner_data.get(field) {
                             match inner_value {
-                                HashStrAny::Str(value) => {
+                                USSDData::Str(value) => {
                                     return value.to_string(); // Replace with value if found
                                 }
                                 _ => {}
@@ -118,7 +80,7 @@ pub fn evaluate_expression(text: &str, session: &USSDSession) -> String {
                         }
                     }
                 }
-                HashStrAny::Str(value) => {
+                USSDData::Str(value) => {
                     if field.is_empty() {
                         return value.to_string(); // Replace with value if found
                     }
@@ -172,16 +134,16 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
 
         if let Some(data_object) = session.data.get(object) {
             match data_object {
-                HashStrAny::Dict(inner_data) => {
+                USSDData::Dict(inner_data) => {
                     if field.is_empty() {
                         debug!("Field is empty");
-                        if let Some(HashStrAny::Str(data_value)) = inner_data.get(object) {
+                        if let Some(USSDData::Str(data_value)) = inner_data.get(object) {
                             return compare_strings(operator, data_value, value);
                         }
                     } else {
                         if let Some(inner_value) = inner_data.get(field) {
                             match inner_value {
-                                HashStrAny::Str(data_value) => {
+                                USSDData::Str(data_value) => {
                                     return compare_strings(operator, data_value, value);
                                 }
                                 _ => {}
@@ -189,7 +151,7 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
                         }
                     }
                 }
-                HashStrAny::Str(data_value) => {
+                USSDData::Str(data_value) => {
                     return compare_strings(operator, data_value, value);
                 }
                 _ => {}
@@ -231,7 +193,7 @@ fn compare_strings(operator: &str, left: &str, right: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::HashStrAny;
+    use crate::types::USSDData;
     use std::collections::HashMap;
 
     fn new_session() -> USSDSession {
@@ -247,7 +209,7 @@ mod tests {
     fn test_evaluate_expression() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("name".to_string(), HashStrAny::Str("John".to_string()));
+        data.insert("name".to_string(), USSDData::Str("John".to_string()));
         session.data = data;
 
         let text = "Hello {{name}}";
@@ -260,8 +222,8 @@ mod tests {
         let mut session = new_session();
         let mut data = HashMap::new();
         let mut inner_data = HashMap::new();
-        inner_data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
-        data.insert("session".to_string(), HashStrAny::new_dict(inner_data));
+        inner_data.insert("age".to_string(), USSDData::Str("30".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
         session.data = data;
 
         let text = "You're {{session.age}}";
@@ -274,8 +236,8 @@ mod tests {
         let mut session = new_session();
         let mut data = HashMap::new();
         let mut inner_data = HashMap::new();
-        inner_data.insert("name".to_string(), HashStrAny::Str("John".to_string()));
-        data.insert("session".to_string(), HashStrAny::new_dict(inner_data));
+        inner_data.insert("name".to_string(), USSDData::Str("John".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
         session.data = data;
 
         let text = "Hello {{session.name}}";
@@ -288,8 +250,8 @@ mod tests {
         let mut session = new_session();
         let mut data = HashMap::new();
         let mut inner_data = HashMap::new();
-        inner_data.insert("name".to_string(), HashStrAny::Str("john".to_string()));
-        data.insert("session".to_string(), HashStrAny::new_dict(inner_data));
+        inner_data.insert("name".to_string(), USSDData::Str("john".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
         session.data = data;
 
         let text = "Hello {{session.age}}";
@@ -302,8 +264,8 @@ mod tests {
         let mut session = new_session();
         let mut data = HashMap::new();
         let mut inner_data = HashMap::new();
-        inner_data.insert("name".to_string(), HashStrAny::Str("john".to_string()));
-        data.insert("session".to_string(), HashStrAny::new_dict(inner_data));
+        inner_data.insert("name".to_string(), USSDData::Str("john".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
         session.data = data;
 
         let text = "Hello {{session.age}}";
@@ -315,7 +277,7 @@ mod tests {
     fn test_evaluate_expression_nested_field_not_found_object_not_dict() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("session".to_string(), HashStrAny::Str("john".to_string()));
+        data.insert("session".to_string(), USSDData::Str("john".to_string()));
         session.data = data;
 
         let text = "Hello {{session.age}}";
@@ -327,7 +289,7 @@ mod tests {
     fn test_evaluate_expression_op() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("name".to_string(), HashStrAny::Str("John".to_string()));
+        data.insert("name".to_string(), USSDData::Str("John".to_string()));
         session.data = data;
 
         let text = "Is John? {{name == 'John'}}";
@@ -339,7 +301,7 @@ mod tests {
     fn test_evaluate_expression_op_gt() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 > 20? {{age > '20'}}";
@@ -351,7 +313,7 @@ mod tests {
     fn test_evaluate_expression_op_ge() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 >= 30? {{age >= '30'}}";
@@ -363,7 +325,7 @@ mod tests {
     fn test_evaluate_expression_op_lt() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 < 40? {{age < '40'}}";
@@ -375,7 +337,7 @@ mod tests {
     fn test_evaluate_expression_op_le() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 <= 30? {{age <= '30'}}";
@@ -387,7 +349,7 @@ mod tests {
     fn test_evaluate_expression_op_not_found() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 == 30? {{age == '30'}}";
@@ -399,7 +361,7 @@ mod tests {
     fn test_evaluate_expression_op_not_found_object_not_found() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 == 30? {{name == 'John'}}";
@@ -411,7 +373,7 @@ mod tests {
     fn test_evaluate_expression_op_not_found_object_not_dict() {
         let mut session = new_session();
         let mut data = HashMap::new();
-        data.insert("age".to_string(), HashStrAny::Str("30".to_string()));
+        data.insert("age".to_string(), USSDData::Str("30".to_string()));
         session.data = data;
 
         let text = "Is 30 == 30? {{age.name == 'John'}}";
@@ -424,8 +386,8 @@ mod tests {
         let mut session = new_session();
         let mut data = HashMap::new();
         let mut inner_data = HashMap::new();
-        inner_data.insert("name".to_string(), HashStrAny::new_dict(HashMap::new()));
-        data.insert("age".to_string(), HashStrAny::new_dict(inner_data));
+        inner_data.insert("name".to_string(), USSDData::new_dict(HashMap::new()));
+        data.insert("age".to_string(), USSDData::new_dict(inner_data));
         session.data = data;
 
         let text = "Is 30 == 30? {{age.name == 'John'}}";

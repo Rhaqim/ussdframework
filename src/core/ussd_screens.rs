@@ -1,6 +1,6 @@
 use crate::{
     error,
-    types::HashStrAny,
+    types::USSDData,
     utils::{evaluate_expression, evaluate_expression_op},
 };
 
@@ -169,7 +169,7 @@ impl USSDAction for Screen {
                         if let Some(input_identifier) = &self.input_identifier {
                             session.data.insert(
                                 input_identifier.to_string(),
-                                HashStrAny::Str(input.to_string()),
+                                USSDData::Str(input.to_string()),
                             );
                         }
                         self.default_next_screen.clone()
