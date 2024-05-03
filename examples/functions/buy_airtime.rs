@@ -3,7 +3,11 @@ use ussdframework::prelude::USSDSession;
 use ussdframework::types::HashStrAny;
 
 pub fn buy_airtime(session: &USSDSession, url: &str) -> HashStrAny {
-    let amount = session.fetch_session_data("amount").unwrap().as_str().unwrap();
+    let amount = session
+        .fetch_session_data("amount")
+        .unwrap()
+        .as_str()
+        .unwrap();
 
     print!("Sending request to: {} with amount: {}", url, amount);
 

@@ -15,21 +15,20 @@ use menu::USSDMenu;
 
 /// Represents a USSD application.
 /// The USSD application is responsible for processing USSD requests and responses.
-/// 
+///
 /// # Fields
-/// 
+///
 /// * `functions_path` - The path to the functions used by the USSD application.
 /// * `session_cache` - The session cache implementation used by the USSD application.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// use ussdframework::prelude::*;
-/// 
+///
 /// let app = UssdApp::new("functions".to_string(), false, None);
 /// ```
 pub struct UssdApp {
-    functions_path: String,
     pub session_cache: Box<dyn SessionCache>,
 }
 
@@ -45,20 +44,17 @@ impl UssdApp {
     ///
     /// A new instance of `UssdApp`.
     pub fn new(
-        functions_path: String,
         built_in_session_manager: bool,
         session_manager: Option<Box<dyn SessionCache>>,
     ) -> UssdApp {
-        let session_cache: Box<dyn SessionCache> = if built_in_session_manager || session_manager.is_none() {
-            Box::new(InMemorySessionStore::new())
-        } else {
-            session_manager.unwrap()
-        };
+        let session_cache: Box<dyn SessionCache> =
+            if built_in_session_manager || session_manager.is_none() {
+                Box::new(InMemorySessionStore::new())
+            } else {
+                session_manager.unwrap()
+            };
 
-        UssdApp {
-            functions_path,
-            session_cache,
-        }
+        UssdApp { session_cache }
     }
 
     /// Runs the USSD application with the given request and screens.
@@ -72,12 +68,7 @@ impl UssdApp {
     ///
     /// The USSD response.
     pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
-        process_request(
-            &request,
-            &self.functions_path,
-            &self.session_cache,
-            &screens,
-        )
+        process_request(&request, &self.session_cache, &screens)
     }
 
     /// Displays the menu to the user.

@@ -166,8 +166,8 @@ pub struct InMemorySessionStore {
     data: Mutex<HashMap<String, String>>,
 }
 
-unsafe impl Send for InMemorySessionStore {}
-unsafe impl Sync for InMemorySessionStore {}
+// unsafe impl Send for InMemorySessionStore {}
+// unsafe impl Sync for InMemorySessionStore {}
 
 impl InMemorySessionStore {
     pub fn new() -> Self {

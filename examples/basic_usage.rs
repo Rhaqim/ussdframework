@@ -14,11 +14,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let session_store = InMemorySessionStore::new();
 
-        let app = UssdApp::new(
-            "functions".to_string(),
-            false,
-            Some(Box::new(session_store)),
-        );
+        let app = UssdApp::new(false, Some(Box::new(session_store)));
 
         let content = include_str!("../examples/data/menu.json");
         let menus: USSDMenu = serde_json::from_str(&content).unwrap();

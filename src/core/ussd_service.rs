@@ -23,11 +23,8 @@ pub trait USSDServiceTrait {
         data_key: String,
         service_code: Option<String>,
     ) -> Self;
-    fn call(&self, session: &mut USSDSession, functions_path: String);
-    fn load_function(
-        &self,
-        base_functions_path: String,
-    ) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny>;
+    fn call(&self, session: &mut USSDSession);
+    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny>;
 }
 
 impl USSDServiceTrait for USSDService {
@@ -47,10 +44,10 @@ impl USSDServiceTrait for USSDService {
         }
     }
 
-    fn call(&self, session: &mut USSDSession, functions_path: String) {
+    fn call(&self, session: &mut USSDSession) {
         // Find and load the function from the functions_path
         // Logic to load the function from the function_path (You need to implement this logic)
-        let loaded_function = self.load_function(functions_path);
+        let loaded_function = self.load_function();
 
         let new_session: USSDSession = session.clone();
 
@@ -65,10 +62,7 @@ impl USSDServiceTrait for USSDService {
         session.data.insert(self.data_key.clone(), result.clone());
     }
 
-    fn load_function(
-        &self,
-        _base_functions_path: String,
-    ) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny> {
+    fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> HashStrAny> {
         // Load the function from the functions_path
         let func = FUNCTION_MAP
             .lock()

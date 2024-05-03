@@ -76,6 +76,20 @@ impl HashStrAny {
         }
     }
 
+    pub fn as_hash_str_any(&self) -> Option<&HashMap<String, HashStrAny>> {
+        match self {
+            HashStrAny::Dict(d) => Some(d),
+            _ => None,
+        }
+    }
+
+    pub fn as_list(&self) -> Option<&Vec<HashStrAny>> {
+        match self {
+            HashStrAny::List(l) => Some(l),
+            _ => None,
+        }
+    }
+
     // Helper function to create a new HashStrAny::Dict variant
     pub fn new_dict(dict: HashMap<String, HashStrAny>) -> HashStrAny {
         HashStrAny::Dict(dict)

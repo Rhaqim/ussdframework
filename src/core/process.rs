@@ -16,7 +16,6 @@ use super::{ScreenType, SessionCache, USSDAction, USSDRequest, USSDResponse, USS
 /// The USSD response.
 pub fn process_request(
     request: &USSDRequest,
-    functions_path: &String,
     session_cache: &Box<dyn SessionCache>,
     screens: &USSDMenu,
 ) -> USSDResponse {
@@ -51,12 +50,7 @@ pub fn process_request(
             // The next screen is set based on the action
             match screen.screen_type {
                 ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
-                    screen.execute(
-                        &mut session,
-                        request,
-                        functions_path.clone(),
-                        &screens.services,
-                    );
+                    screen.execute(&mut session, request, &screens.services);
                 }
 
                 // Display the screen message and execute the screen action for Menu and Input screen types
@@ -86,12 +80,7 @@ pub fn process_request(
                     } else {
                         debug!("Executing action for screen: {}", current_screen);
 
-                        screen.execute(
-                            &mut session,
-                            request,
-                            functions_path.clone(),
-                            &screens.services,
-                        );
+                        screen.execute(&mut session, request, &screens.services);
 
                         // remove from displayed
                         session.displayed.remove(&current_screen);

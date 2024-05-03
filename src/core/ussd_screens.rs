@@ -72,7 +72,6 @@ pub trait USSDAction {
         &self,
         session: &mut USSDSession,
         request: &USSDRequest,
-        function_path: String,
         services: &HashMap<String, USSDService>,
     );
 }
@@ -137,7 +136,6 @@ impl USSDAction for Screen {
         &self,
         session: &mut USSDSession,
         request: &USSDRequest,
-        function_path: String,
         services: &HashMap<String, USSDService>,
     ) {
         let input = request.input.trim();
@@ -178,7 +176,7 @@ impl USSDAction for Screen {
                     }
                     ScreenType::Function => {
                         if let Some(function_name) = &self.function {
-                            call_function(session, services, function_name, function_path);
+                            call_function(session, services, function_name);
                         }
                         self.default_next_screen.clone()
                     }
@@ -222,13 +220,7 @@ impl USSDAction for Screen {
 /// use std::collections::HashMap;
 ///
 /// let mut session = USSDSession::new();
-/// let request = USSDRequest {
-///    msisdn
-///    session_id
-///    service_code
-///    input
-///    language
-/// };
+///
 /// let services = HashMap::new();
 /// let function_name = "function_name".to_string();
 /// let functions_path = "path/to/functions".to_string();
@@ -239,9 +231,8 @@ fn call_function(
     session: &mut USSDSession,
     services: &HashMap<String, USSDService>,
     function_name: &str,
-    functions_path: String,
 ) {
     let service = services.get(function_name).unwrap();
 
-    service.call(session, functions_path);
+    service.call(session);
 }
