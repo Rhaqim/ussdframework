@@ -5,9 +5,9 @@ pub mod menubuilder {
         model_screen::screens::dsl::screens as screen_dsl,
         model_service::services::dsl::services as services_dsl,
     };
+    use crate::builder::{Database, DatabaseManager};
     use crate::builder::{Screen as ScreenModel, Service as ServiceModel};
     use crate::core::USSDMenu;
-    use crate::builder::{Database, DatabaseManager};
 
     pub trait MenuBuilderTrait {
         fn new(service_code: &str) -> Self;
@@ -31,11 +31,11 @@ pub mod menubuilder {
             let mut menus = HashMap::new();
             let mut services = HashMap::new();
 
+            let service: Vec<ServiceModel> = db.get_many().expect("Failed to get services");
 
-            let service = db.get(1).unwrap();
-
-            services.insert(service.name.clone(), service.to_ussd_service());
-        
+            for s in service {
+                services.insert(s.name.clone(), s.to_ussd_service());
+            }
 
             USSDMenu { menus, services }
         }

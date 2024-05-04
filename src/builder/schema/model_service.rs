@@ -28,9 +28,9 @@ table! {
 }
 
 impl Service {
-    pub fn from(service: USSDService) -> Self {
+    pub fn from(name: &str, service: USSDService) -> Self {
         Service {
-            name: service.function_name.clone(),
+            name: name.to_string(),
             function_name: service.function_name,
             function_url: service.function_url,
             data_key: service.data_key,
@@ -103,6 +103,12 @@ impl Database<Service> for DatabaseManager {
         services::table
             .find(id)
             .first(&mut self.connection)
+            .map_err(|e| Box::new(e) as Box<dyn Error>)
+    }
+
+    fn get_many(&mut self) -> Result<Vec<Service>, Box<dyn Error>> {
+        services::table
+            .load(&mut self.connection)
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }
 }

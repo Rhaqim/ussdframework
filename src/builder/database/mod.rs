@@ -2,7 +2,7 @@ use diesel::{sqlite::SqliteConnection, Connection};
 use std::error::Error;
 
 pub fn establish_connection() -> SqliteConnection {
-    let database_url = "database.db";
+    let database_url = "menu.sqlite3";
     SqliteConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
 }
@@ -12,6 +12,7 @@ pub trait Database<T> {
     fn update(&mut self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
     fn delete(&mut self, id: i32) -> Result<(), Box<dyn Error>>;
     fn get(&mut self, id: i32) -> Result<T, Box<dyn Error>>;
+    fn get_many(&mut self) -> Result<Vec<T>, Box<dyn Error>>;
 }
 
 pub struct DatabaseManager {

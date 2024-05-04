@@ -34,10 +34,10 @@ serde_json = "1.0"
 # async
 tokio = { version = "1.0", features = ["full"] }
 
-# feature dependencies
+# feature dependencies // change to optional for build
 diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = false }
 dotenv = { version = "0.15.0", optional = false }
 
 [features]
-# menubuilder = ["diesel", "dotenv"]
+# menubuilder = ["diesel", "dotenv"] // uncomment to enable feature
 menubuilder = []
