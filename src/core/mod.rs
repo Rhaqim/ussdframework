@@ -1,4 +1,5 @@
 pub mod process;
+pub mod ussd_menu;
 pub mod ussd_request;
 pub mod ussd_response;
 pub mod ussd_screens;
@@ -6,6 +7,7 @@ pub mod ussd_service;
 pub mod ussd_session;
 
 pub use process::process_request;
+pub use ussd_menu::USSDMenu;
 pub use ussd_request::USSDRequest;
 pub use ussd_response::USSDResponse;
 pub use ussd_screens::{ScreenType, USSDAction};

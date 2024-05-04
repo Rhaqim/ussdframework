@@ -12,8 +12,8 @@ use crate::core::{
 
 /// Represents a USSD menu structure.
 ///
-/// The `USSDMenu` struct represents the structure of a USSD (Unstructured Supplementary Service Data) 
-/// menu, including menus and associated services. It encapsulates a collection of menus and services 
+/// The `USSDMenu` struct represents the structure of a USSD (Unstructured Supplementary Service Data)
+/// menu, including menus and associated services. It encapsulates a collection of menus and services
 /// represented as hash maps.
 ///
 /// This struct provides methods for creating a new menu instance and loading menu structure from a JSON file.
@@ -25,7 +25,7 @@ use crate::core::{
 ///
 /// # Derives
 ///
-/// The `USSDMenu` struct derives `Debug`, `Clone`, `Deserialize`, and `Serialize` traits 
+/// The `USSDMenu` struct derives `Debug`, `Clone`, `Deserialize`, and `Serialize` traits
 /// to enable debugging, cloning, and serialization/deserialization of menu instances.
 ///
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -50,7 +50,7 @@ impl USSDMenu {
 
     /// Loads a USSD menu structure from a JSON file.
     ///
-    /// This method reads the contents of the specified JSON `file_path`, parses it, and constructs 
+    /// This method reads the contents of the specified JSON `file_path`, parses it, and constructs
     /// a `USSDMenu` instance from the JSON data.
     ///
     /// # Arguments
@@ -59,8 +59,8 @@ impl USSDMenu {
     ///
     /// # Returns
     ///
-    /// A `Result` containing either a `USSDMenu` instance representing the loaded menu structure 
-    /// (if successful), or a `Box<dyn std::error::Error>` containing an error message if an error occurs 
+    /// A `Result` containing either a `USSDMenu` instance representing the loaded menu structure
+    /// (if successful), or a `Box<dyn std::error::Error>` containing an error message if an error occurs
     /// during the loading process.
     ///
     pub fn load_from_json(file_path: &str) -> Result<Self, Box<dyn std::error::Error>> {
@@ -150,84 +150,3 @@ impl USSDMenu {
     //     MenuBuilder::new(service_code, connection)
     // }
 }
-
-#[cfg(feature = "menubuilder")]
-pub mod menubuilder {
-    use crate::menu::USSDMenu;
-    use crate::ussd_screens::Screen;
-    use crate::ussd_service::USSDService;
-    use diesel::{self, prelude::*};
-
-    pub trait MenuBuilderTrait {
-        fn new(service_code: &str, connection: Option<DbConnection>) -> Self;
-        fn add_screen(&self, screen: Screen);
-        fn add_service(&self, service: USSDService);
-        fn build(&self) -> USSDMenu;
-    }
-
-    pub struct MenuBuilder {
-        pub service_code: String,
-        pub connection: Option<DbConnection>,
-    }
-
-    impl MenuBuilderTrait for MenuBuilder {
-        fn new(service_code: &str, connection: Option<DbConnection>) -> Self {
-            MenuBuilder {
-                service_code: service_code.to_string(),
-                connection,
-            }
-        }
-
-        fn add_screen(&self, screen: Screen) {
-            if let Some(ref conn) = self.connection {
-                diesel::insert_into(screens::table)
-                    .values(&screen)
-                    .execute(conn)
-                    .expect("Error saving new screen");
-            } else {
-                panic!("No database connection provided");
-            }
-        }
-
-        fn add_service(&self, service: USSDService) {
-            if let Some(ref conn) = self.connection {
-                // Add the service to the database
-                diesel::insert_into(services::table)
-                    .values(&service)
-                    .execute(conn)
-                    .expect("Error saving new service");
-            } else {
-                panic!("No database connection provided");
-            }
-        }
-
-        fn build(&self) -> USSDMenu {
-            let mut menus = HashMap::new();
-            let mut services = HashMap::new();
-
-            if let Some(ref conn) = self.connection {
-                // Add the screens and services to the menu
-                for screen in Screen::belonging_to(&self.service_code)
-                    .load::<Screen>(conn)
-                    .expect("Error loading screens")
-                {
-                    menus.insert(screen.name.clone(), screen);
-                }
-
-                for service in USSDService::belonging_to(&self.service_code)
-                    .load::<USSDService>(conn)
-                    .expect("Error loading services")
-                {
-                    services.insert(service.name.clone(), service);
-                }
-            } else {
-                panic!("No database connection provided");
-            }
-
-            USSDMenu { menus, services }
-        }
-    }
-}
-
-#[cfg(not(feature = "menubuilder"))]
-pub mod menubuilder {}
