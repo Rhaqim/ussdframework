@@ -1,21 +1,21 @@
 use crate::core::USSDSession;
 use crate::types::{FunctionMap, USSDData, USSDFunction};
 use crate::{debug, info};
-use std::sync::Mutex;
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex, MutexGuard};
 
 lazy_static::lazy_static! {
     // Define a lazy static variable to store registered functions
-    pub static ref FUNCTION_MAP: Mutex<FunctionMap> = Mutex::new(FunctionMap::new());
+    pub static ref FUNCTION_MAP: Arc<Mutex<FunctionMap>> = Arc::new(Mutex::new(FunctionMap::new()));
+    pub static ref REGISTERED_FUNCTIONS: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
+
 }
 
 // Function to register functions
-pub fn register_function(path: &str, function_ptr: USSDFunction) {
+pub fn register_function(path: &str, function_ptr: USSDFunction, function_map_guard: &mut MutexGuard<FunctionMap>) {
     info!("Registering function: {}", path);
 
     let function_name = path.to_string();
-
-    let mut function_map_guard = FUNCTION_MAP.lock().expect("Failed to lock function map");
-
     function_map_guard.insert(function_name, function_ptr);
 }
 

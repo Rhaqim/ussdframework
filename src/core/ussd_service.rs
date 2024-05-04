@@ -45,13 +45,13 @@ impl USSDServiceTrait for USSDService {
         // Logic to load the function from the function_path (You need to implement this logic)
         let loaded_function = self.load_function();
 
+        // Clone the session to pass to the loaded function
         let new_session: USSDSession = session.clone();
 
         // Pass the function_url as an argument to the loaded function
-        let result = if let Some(url) = &self.function_url {
-            loaded_function(&new_session, url)
-        } else {
-            loaded_function(&new_session, "")
+        let result = match &self.function_url {
+            Some(url) => loaded_function(&new_session, url),
+            None => loaded_function(&new_session, ""),
         };
 
         // Save the returned result in the session data with the data_key

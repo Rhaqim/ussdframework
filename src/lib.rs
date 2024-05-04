@@ -12,7 +12,7 @@ extern crate serde;
 
 use core::{process_request, InMemorySessionStore, SessionCache, USSDRequest, USSDResponse};
 use menu::USSDMenu;
-use utils::register_function;
+use utils::{register_function, FUNCTION_MAP, REGISTERED_FUNCTIONS};
 
 /// Represents a USSD application.
 /// The USSD application is responsible for processing USSD requests and responses.
@@ -91,8 +91,17 @@ impl UssdApp {
     ///
     /// ```
     pub fn register_functions(&self, functions_map: types::FunctionMap) {
+        let mut function_map_guard = FUNCTION_MAP.lock().expect("Failed to lock function map");
+        let mut registered_functions_guard = REGISTERED_FUNCTIONS.lock().expect("Failed to lock registered functions");
+    
         for (path, function) in functions_map {
-            register_function(&path, function);
+            if registered_functions_guard.contains(&path) {
+                // Function already registered, skip it
+                continue;
+            }
+    
+            register_function(&path, function, &mut function_map_guard);
+            registered_functions_guard.insert(path);
         }
     }
 
