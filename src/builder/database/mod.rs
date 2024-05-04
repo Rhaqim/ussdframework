@@ -8,11 +8,10 @@ pub fn establish_connection() -> SqliteConnection {
 }
 
 pub trait Database<T> {
-    fn insert(&mut self, model: T, extra: Option<String>) -> Result<(), Box<dyn Error>>;
-    fn update(&self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
-    fn delete(&self, id: i32) -> Result<(), Box<dyn Error>>;
-    fn get(&self, id: i32) -> Result<T, Box<dyn Error>>;
-    fn get_all(&self) -> Result<Vec<T>, Box<dyn Error>>;
+    fn create(&mut self, model: T) -> Result<(), Box<dyn Error>>;
+    fn update(&mut self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
+    fn delete(&mut self, id: i32) -> Result<(), Box<dyn Error>>;
+    fn get(&mut self, id: i32) -> Result<T, Box<dyn Error>>;
 }
 
 pub struct DatabaseManager {
