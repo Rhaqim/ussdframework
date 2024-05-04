@@ -10,10 +10,33 @@ use crate::{info, types::USSDData};
 
 use super::USSDRequest;
 
-/// Structure for USSD session
-/// The session stores the current screen, session data, and other session-related information.
-/// It is used to maintain the state of the USSD session.
-/// It can be stored and retrieved from a cache.
+/// Represents a USSD session.
+///
+/// The `USSDSession` struct represents a session in the context of Unstructured Supplementary 
+/// Service Data (USSD) communication. It encapsulates various session-related data, including 
+/// session ID, session data, current screen, displayed screens, visited screens, last interaction 
+/// time, session termination status, language, and mobile subscriber ISDN (MSISDN) number.
+///
+/// This struct is used to maintain and manage the state of USSD sessions throughout their lifecycle.
+/// It provides methods for accessing and manipulating session data.
+///
+/// # Fields
+///
+/// * `session_id`: A string representing the unique identifier of the session.
+/// * `data`: A `HashMap<String, USSDData>` containing session-specific data associated with keys.
+/// * `current_screen`: A string representing the identifier of the current screen within the session.
+/// * `displayed`: A `HashMap<String, bool>` indicating whether each screen has been displayed.
+/// * `visited_screens`: A vector of strings representing the screens visited during the session.
+/// * `last_interaction_time`: A `SystemTime` representing the timestamp of the last interaction with the session.
+/// * `end_session`: A boolean indicating whether the session has ended.
+/// * `language`: A string representing the language preference of the session.
+/// * `msisdn`: A string representing the mobile subscriber ISDN (MSISDN) number associated with the session.
+///
+/// # Derives
+///
+/// The `USSDSession` struct derives `Debug`, `Deserialize`, `Serialize`, and `Clone` traits 
+/// to enable debugging, serialization/deserialization, and cloning of session instances.
+///
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct USSDSession {
     pub session_id: String,
@@ -150,15 +173,51 @@ impl USSDSession {
     }
 }
 
-/// Implement this trait for storing and retrieving USSD sessions
-/// from a cache.
-/// The cache can be an in-memory store, a database, or any other
-/// storage mechanism.
-/// The cache should be thread-safe and allow for concurrent access.
-/// The cache should also be able to store and retrieve USSD sessions.
-/// The cache should be able to store and retrieve USSD sessions.
+/// Trait for a session cache implementation.
+///
+/// The `SessionCache` trait defines the interface for storing and retrieving USSD (Unstructured
+/// Supplementary Service Data) sessions. Implementations of this trait are responsible for storing
+/// and retrieving session data associated with session IDs. This trait provides methods for storing
+/// and retrieving sessions, which should be implemented according to the specific storage mechanism.
+///
+/// # Safety
+///
+/// This trait is marked as `Send` and `Sync`, indicating that implementations must be thread-safe
+/// and capable of being sent across threads. Implementations should ensure that concurrent access
+/// to session data is properly synchronized to prevent data races.
+///
 pub trait SessionCache: Send + Sync {
+    /// Stores a USSD session in the cache.
+    ///
+    /// This method stores the provided `session` in the session cache. The session data is associated
+    /// with a session ID, which is used as the key for storage. If the session ID already exists
+    /// in the cache, the existing session data should be replaced with the new session data.
+    ///
+    /// # Arguments
+    ///
+    /// * `session`: A reference to the `USSDSession` object representing the session to be stored.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` indicating whether the operation was successful. If successful, `Ok(())` is returned.
+    /// If an error occurs during the storage process, a `String` containing an error message is returned.
+    ///
     fn store_session(&self, session: &USSDSession) -> Result<(), String>;
+
+    /// Retrieves a USSD session from the cache.
+    ///
+    /// This method retrieves the session associated with the provided `session_id` from the session cache.
+    /// If a session with the specified ID exists in the cache, it is returned. Otherwise, `None` is returned.
+    ///
+    /// # Arguments
+    ///
+    /// * `session_id`: A string representing the unique identifier of the session to be retrieved.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing either an `Option<USSDSession>` representing the retrieved session (if found),
+    /// or a `String` containing an error message if an error occurs during the retrieval process.
+    ///
     fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String>;
 }
 

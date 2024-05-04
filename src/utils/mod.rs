@@ -11,7 +11,47 @@ lazy_static::lazy_static! {
 
 }
 
-// Function to register functions
+/// Registers a USSD function with the provided path.
+///
+/// The `register_function` function is used to register a USSD (Unstructured Supplementary Service Data) function 
+/// with the specified path. USSD functions are callbacks that handle USSD requests and return the appropriate 
+/// USSD data. Once registered, the function can be invoked by its path.
+///
+/// # Arguments
+///
+/// * `path`: A string representing the unique path for the USSD function. This path is used to identify 
+///           the function when invoking it.
+/// * `function_ptr`: A function pointer representing the USSD function to be registered. This function 
+///                   should have the signature `fn(&USSDSession, &str) -> USSDData`, where `USSDSession` 
+///                   represents the session data and `USSDData` represents the data to be returned 
+///                   as a response.
+/// * `function_map_guard`: A mutable reference to a `MutexGuard<HashMap<String, USSDFunction>>` representing 
+///                          the guarded HashMap containing the registered USSD functions. This guard is used 
+///                          to insert the new function into the map.
+///
+/// # Example
+///
+/// ```
+/// use my_module::{register_function, USSDSession, USSDData};
+///
+/// fn my_function(session: &USSDSession, input: &str) -> USSDData {
+///     // Implementation of the USSD function
+///     unimplemented!()
+/// }
+///
+/// // Registering the function with a specific path
+/// register_function("/my-path", my_function, &mut function_map_guard);
+/// ```
+///
+/// # Panics
+///
+/// This function panics if it fails to acquire the lock on the function map.
+///
+/// # Safety
+///
+/// This function is safe to call as long as the provided `function_map_guard` is a mutable reference 
+/// to a locked `MutexGuard<HashMap<String, USSDFunction>>`.
+///
 pub fn register_function(path: &str, function_ptr: USSDFunction, function_map_guard: &mut MutexGuard<FunctionMap>) {
     info!("Registering function: {}", path);
 

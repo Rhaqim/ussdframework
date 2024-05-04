@@ -53,18 +53,50 @@ impl Display for RouterOptions {
     }
 }
 
+/// Represents various types of USSD data.
+///
+/// The `USSDData` enum represents different types of data that can be exchanged
+/// in the context of Unstructured Supplementary Service Data (USSD) communication.
+///
+/// This enum encompasses string, integer, floating-point, list, dictionary, and
+/// null-like data types commonly used in USSD interactions.
+///
+/// # Derives
+///
+/// The `USSDData` enum derives `Debug`, `Clone`, `Serialize`, `Deserialize`, and `PartialEq` traits
+/// to enable debugging, cloning, serialization/deserialization, and comparison of data instances.
+///
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum USSDData {
+    /// Represents a string value
     Str(String),
+    /// Represents an integer value
     Int(i64),
+    /// Represents a floating-point value
     Float(f64),
+    /// Represents a list of USSD data
     List(Vec<USSDData>),
+    /// Represents a list of string values
     ListStr(Vec<String>),
+    /// Represents a dictionary of key-value pairs with USSDData values.
     Dict(HashMap<String, USSDData>),
+    /// Represents a null-like value
     None,
 }
 
 impl USSDData {
+    /// Creates a new `USSDData` instance from a JSON value.
+    ///
+    /// This method converts a JSON value into the corresponding `USSDData` variant.
+    ///
+    /// # Arguments
+    ///
+    /// * `value`: An optional JSON `Value` representing the data value to be converted.
+    ///
+    /// # Returns
+    ///
+    /// A `USSDData` instance representing the converted data value.
+    ///
     pub fn new(value: Option<Value>) -> Self {
         match value {
             Some(val) => json_to_hash_str_any(val),
@@ -72,6 +104,12 @@ impl USSDData {
         }
     }
 
+    /// Returns the data as a string, if applicable.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to a string value, if the data is of string type.
+    ///
     pub fn as_str(&self) -> Option<&str> {
         match self {
             USSDData::Str(s) => Some(s),
@@ -79,6 +117,12 @@ impl USSDData {
         }
     }
 
+    /// Returns the data as a dictionary of key-value pairs, if applicable.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to a dictionary of key-value pairs, if the data is of dictionary type.
+    ///
     pub fn as_hash_str_any(&self) -> Option<&HashMap<String, USSDData>> {
         match self {
             USSDData::Dict(d) => Some(d),
@@ -86,6 +130,12 @@ impl USSDData {
         }
     }
 
+    /// Returns the data as a list, if applicable.
+    ///
+    /// # Returns
+    ///
+    /// An optional reference to a list of USSDData values, if the data is of list type.
+    ///
     pub fn as_list(&self) -> Option<&Vec<USSDData>> {
         match self {
             USSDData::List(l) => Some(l),
@@ -93,7 +143,20 @@ impl USSDData {
         }
     }
 
-    // Helper function to create a new USSDData::Dict variant
+    /// Creates a new `USSDData` instance representing a dictionary.
+    ///
+    /// The `new_dict` function creates a new `USSDData` instance representing a dictionary
+    /// (i.e., a collection of key-value pairs) initialized with the provided `dict` HashMap.
+    ///
+    /// # Arguments
+    ///
+    /// * `dict`: A `HashMap<String, USSDData>` representing the dictionary data to be encapsulated
+    ///           within the `USSDData` instance.
+    ///
+    /// # Returns
+    ///
+    /// A `USSDData` instance representing the dictionary data provided in the `dict` parameter.
+    ///
     pub fn new_dict(dict: HashMap<String, USSDData>) -> USSDData {
         USSDData::Dict(dict)
     }
@@ -125,34 +188,6 @@ impl USSDData {
     /// ```
     pub fn json_to_hash_str_any(&self, json: Value) -> Self {
         json_to_hash_str_any(json)
-        // match json {
-        //     Value::Null => USSDData::None,
-        //     Value::Bool(b) => USSDData::Str(b.to_string()),
-        //     Value::Number(n) => {
-        //         if let Some(i) = n.as_i64() {
-        //             USSDData::Int(i as i64)
-        //         } else if let Some(f) = n.as_f64() {
-        //             USSDData::Float(f as f64)
-        //         } else {
-        //             USSDData::None
-        //         }
-        //     }
-        //     Value::String(s) => USSDData::Str(s),
-        //     Value::Array(arr) => {
-        //         let mut list = Vec::new();
-        //         for val in arr {
-        //             list.push(self.json_to_hash_str_any(val));
-        //         }
-        //         USSDData::List(list)
-        //     }
-        //     Value::Object(obj) => {
-        //         let mut dict = HashMap::new();
-        //         for (key, val) in obj {
-        //             dict.insert(key, self.json_to_hash_str_any(val));
-        //         }
-        //         USSDData::Dict(dict)
-        //     }
-        // }
     }
 
     /// Convert a USSDData value to a JSON value
@@ -194,9 +229,7 @@ impl USSDData {
                     .collect();
                 Value::Array(items)
             }
-            USSDData::ListStr(list) => {
-                Value::Array(list.into_iter().map(Value::String).collect())
-            }
+            USSDData::ListStr(list) => Value::Array(list.into_iter().map(Value::String).collect()),
             USSDData::Dict(dict) => {
                 let mut obj = serde_json::Map::new();
                 for (key, value) in dict {
