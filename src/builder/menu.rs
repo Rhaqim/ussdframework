@@ -1,10 +1,12 @@
 pub mod menubuilder {
     use std::collections::HashMap;
+    use diesel_migrations::{embed_migrations, MigrationHarness};
 
     use crate::builder::server::start_server;
     use crate::builder::{Database, DatabaseManager};
     use crate::builder::{Screen as ScreenModel, Service as ServiceModel};
     use crate::core::USSDMenu;
+    use crate::info;
 
     pub trait MenuBuilderTrait {
         fn new(service_code: &str) -> Self;
@@ -57,7 +59,23 @@ pub mod menubuilder {
             }
         }
 
+        fn run_migration() {
+            info!("Running migration");
+
+            let mut db = DatabaseManager::new();
+
+            let mig = embed_migrations!("./migrations");
+
+            info!("Running pending migrations");
+
+            let _ = &db.connection.run_pending_migrations(mig);
+
+            info!("Migration complete");
+        }
+
         pub async fn server(port: u16) -> std::io::Result<()> {
+            Self::run_migration();
+            
             start_server(port).await
         }
     }

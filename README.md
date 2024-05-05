@@ -1,6 +1,8 @@
-# USSD Framework
+<div style="text-align: center;">
+   <h1>USSD Framework</h1>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+</div>
 
 ## Overview
 
@@ -135,7 +137,7 @@ The USSD Framework supports session management and stateful interactions. It kee
     fn main() {
         // Create a new instance of the USSD Framework
         let mut ussd = UssdApp::new(false, Some(Box::new(RedisSession::new())));
-        
+
         ...
     }
 
@@ -159,7 +161,7 @@ The USSD Framework supports calling functions from the menu configuration. You c
         // Convert the JSON data to USSDData by passing the JSON data to the USSDData.json_to_hash_str_any() method
         data.json_to_hash_str_any(json)
     }
-    
+
     fn my_function2(session: &USSDSession, input: &str) -> USSDData {
          let json = json!({
             "status": "success",
