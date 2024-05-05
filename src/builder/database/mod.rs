@@ -1,10 +1,20 @@
-use diesel::{sqlite::SqliteConnection, Connection};
+use diesel::{
+    prelude::*,
+    r2d2::{ConnectionManager, Pool},
+};
 use std::error::Error;
 
 pub fn establish_connection() -> SqliteConnection {
     let database_url = "menu.sqlite3";
     SqliteConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
+}
+
+pub fn establish_pool() -> Pool<ConnectionManager<SqliteConnection>> {
+    let manager = ConnectionManager::<SqliteConnection>::new("menu.sqlite3");
+    Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool")
 }
 
 pub trait Database<T> {
@@ -17,11 +27,13 @@ pub trait Database<T> {
 
 pub struct DatabaseManager {
     pub connection: SqliteConnection,
+    pub pool: Pool<ConnectionManager<SqliteConnection>>,
 }
 
 impl DatabaseManager {
     pub fn new() -> DatabaseManager {
         let connection = establish_connection();
-        DatabaseManager { connection }
+        let pool = establish_pool();
+        DatabaseManager { connection, pool }
     }
 }
