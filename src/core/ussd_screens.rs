@@ -20,9 +20,37 @@ pub enum ScreenType {
     Quit,
 }
 
+impl ScreenType {
+    pub fn to_string(&self) -> String {
+        match self {
+            ScreenType::Initial => "Initial".to_string(),
+            ScreenType::Menu => "Menu".to_string(),
+            ScreenType::Input => "Input".to_string(),
+            ScreenType::Function => "Function".to_string(),
+            ScreenType::Router => "Router".to_string(),
+            ScreenType::Quit => "Quit".to_string(),
+        }
+    }
+
+    pub fn from_string(screen_type: &str) -> ScreenType {
+        match screen_type {
+            "Initial" => ScreenType::Initial,
+            "Menu" => ScreenType::Menu,
+            "Input" => ScreenType::Input,
+            "Function" => ScreenType::Function,
+            "Router" => ScreenType::Router,
+            "Quit" => ScreenType::Quit,
+            _ => {
+                error!("Invalid screen type");
+                ScreenType::Initial
+            }
+        }
+    }
+}
+
 // Define structure for a screen
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Screen {
+pub struct USSDScreen {
     pub text: String,
     pub screen_type: ScreenType,
     pub default_next_screen: String,
@@ -76,7 +104,7 @@ pub trait USSDAction {
     );
 }
 
-impl USSDAction for Screen {
+impl USSDAction for USSDScreen {
     /// Displays a message corresponding to the screen type.
     ///
     /// The message construction depends on the type of screen:

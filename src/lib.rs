@@ -156,14 +156,12 @@ impl UssdApp {
     }
 
     #[cfg(feature = "menubuilder")]
-    pub fn build_service(&self, service_code: &str, connection: Option<DbConnection>) -> USSDMenu {
-        let mut builder = menu::menubuilder::MenuBuilder::new(service_code, connection);
-        builder.add_screen(Screen::new(
-            "initial",
-            "Welcome to the USSD service",
-            ScreenType::Initial,
-        ));
-        builder.add_screen(Screen::new("menu", "Main menu", ScreenType::Menu));
-        builder.add_screen(Screen::new("end", "Goodbye", ScreenType::End));
+    pub async fn build_service(&self) -> () {
+        let builder = menubuilder::MenuBuilder::server().await;
+
+        match builder {
+            Ok(_) => info!("Server started"),
+            Err(e) => error!("Failed to start server: {}", e),
+        }
     }
 }

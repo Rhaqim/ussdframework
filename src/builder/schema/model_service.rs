@@ -57,7 +57,6 @@ impl
             diesel::sql_types::Nullable<diesel::sql_types::Text>,
             diesel::sql_types::Text,
             diesel::sql_types::Nullable<diesel::sql_types::Text>,
-
         ),
         diesel::sqlite::Sqlite,
     > for Service

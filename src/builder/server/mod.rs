@@ -1,15 +1,13 @@
-pub mod api;
-
-use api::get_data;
-
 use actix_files::Files;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use std::path::PathBuf;
 
+use super::api::database::database_start;
+
 pub async fn start_server() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(web::resource("/api/data").route(web::get().to(get_data)))
+            .service(web::resource("/api/data").route(web::get().to(database_start)))
             .default_service(web::get().to(index)) // Serve the index.html for all other routes
             .service(Files::new("/_next", "./frontend/.next").index_file("/server/app/index.html"))
         // Serve all files under the static directory

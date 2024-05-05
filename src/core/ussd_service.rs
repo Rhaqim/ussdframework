@@ -15,31 +15,11 @@ pub struct USSDService {
 }
 
 pub trait USSDServiceTrait {
-    fn new(
-        function_name: String,
-        function_url: Option<String>,
-        data_key: String,
-        service_code: Option<String>,
-    ) -> Self;
     fn call(&self, session: &mut USSDSession);
     fn load_function(&self) -> Box<dyn Fn(&USSDSession, &str) -> USSDData>;
 }
 
 impl USSDServiceTrait for USSDService {
-    fn new(
-        function_name: String,
-        function_url: Option<String>,
-        data_key: String,
-        service_code: Option<String>,
-    ) -> Self {
-        Self {
-            function_name,
-            function_url,
-            data_key,
-            service_code,
-        }
-    }
-
     fn call(&self, session: &mut USSDSession) {
         // Find and load the function from the functions_path
         // Logic to load the function from the function_path (You need to implement this logic)

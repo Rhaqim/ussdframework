@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::core::{
-    ussd_screens::{Screen, ScreenType},
+    ussd_screens::{USSDScreen, ScreenType},
     ussd_service::USSDService,
 };
 
@@ -30,7 +30,7 @@ use crate::core::{
 ///
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct USSDMenu {
-    pub menus: HashMap<String, Screen>,
+    pub menus: HashMap<String, USSDScreen>,
     pub services: HashMap<String, USSDService>,
 }
 
@@ -73,7 +73,7 @@ impl USSDMenu {
     }
 
     // Save menu structure to JSON file
-    pub fn _save_to_json(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn save_to_json(&self, file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let json_str = serde_json::to_string(self)?;
         let mut file = File::create(file_path)?;
         file.write_all(json_str.as_bytes())?;
@@ -98,7 +98,7 @@ impl USSDMenu {
     ///
     /// This method panics if no initial screen is found in the menu.
     ///
-    pub fn get_initial_screen(&self) -> (String, &Screen) {
+    pub fn get_initial_screen(&self) -> (String, &USSDScreen) {
         for (screen_name, screen) in self.menus.iter() {
             if let ScreenType::Initial = screen.screen_type {
                 return (screen_name.clone(), screen);
