@@ -57,8 +57,8 @@ pub mod menubuilder {
             }
         }
 
-        pub async fn server() -> std::io::Result<()> {
-            start_server().await
+        pub async fn server(port: u16) -> std::io::Result<()> {
+            start_server(port).await
         }
     }
 }

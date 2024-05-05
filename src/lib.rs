@@ -14,12 +14,6 @@ use utils::{register_function, FUNCTION_MAP, REGISTERED_FUNCTIONS};
 #[cfg(feature = "menubuilder")]
 mod builder;
 
-#[cfg(feature = "menubuilder")]
-pub use builder::menubuilder;
-
-#[cfg(not(feature = "menubuilder"))]
-pub mod menubuilder {}
-
 /// Represents a USSD application.
 /// The USSD application is responsible for processing USSD requests and responses.
 ///
@@ -153,15 +147,5 @@ impl UssdApp {
     pub fn display_menu(&self, ussd_response: &USSDResponse) {
         // Display the menu to the user
         println!("{}", ussd_response.message);
-    }
-
-    #[cfg(feature = "menubuilder")]
-    pub async fn build_service(&self) -> () {
-        let builder = menubuilder::MenuBuilder::server().await;
-
-        match builder {
-            Ok(_) => info!("Server started"),
-            Err(e) => error!("Failed to start server: {}", e),
-        }
     }
 }

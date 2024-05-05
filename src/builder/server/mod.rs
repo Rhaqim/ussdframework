@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use super::api::database::database_start;
 
-pub async fn start_server() -> std::io::Result<()> {
+pub async fn start_server(port: u16) -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .service(web::resource("/api/data").route(web::get().to(database_start)))
@@ -12,7 +12,7 @@ pub async fn start_server() -> std::io::Result<()> {
             .service(Files::new("/_next", "./frontend/.next").index_file("/server/app/index.html"))
         // Serve all files under the static directory
     })
-    .bind("127.0.0.1:8080")?
+    .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
 }
