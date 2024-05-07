@@ -1,8 +1,6 @@
-<div style="text-align: center;">
-   <h1>USSD Framework</h1>
+# USSD Framework
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-</div>
 
 ## Overview
 

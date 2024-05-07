@@ -21,5 +21,13 @@ async fn index(_req: HttpRequest) -> Result<actix_files::NamedFile> {
     // let path: PathBuf = "./_next/server/app/index.html".into(); // Adjust path as needed
     let path: PathBuf = "./frontend/.next/server/app/index.html".into(); // Adjust path as needed
     println!("Attempting to open file: {:?}", path); // Log the resolved file path
-    Ok(actix_files::NamedFile::open(path)?)
+    let result = actix_files::NamedFile::open(path.clone());
+
+    match result {
+        Ok(file) => Ok(file),
+        Err(e) => {
+            println!("Error opening file: {:?} at path {}", e, path.display());
+            Ok(actix_files::NamedFile::open("_next/404.html")?)
+        }
+    }
 }

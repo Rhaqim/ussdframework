@@ -1,5 +1,3 @@
-extern crate diesel_migrations;
-
 mod core;
 mod log;
 pub mod prelude;

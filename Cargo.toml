@@ -16,10 +16,8 @@ name = "main"
 path = "src/main.rs"
 
 [dependencies]
-
-# actix
-actix-files = "0.6.5"
-actix-web = "4.0"
+# web framework
+warp = "0.3.0"
 
 # helpers
 chrono = { version = "0.4", features = ["serde"] }
@@ -35,10 +33,12 @@ serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 
 # feature dependencies // change to optional for build
-diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = false }
-diesel_migrations = { version = "2.1.0", optional = false }
-dotenv = { version = "0.15.0", optional = false }
+actix-files = { version = "0.6.5", optional = true  }
+actix-web = { version = "4.0", optional = false}
+diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = true }
+diesel_migrations = { version = "2.1.0", optional = true }
+dotenv = { version = "0.15.0", optional = true }
 
 [features]
-# menubuilder = ["diesel", "diesel_migrations", "dotenv"] // uncomment to enable feature
-menubuilder = []
+menubuilder = ["diesel", "diesel_migrations", "dotenv"]
+# menubuilder = []
