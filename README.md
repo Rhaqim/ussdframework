@@ -14,7 +14,7 @@ The USSD Framework is a powerful and flexible framework designed to be easy to u
 - Support for session management and stateful interactions
 - Built-in validation and error handling mechanisms
 - Extensible architecture to support custom USSD applications
-- Menu builder for creating custom menus in the application and storing them in a database (Optional)
+- [Menu builder](src/builder/README.md) for creating custom menus in the application and storing them in a database (Optional)
 - Cross-platform compatibility for users from other programming languages
 
 ## Installation
