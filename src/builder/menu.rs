@@ -2,7 +2,7 @@ pub mod menubuilder {
     use std::collections::HashMap;
     use diesel_migrations::{embed_migrations, MigrationHarness};
 
-    use crate::builder::server::start_server;
+    use crate::builder::server::actix::start_server;
     use crate::builder::{Database, DatabaseManager};
     use crate::builder::{Screen as ScreenModel, Service as ServiceModel};
     use crate::core::USSDMenu;

@@ -12,9 +12,3 @@ path = "basic_usage.rs"
 ussdframework = { path = "../", features = ["menubuilder"] }  # Link to the local ussdframework directory
 # Redis client library
 # redis = "0.24.0"
-# HTTP server library
-# hyper = "1.2.0"
-# Routing library
-# routerify = "3.0.0"
-# Templating library
-# askama = "0.12.1"

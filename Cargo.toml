@@ -15,6 +15,10 @@ crate-type = ["lib"]
 name = "main"
 path = "src/main.rs"
 
+[build-dependencies]
+# Required to execute shell commands during build
+cargo-make = "0.37.12"
+
 [dependencies]
 # web framework
 warp = "0.3.0"
@@ -24,6 +28,7 @@ chrono = { version = "0.4", features = ["serde"] }
 config = "0.14.0"
 lazy_static = "1.4.0"
 regex = "1.5.4"
+static_dir = "0.2.0"
 
 # serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -33,12 +38,12 @@ serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 
 # feature dependencies // change to optional for build
-actix-files = { version = "0.6.5", optional = true  }
+actix-files = { version = "0.6.5", optional = false  }
 actix-web = { version = "4.0", optional = false}
-diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = true }
-diesel_migrations = { version = "2.1.0", optional = true }
-dotenv = { version = "0.15.0", optional = true }
+diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = false }
+diesel_migrations = { version = "2.1.0", optional = false }
+dotenv = { version = "0.15.0", optional = false }
 
 [features]
-menubuilder = ["diesel", "diesel_migrations", "dotenv"]
-# menubuilder = []
+# menubuilder = ["diesel", "diesel_migrations", "dotenv"]
+menubuilder = []

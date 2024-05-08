@@ -1,0 +1,21 @@
+[tasks.build]
+description = "Builds the frontend"
+script = [
+    "cd frontend",
+    "npm install",
+    "npm run build",
+    "cd ..",
+    "cp -r frontend/.next/* src/builder/static/",
+]
+
+[tasks.run]
+description = "Runs the example"
+script = [
+    "cargo run --example basic_usage",
+]
+
+[tasks.clean]
+description = "Cleans the frontend build"
+script = [
+    "rm -rf src/builder/static/*",
+]
