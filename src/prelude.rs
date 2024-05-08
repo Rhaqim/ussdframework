@@ -6,5 +6,5 @@ pub use crate::core::{SessionCache, USSDSession};
 pub use crate::types::{FunctionMap, Stack, USSDData, USSDFunction};
 pub use crate::UssdApp;
 
-// #[cfg(feature = "menubuilder")]
+#[cfg(feature = "menubuilder")]
 pub use crate::builder::menubuilder;
