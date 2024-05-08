@@ -21,7 +21,8 @@ cargo-make = "0.37.12"
 
 [dependencies]
 # web framework
-warp = "0.3.0"
+actix-files = "0.6.5"
+actix-web = "4.0"
 
 # helpers
 chrono = { version = "0.4", features = ["serde"] }
@@ -38,8 +39,6 @@ serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 
 # feature dependencies // change to optional for build
-actix-files = { version = "0.6.5", optional = false  }
-actix-web = { version = "4.0", optional = false}
 diesel = { version = "2.1.4", features = ["sqlite", "r2d2"], optional = false }
 diesel_migrations = { version = "2.1.0", optional = false }
 dotenv = { version = "0.15.0", optional = false }
