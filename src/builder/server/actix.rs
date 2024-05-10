@@ -24,18 +24,18 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::post().to(services::create))
                     .route(web::put().to(services::update))
                     .route(web::delete().to(services::delete))
-                    .route(web::get().to(services::get))
-                    .route(web::get().to(services::get_multiple))
-                    .route(web::get().to(services::get_all)),
+                    .route(web::get().to(services::get_list))
+                    // .route(web::get().to(services::get_multiple))
+                    // .route(web::get().to(services::get_all)),
             )
             .service(
                 web::resource("/api/screens")
                     .route(web::post().to(screens::create))
                     .route(web::put().to(screens::update))
                     .route(web::delete().to(screens::delete))
-                    .route(web::get().to(screens::get))
-                    .route(web::get().to(screens::get_multiple))
-                    .route(web::get().to(screens::get_all)),
+                    .route(web::get().to(screens::get_list))
+                    // .route(web::get().to(screens::get_multiple))
+                    // .route(web::get().to(screens::get_all)),
             )
             // Serve static files
             .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))

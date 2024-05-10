@@ -97,21 +97,6 @@ impl
     }
 }
 
-impl diesel::deserialize::FromSqlRow<diesel::sql_types::Untyped, diesel::sqlite::Sqlite> for Screen {
-    fn build_from_row<'a>(row: &impl diesel::row::Row<'a, diesel::sqlite::Sqlite>) -> Result<Screen, Box<dyn std::error::Error + Send + Sync>> {
-        Ok(Screen {
-            name: row.get(1)?,
-            text: row.get(2)?,
-            screen_type: row.get(3)?,
-            default_next_screen: row.get(4)?,
-            service_code: row.get(5)?,
-            function: row.get(6)?,
-            input_identifier: row.get(7)?,
-            input_type: row.get(8)?,
-        })
-    }
-}
-
 impl diesel::deserialize::FromSql<Text, Sqlite> for Screen {
     fn from_sql(
         bytes: SqliteValue<'_, '_, '_>,
@@ -162,8 +147,10 @@ impl Database<Screen> for DatabaseManager {
     }
 
     fn get_by_query(&mut self, query: String) -> Result<Vec<Screen>, Box<dyn Error>> {
-        diesel::dsl::sql_query(query)
-            .load(&mut self.connection)
-            .map_err(|e| Box::new(e) as Box<dyn Error>)
+        let screens = screens::table
+            .filter(screens::text.like(format!("%{}%", query)))
+            .load::<Screen>(&mut self.connection)?;
+
+        Ok(screens)
     }
 }

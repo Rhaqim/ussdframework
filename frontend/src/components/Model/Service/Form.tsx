@@ -4,6 +4,7 @@ import React from 'react'
 
 import Form from '@/components/UI/Form'
 import Service from '@/types/service.type'
+import { Services } from "@/api/route";
 
 const ServiceForm = () => {
   const fields = [
@@ -35,7 +36,9 @@ const ServiceForm = () => {
   ]
 
   const handleSubmit = (data: Service) => {
-    console.log(data)
+    Services.createService(data).then((response) => {
+      console.log(response)
+    })
   }
 
   return <Form fields={fields} onSubmit={handleSubmit} />

@@ -61,3 +61,11 @@ pub async fn get_all(db_manager: web::Data<DatabaseManager>) -> impl Responder {
     // Implement get all logic here
     HttpResponse::Ok().body("Get all operation executed")
 }
+
+pub async fn get_list(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+    let mut manager = DatabaseManager::new();
+
+    let services: Vec<Service> = manager.get_by_query("SELECT id, name FROM services".to_string()).unwrap();
+
+    HttpResponse::Ok().json(services)
+}
