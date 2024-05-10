@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import ModelList from "@/components/Model/ModelList";
-import ModelCreate from "@/components/Model/ModelCreate";
-import ModelDelete from "@/components/Model/ModelDelete";
+import ModelList from "@/components/Model/Common/ModelList";
+import ModelCreate from "@/components/Model/Common/ModelCreate";
+import ModelDelete from "@/components/Model/Common/ModelDelete";
 import Screen from "@/types/screen.type";
 import Model from "@/types/model.type";
 
