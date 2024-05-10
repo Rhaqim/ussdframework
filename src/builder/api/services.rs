@@ -9,13 +9,10 @@ use crate::builder::schema::services::model_service::Service;
 
 // Create operation
 pub async fn create(
-    db_manager: web::Data<RwLock<DatabaseManager>>,
     service: web::Json<Service>,
-) -> impl Responder {
-    // Implement create logic here
+) -> impl Responder {let service = service.into_inner();
 
-    let service = service.into_inner();
-    let mut manager = db_manager.write().unwrap();
+    let mut manager = DatabaseManager::new();
 
     manager.create(service).unwrap();
 
@@ -24,7 +21,7 @@ pub async fn create(
 
 // Update operation
 pub async fn update(
-    db_manager: web::Data<DatabaseManager>,
+    
     service: web::Json<Service>,
 ) -> impl Responder {
     // Implement update logic here
@@ -32,13 +29,13 @@ pub async fn update(
 }
 
 // Delete operation
-pub async fn delete(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+pub async fn delete() -> impl Responder {
     // Implement delete logic here
     HttpResponse::Ok().body("Delete operation executed")
 }
 
 // Get operation
-pub async fn get(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+pub async fn get() -> impl Responder {
     // Implement get logic here
     let response = json!(
         [{
@@ -51,18 +48,18 @@ pub async fn get(db_manager: web::Data<DatabaseManager>) -> impl Responder {
 }
 
 // Get multiple operation
-pub async fn get_multiple(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+pub async fn get_multiple() -> impl Responder {
     // Implement get multiple logic here
     HttpResponse::Ok().body("Get multiple operation executed")
 }
 
 // Get all operation
-pub async fn get_all(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+pub async fn get_all() -> impl Responder {
     // Implement get all logic here
     HttpResponse::Ok().body("Get all operation executed")
 }
 
-pub async fn get_list(db_manager: web::Data<DatabaseManager>) -> impl Responder {
+pub async fn get_list() -> impl Responder {
     let mut manager = DatabaseManager::new();
 
     let services: Vec<Service> = manager.get_by_query("SELECT id, name FROM services".to_string()).unwrap();

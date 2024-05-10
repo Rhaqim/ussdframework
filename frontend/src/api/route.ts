@@ -18,14 +18,14 @@ const fetcher = {
 
 export const Services = {
   createService: (service: Service) => {
-    return fetcher.post("/api/service", service);
+    return fetcher.post("/api/services", service);
   },
 
   getService: (routeId: string) => {
-    return fetcher.get(`/api/service/${routeId}`);
+    return fetcher.get(`/api/services/${routeId}`);
   },
 
   getServiceList: () => {
-    return fetcher.get(`/api/service`);
+    return fetcher.get(`/api/services`);
   },
 };

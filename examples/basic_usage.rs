@@ -11,6 +11,9 @@ use session::InMemorySessionStore;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Start the MenuBuilder server
+    // menubuilder::MenuBuilder::server(8080).await?;
+
     HttpServer::new(move || {
         let session_store = InMemorySessionStore::new();
 
