@@ -33,7 +33,7 @@ const Form: React.FC<FormProps> = ({ fields, onSubmit }) => {
 				<div key={field.name} className="mb-4">
 					<label
 						htmlFor={field.name}
-						className="block text-sm font-medium text-gray-700"
+						className="block text-sm font-medium text-gray-100"
 					>
 						{field.label}
 					</label>
@@ -45,7 +45,7 @@ const Form: React.FC<FormProps> = ({ fields, onSubmit }) => {
 							id={field.name}
 							name={field.name}
 							onChange={handleChange}
-							className="mt-1 p-2 border border-gray-300 rounded-md w-full"
+							className="mt-1 p-2 border border-gray-300 text-black rounded-md w-full"
 						/>
 					)}
 				</div>

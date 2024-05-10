@@ -10,6 +10,7 @@ interface ModelCreateProps {
 
 const ModelCreate: React.FC<ModelCreateProps> = ({ onCreate }) => {
 	const [screen, setScreen] = useState<Screen>({
+		name: "",
 		text: "",
 		screen_type: "",
 		default_next_screen: "",
