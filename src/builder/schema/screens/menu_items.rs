@@ -92,13 +92,20 @@ impl Database<MenuItem> for DatabaseManager {
         Ok(())
     }
 
-    fn get(&mut self, id: i32) -> Result<MenuItem, Box<dyn Error>> {
+    fn get_by_id(&mut self, id: i32) -> Result<MenuItem, Box<dyn Error>> {
         let result = menu_items::table.find(id).first(&mut self.connection)?;
         Ok(result)
     }
 
     fn get_many(&mut self) -> Result<Vec<MenuItem>, Box<dyn Error>> {
         let result = menu_items::table.load::<MenuItem>(&mut self.connection)?;
+        Ok(result)
+    }
+
+    fn get_by_query(&mut self, query: String) -> Result<Vec<MenuItem>, Box<dyn Error>> {
+        let result = menu_items::table
+            .filter(menu_items::name.eq(query))
+            .load::<MenuItem>(&mut self.connection)?;
         Ok(result)
     }
 }

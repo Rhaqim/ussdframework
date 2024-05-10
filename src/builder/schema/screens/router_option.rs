@@ -67,13 +67,20 @@ impl Database<RouterOption> for DatabaseManager {
         Ok(())
     }
 
-    fn get(&mut self, id: i32) -> Result<RouterOption, Box<dyn Error>> {
+    fn get_by_id(&mut self, id: i32) -> Result<RouterOption, Box<dyn Error>> {
         let result = router_options::table.find(id).first(&mut self.connection)?;
         Ok(result)
     }
 
     fn get_many(&mut self) -> Result<Vec<RouterOption>, Box<dyn Error>> {
         let result = router_options::table.load::<RouterOption>(&mut self.connection)?;
+        Ok(result)
+    }
+
+    fn get_by_query(&mut self, query: String) -> Result<Vec<RouterOption>, Box<dyn Error>> {
+        let result = router_options::table
+            .filter(router_options::router_option.eq(query))
+            .load::<RouterOption>(&mut self.connection)?;
         Ok(result)
     }
 }

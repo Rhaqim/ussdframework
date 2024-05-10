@@ -5,7 +5,7 @@ use serde_json::json;
 
 use crate::builder::{Database, DatabaseManager};
 
-use crate::builder::schema::model_service::Service;
+use crate::builder::schema::services::model_service::Service;
 
 // Create operation
 pub async fn create(

@@ -21,8 +21,9 @@ pub trait Database<T> {
     fn create(&mut self, model: T) -> Result<(), Box<dyn Error>>;
     fn update(&mut self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
     fn delete(&mut self, id: i32) -> Result<(), Box<dyn Error>>;
-    fn get(&mut self, id: i32) -> Result<T, Box<dyn Error>>;
+    fn get_by_id(&mut self, id: i32) -> Result<T, Box<dyn Error>>;
     fn get_many(&mut self) -> Result<Vec<T>, Box<dyn Error>>;
+    fn get_by_query(&mut self, query: String) -> Result<Vec<T>, Box<dyn Error>>;
 }
 
 pub struct DatabaseManager {

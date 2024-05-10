@@ -1,6 +1,6 @@
 pub mod base;
-pub mod menus;
-pub mod model_service;
+pub mod screens;
+pub mod services;
 
-pub use menus::model_screen::Screen;
-pub use model_service::Service;
+pub use screens::model_screen::Screen;
+pub use services::model_service::Service;

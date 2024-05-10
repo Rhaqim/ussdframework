@@ -98,7 +98,7 @@ impl Database<Service> for DatabaseManager {
             .map(|_| ())
     }
 
-    fn get(&mut self, id: i32) -> Result<Service, Box<dyn Error>> {
+    fn get_by_id(&mut self, id: i32) -> Result<Service, Box<dyn Error>> {
         services::table
             .find(id)
             .first(&mut self.connection)
@@ -107,6 +107,12 @@ impl Database<Service> for DatabaseManager {
 
     fn get_many(&mut self) -> Result<Vec<Service>, Box<dyn Error>> {
         services::table
+            .load(&mut self.connection)
+            .map_err(|e| Box::new(e) as Box<dyn Error>)
+    }
+
+    fn get_by_query(&mut self, query: String) -> Result<Vec<Service>, Box<dyn Error>> {
+        diesel::sql_query(query)
             .load(&mut self.connection)
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }
