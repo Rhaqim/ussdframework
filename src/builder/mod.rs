@@ -1,5 +1,6 @@
 pub mod api;
 pub mod database;
+pub mod file;
 pub mod menu;
 pub mod schema;
 pub mod server;
