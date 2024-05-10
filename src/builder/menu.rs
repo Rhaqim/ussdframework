@@ -1,6 +1,6 @@
 pub mod menubuilder {
     use std::collections::HashMap;
-    use diesel_migrations::{embed_migrations, MigrationHarness};
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
     use crate::builder::server::actix::start_server;
     use crate::builder::{Database, DatabaseManager};
@@ -64,11 +64,11 @@ pub mod menubuilder {
 
             let mut db = DatabaseManager::new();
 
-            let mig = embed_migrations!("./migrations");
+            const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
             info!("Running pending migrations");
 
-            let _ = &db.connection.run_pending_migrations(mig);
+            let _ = &db.connection.run_pending_migrations(MIGRATIONS);
 
             info!("Migration complete");
         }
