@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import Screen from "@/types/screen.type";
+import Screen, { ScreenType } from "@/types/screen.type";
 
 interface ModelCreateProps {
 	onCreate: (screen: Screen) => void;
@@ -12,7 +12,7 @@ const ModelCreate: React.FC<ModelCreateProps> = ({ onCreate }) => {
 	const [screen, setScreen] = useState<Screen>({
 		name: "",
 		text: "",
-		screen_type: "",
+		screen_type: ScreenType.INITIAL,
 		default_next_screen: "",
 	});
 	const [functions, setFunctions] = useState<string[]>([]);
