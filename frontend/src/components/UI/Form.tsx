@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import FormProps from "@/types/form.type";
+import Dropdown from "../Dropdown";
 
 const Form: React.FC<FormProps> = ({ fields, onSubmit }) => {
 	const [formData, setFormData] = useState<{ [key: string]: any }>({});
@@ -11,6 +12,13 @@ const Form: React.FC<FormProps> = ({ fields, onSubmit }) => {
 		setFormData({
 			...formData,
 			[e.target.name]: e.target.value,
+		});
+	};
+
+	const handleSelect = (value: string) => {
+		setFormData({
+			...formData,
+			[value]: value,
 		});
 	};
 
@@ -29,13 +37,17 @@ const Form: React.FC<FormProps> = ({ fields, onSubmit }) => {
 					>
 						{field.label}
 					</label>
-					<input
-						type={field.type}
-						id={field.name}
-						name={field.name}
-						onChange={handleChange}
-						className="mt-1 p-2 border border-gray-300 rounded-md w-full"
-					/>
+					{field.type === "dropdown" ? (
+						<Dropdown options={field.options || []} onSelect={handleSelect} />
+					) : (
+						<input
+							type={field.type}
+							id={field.name}
+							name={field.name}
+							onChange={handleChange}
+							className="mt-1 p-2 border border-gray-300 rounded-md w-full"
+						/>
+					)}
 				</div>
 			))}
 			<button
