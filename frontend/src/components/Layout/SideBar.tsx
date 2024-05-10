@@ -1,7 +1,7 @@
 import { SideNavLinks } from "@/constants/links";
 import Link from "next/link";
 
-export default function SideNav({
+export default function SideBar({
 	onSelect,
 }: {
 	onSelect: (screen: string) => void;
