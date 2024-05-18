@@ -63,6 +63,19 @@ impl Screen {
             router_options: Some(router_options_vec),
         }
     }
+
+    pub fn from_ussd_menu(name: String, screen: USSDScreen) -> Self {
+        Screen {
+            name,
+            text: screen.text.clone(),
+            screen_type: screen.screen_type.to_string(),
+            default_next_screen: screen.default_next_screen.clone(),
+            service_code: screen.service_code.clone(),
+            function: screen.function.clone(),
+            input_identifier: screen.input_identifier.clone(),
+            input_type: screen.input_type.clone(),
+        }
+    }
 }
 
 table! {
