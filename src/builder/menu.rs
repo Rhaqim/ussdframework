@@ -9,14 +9,28 @@ pub mod menubuilder {
     use crate::info;
 
     pub trait MenuBuilderTrait {
-        fn new(service_code: &str) -> Self;
+        fn new() -> Self;
         fn build(&self) -> USSDMenu;
         fn to_json(&self, path: Option<&str>) -> ();
+
+        // TODO: Implement the following methods
+        fn from_json(&self, path: Option<&str>) -> ();
+        fn initial(&self, name: &str, text: &str) -> ();
+        fn menu(&self, name: &str, text: &str) -> ();
+        fn input(&self, name: &str, text: &str) -> ();
+        fn function(&self, name: &str, text: &str) -> ();
+        fn router(&self, name: &str, text: &str) -> ();
+        fn quit(&self, name: &str, text: &str) -> ();
     }
 
     pub struct MenuBuilder {}
 
     impl MenuBuilder {
+        pub fn new() -> MenuBuilder {
+            info!("Creating new MenuBuilder");
+            MenuBuilder {}
+        }
+
         fn build(&self) -> USSDMenu {
             let mut db = DatabaseManager::new();
 

@@ -42,6 +42,24 @@ fn main() {
 
 This code will start the menu builder server on port 8080. You can now access the menu builder by visiting `http://localhost:8080` in your web browser.
 
+## Generating a JSON File
+
+Once you have created a menu structure in the menu builder, you can generate a JSON file that you can use in your USSD application. To generate a JSON file, click on the "Generate JSON" button in the menu builder. The JSON file will be downloaded to your computer or you can run it directly from the code.
+
+```rust
+use ussdframework::menu_builder::MenuBuilder;
+
+fn main() {
+    let json_file = "menu.json";
+    
+    MenuBuilder::new().to_json(Some(json_file));
+}
+```
+
+This code will generate a JSON file with the menu structure and save it to the specified file. If none is provided it will save to the root directory with the name `menu.json`.
+
+>Note: The `to_json` method builds and generates a JSON file with the menu structure that exists in the menu builder database. If you have not created a menu structure in the menu builder, the generated JSON file will be empty.
+
 ## Conclusion
 
 The menu builder is a powerful tool that allows you to create and manage menu structures for your USSD application. The menu builder is easy to use and provides a visual interface for crafting menus that follow the USSD structure. With the menu builder, you can create complex menu structures quickly and easily, saving you time and effort in developing your USSD application.

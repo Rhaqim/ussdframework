@@ -11,7 +11,7 @@ use core::{
 };
 use utils::{register_function, FUNCTION_MAP, REGISTERED_FUNCTIONS};
 
-// #[cfg(feature = "menubuilder")]
+#[cfg(feature = "menubuilder")]
 mod builder;
 
 /// Represents a USSD application.
