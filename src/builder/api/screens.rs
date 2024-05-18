@@ -2,7 +2,7 @@ use std::sync::RwLock;
 
 use actix_web::{web, HttpResponse, Responder};
 
-use crate::builder::{Database, DatabaseManager, Screen};
+use crate::builder::{Database, DatabaseManager, ScreenModel};
 
 // Create operation
 pub async fn create(db_manager: web::Data<DatabaseManager>) -> impl Responder {
@@ -43,7 +43,7 @@ pub async fn get_all(db_manager: web::Data<DatabaseManager>) -> impl Responder {
 pub async fn get_list(db_manager: web::Data<DatabaseManager>) -> impl Responder {
     let mut manager = DatabaseManager::new();
 
-    let screens: Vec<Screen> = manager
+    let screens: Vec<ScreenModel> = manager
         .get_by_query("SELECT * FROM screens".to_string())
         .unwrap();
 

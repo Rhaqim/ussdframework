@@ -1,12 +1,35 @@
 use crate::{
-    builder::{
-        schema::{MenuItem, RouterOption, Screen as ScreenModel, Service as ServiceModel},
-        {Database, DatabaseManager},
-    },
+    builder::{Database, DatabaseManager, MenuItem, RouterOption, ScreenModel, ServiceModel},
     core::USSDMenu,
-    {error, info},
+    error, info,
 };
 
+/// Loads a `USSDMenu` from a JSON file and populates the database with the menu data.
+///
+/// This function attempts to load a `USSDMenu` from the specified JSON file or defaults to
+/// "menu.json" if no file path is provided. It then initializes the `DatabaseManager` and
+/// populates the database with the services, screens, menu items, and router options
+/// from the loaded menu.
+///
+/// # Arguments
+///
+/// * `file_path` - An optional file path to the JSON file containing the menu data.
+///
+/// # Panics
+///
+/// This function will log an error if it fails to load the menu from the JSON file.
+///
+/// # Examples
+///
+/// ```
+/// from_json(Some("path/to/menu.json"));
+/// // This will load the menu from the specified file and populate the database.
+/// ```
+///
+/// ```
+/// from_json(None);
+/// // This will load the menu from "menu.json" and populate the database.
+/// ```
 pub fn from_json(file_path: Option<&str>) {
     let menu = USSDMenu::load_from_json(file_path.unwrap_or("menu.json"));
 
@@ -74,6 +97,33 @@ pub fn from_json(file_path: Option<&str>) {
     }
 }
 
+/// Saves a `USSDMenu` to a JSON file.
+///
+/// This function attempts to save the provided `USSDMenu` to the specified JSON file.
+/// If no file path is provided, it defaults to "menu.json".
+///
+/// # Arguments
+///
+/// * `file_path` - An optional file path where the menu should be saved.
+/// * `menu` - The `USSDMenu` object to be saved.
+///
+/// # Panics
+///
+/// This function will print an error message if it fails to save the menu to the JSON file.
+///
+/// # Examples
+///
+/// ```
+/// let menu = build();
+/// to_json(Some("path/to/menu.json"), menu);
+/// // This will save the menu to the specified file.
+/// ```
+///
+/// ```
+/// let menu = build();
+/// to_json(None, menu);
+/// // This will save the menu to "menu.json".
+/// ```
 pub fn to_json(file_path: Option<&str>, menu: USSDMenu) {
     match file_path {
         Some(path) => {

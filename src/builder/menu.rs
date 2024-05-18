@@ -1,16 +1,12 @@
 pub mod menubuilder {
-    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
+    use crate::builder::database::run_migration;
     use crate::builder::file::{build, from_json, to_json};
     use crate::builder::server::actix::start_server;
-    use crate::builder::DatabaseManager;
-    use crate::info;
 
     pub trait MenuBuilderTrait {
-        fn new() -> Self;
         fn to_json(&self, path: Option<&str>) -> ();
         fn from_json(&self, path: Option<&str>) -> ();
-        fn run_migration() -> ();
         fn server(port: u16) -> std::io::Result<()>;
 
         // TODO: Implement the following methods
@@ -25,37 +21,21 @@ pub mod menubuilder {
     pub struct MenuBuilder {}
 
     impl MenuBuilder {
-        pub fn new() -> MenuBuilder {
-            info!("Creating new MenuBuilder");
-            MenuBuilder {}
-        }
-
-        pub fn to_json(&self, file_path: Option<&str>) {
+        /// Converts the menu to JSON and writes it to a file.
+        pub fn to_json(file_path: Option<&str>) {
             let menu = build();
 
             to_json(file_path, menu)
         }
 
-        pub fn from_json(&self, file_path: Option<&str>) {
+        /// Loads a menu from a JSON file to the database.
+        pub fn from_json(file_path: Option<&str>) {
             from_json(file_path)
         }
 
-        fn run_migration() {
-            info!("Running migration");
-
-            let mut db = DatabaseManager::new();
-
-            const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
-
-            info!("Running pending migrations");
-
-            let _ = &db.connection.run_pending_migrations(MIGRATIONS);
-
-            info!("Migration complete");
-        }
-
+        /// Starts the server on the specified port.
         pub async fn server(port: u16) -> std::io::Result<()> {
-            Self::run_migration();
+            run_migration();
 
             start_server(port).await
         }

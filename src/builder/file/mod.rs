@@ -6,8 +6,28 @@ pub use json::{from_json, to_json};
 
 use crate::core::USSDMenu;
 
-use super::{Database, DatabaseManager, Screen as ScreenModel, Service as ServiceModel};
+use super::{Database, DatabaseManager, ScreenModel, ServiceModel};
 
+/// Builds and returns a `USSDMenu` by fetching and converting screen and service data.
+///
+/// This function initializes a new `DatabaseManager` and uses it to retrieve screen and service
+/// data. The retrieved data is then converted into USSD-compatible formats and stored in
+/// hash maps. These hash maps are used to construct a `USSDMenu` object which is then returned.
+///
+/// # Panics
+///
+/// This function will panic if it fails to retrieve screens or services from the database.
+///
+/// # Examples
+///
+/// ```
+/// let ussd_menu = build();
+/// // `ussd_menu` now contains the USSD screens and services.
+/// ```
+///
+/// # Returns
+///
+/// A `USSDMenu` containing the converted screens and services.
 pub fn build() -> USSDMenu {
     let mut db = DatabaseManager::new();
 

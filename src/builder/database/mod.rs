@@ -1,3 +1,7 @@
+pub mod migrations;
+
+pub use migrations::run_migration;
+
 use diesel::{
     prelude::*,
     r2d2::{ConnectionManager, Pool},

@@ -8,4 +8,4 @@ pub mod server;
 pub use menu::menubuilder;
 
 pub use database::{Database, DatabaseManager};
-pub use schema::{Screen, Service};
+pub use schema::{MenuItem, RouterOption, Screen as ScreenModel, Service as ServiceModel};
