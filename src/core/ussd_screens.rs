@@ -57,7 +57,7 @@ pub struct USSDScreen {
     #[serde(default)]
     pub service_code: Option<String>,
     #[serde(default)]
-    pub menu_items: Option<HashMap<String, MenuItems>>,
+    pub menu_items: Option<HashMap<String, USSDMenuItems>>,
     #[serde(default)]
     pub function: Option<String>,
     #[serde(default)]
@@ -70,7 +70,7 @@ pub struct USSDScreen {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct MenuItems {
+pub struct USSDMenuItems {
     pub option: String,
     pub display_name: String,
     pub next_screen: String,
@@ -123,7 +123,7 @@ impl USSDAction for USSDScreen {
                 message.push_str(&text);
 
                 if let Some(menu_items) = &self.menu_items {
-                    let mut sorted_menu_items: Vec<(&String, &MenuItems)> =
+                    let mut sorted_menu_items: Vec<(&String, &USSDMenuItems)> =
                         menu_items.iter().collect();
                     // Sort the menu items by their option number
                     sorted_menu_items

@@ -12,6 +12,9 @@ use crate::builder::{Database, DatabaseManager};
 use crate::core::ussd_screens::USSDScreen;
 use crate::core::ScreenType;
 
+use super::menu_items::MenuItem;
+use super::router_option::RouterOption;
+
 // Define structure for a screen
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, AsChangeset, FromSqlRow)]
 pub struct Screen {
@@ -27,6 +30,27 @@ pub struct Screen {
 
 impl Screen {
     pub fn to_ussd_screen(&self) -> USSDScreen {
+        // create a database manager
+        let mut db = DatabaseManager::new();
+
+        // get menu items
+        let menu_items: Vec<MenuItem> = db.get_by_query(self.name.clone()).unwrap();
+
+        // create a hashmap of menu items with name as key
+        let mut menu_items_map = std::collections::HashMap::new();
+        for menu_item in menu_items {
+            menu_items_map.insert(self.name.clone(), menu_item.to_ussd_menu_item());
+        }
+
+        // get router options
+        let router_options: Vec<RouterOption> = db.get_by_query(self.name.clone()).unwrap();
+
+        // create a vector of router options
+        let mut router_options_vec = Vec::new();
+        for router_option in router_options {
+            router_options_vec.push(router_option.to_ussd_router_option());
+        }
+
         USSDScreen {
             text: self.text.clone(),
             screen_type: ScreenType::from_string(&self.screen_type),
@@ -35,8 +59,8 @@ impl Screen {
             function: self.function.clone(),
             input_identifier: self.input_identifier.clone(),
             input_type: self.input_type.clone(),
-            router_options: None,
-            menu_items: None,
+            menu_items: Some(menu_items_map),
+            router_options: Some(router_options_vec),
         }
     }
 }

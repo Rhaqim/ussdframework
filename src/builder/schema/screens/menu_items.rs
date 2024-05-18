@@ -10,15 +10,25 @@ use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
 use crate::builder::{Database, DatabaseManager};
+use crate::core::ussd_screens::USSDMenuItems;
 
 // Define structure for a menu item
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, Queryable, AsChangeset)]
 pub struct MenuItem {
-    pub screen_id: i32,
-    pub name: String,
+    pub screen_name: String,
     pub option: String,
     pub display_name: String,
     pub next_screen: String,
+}
+
+impl MenuItem {
+    pub fn to_ussd_menu_item(&self) -> USSDMenuItems {
+        USSDMenuItems {
+            option: self.option.clone(),
+            display_name: self.display_name.clone(),
+            next_screen: self.next_screen.clone(),
+        }
+    }
 }
 
 impl FromSql<Text, Sqlite> for MenuItem {
@@ -26,11 +36,10 @@ impl FromSql<Text, Sqlite> for MenuItem {
         let s = <String as diesel::deserialize::FromSql<Text, Sqlite>>::from_sql(bytes)?;
         let parts: Vec<&str> = s.split(',').collect();
         Ok(MenuItem {
-            screen_id: parts[0].parse().unwrap(),
-            name: parts[1].to_string(),
-            option: parts[2].to_string(),
-            display_name: parts[3].to_string(),
-            next_screen: parts[4].to_string(),
+            screen_name: parts[0].to_string(),
+            option: parts[1].to_string(),
+            display_name: parts[2].to_string(),
+            next_screen: parts[3].to_string(),
         })
     }
 }
@@ -38,8 +47,7 @@ impl FromSql<Text, Sqlite> for MenuItem {
 table! {
     menu_items (id) {
         id -> Integer,
-        screen_id -> Integer,
-        name -> Text,
+        screen_name -> Text,
         option -> Text,
         display_name -> Text,
         next_screen -> Text,
@@ -50,7 +58,6 @@ impl
     diesel::Queryable<
         (
             diesel::sql_types::Integer,
-            diesel::sql_types::Integer,
             diesel::sql_types::Text,
             diesel::sql_types::Text,
             diesel::sql_types::Text,
@@ -59,15 +66,14 @@ impl
         Sqlite,
     > for MenuItem
 {
-    type Row = (i32, i32, String, String, String, String);
+    type Row = (i32, String, String, String, String);
 
     fn build(row: Self::Row) -> Result<MenuItem, Box<(dyn StdError + Send + Sync + 'static)>> {
         Ok(MenuItem {
-            screen_id: row.1,
-            name: row.2,
-            option: row.3,
-            display_name: row.4,
-            next_screen: row.5,
+            screen_name: row.1,
+            option: row.2,
+            display_name: row.3,
+            next_screen: row.4,
         })
     }
 }
@@ -104,7 +110,7 @@ impl Database<MenuItem> for DatabaseManager {
 
     fn get_by_query(&mut self, query: String) -> Result<Vec<MenuItem>, Box<dyn Error>> {
         let result = menu_items::table
-            .filter(menu_items::name.eq(query))
+            .filter(menu_items::screen_name.eq(query))
             .load::<MenuItem>(&mut self.connection)?;
         Ok(result)
     }

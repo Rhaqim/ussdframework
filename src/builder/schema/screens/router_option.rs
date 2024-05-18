@@ -11,7 +11,7 @@ use crate::builder::{Database, DatabaseManager};
 // Define structure for a router option
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, Queryable, AsChangeset)]
 pub struct RouterOption {
-    pub screen_id: i32,
+    pub screen_name: String,
     pub router_option: String,
     pub next_screen: String,
 }
@@ -19,9 +19,18 @@ pub struct RouterOption {
 table! {
     router_options (id) {
         id -> Integer,
-        screen_id -> Integer,
+        screen_name -> Text,
         router_option -> Text,
         next_screen -> Text,
+    }
+}
+
+impl RouterOption {
+    pub fn to_ussd_router_option(&self) -> crate::core::ussd_screens::RouterOption {
+        crate::core::ussd_screens::RouterOption {
+            router_option: self.router_option.clone(),
+            next_screen: self.next_screen.clone(),
+        }
     }
 }
 
@@ -29,18 +38,18 @@ impl
     diesel::Queryable<
         (
             diesel::sql_types::Integer,
-            diesel::sql_types::Integer,
+            diesel::sql_types::Text,
             diesel::sql_types::Text,
             diesel::sql_types::Text,
         ),
         Sqlite,
     > for RouterOption
 {
-    type Row = (i32, i32, String, String);
+    type Row = (i32, String, String, String);
 
     fn build(row: Self::Row) -> Result<RouterOption, Box<(dyn StdError + Send + Sync + 'static)>> {
         Ok(RouterOption {
-            screen_id: row.1,
+            screen_name: row.1,
             router_option: row.2,
             next_screen: row.3,
         })
@@ -79,7 +88,7 @@ impl Database<RouterOption> for DatabaseManager {
 
     fn get_by_query(&mut self, query: String) -> Result<Vec<RouterOption>, Box<dyn Error>> {
         let result = router_options::table
-            .filter(router_options::router_option.eq(query))
+            .filter(router_options::screen_name.eq(query))
             .load::<RouterOption>(&mut self.connection)?;
         Ok(result)
     }
