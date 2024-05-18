@@ -43,7 +43,9 @@ pub async fn get_all(db_manager: web::Data<DatabaseManager>) -> impl Responder {
 pub async fn get_list(db_manager: web::Data<DatabaseManager>) -> impl Responder {
     let mut manager = DatabaseManager::new();
 
-    let screens: Vec<Screen> = manager.get_by_query("SELECT * FROM screens".to_string()).unwrap();
+    let screens: Vec<Screen> = manager
+        .get_by_query("SELECT * FROM screens".to_string())
+        .unwrap();
 
     HttpResponse::Ok().json(screens)
 }

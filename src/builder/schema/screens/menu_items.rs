@@ -16,17 +16,34 @@ use crate::core::ussd_screens::USSDMenuItems;
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, Queryable, AsChangeset)]
 pub struct MenuItem {
     pub screen_name: String,
+    pub name: String,
     pub option: String,
     pub display_name: String,
     pub next_screen: String,
 }
 
 impl MenuItem {
-    pub fn to_ussd_menu_item(&self) -> USSDMenuItems {
-        USSDMenuItems {
+    pub fn to_ussd_menu_item(&self) -> (String, USSDMenuItems) {
+        let menu_item = USSDMenuItems {
             option: self.option.clone(),
             display_name: self.display_name.clone(),
             next_screen: self.next_screen.clone(),
+        };
+
+        (self.name.clone(), menu_item)
+    }
+
+    pub fn from_ussd_menu_item(
+        screen_name: String,
+        name: String,
+        menu_item: USSDMenuItems,
+    ) -> MenuItem {
+        MenuItem {
+            screen_name,
+            name,
+            option: menu_item.option,
+            display_name: menu_item.display_name,
+            next_screen: menu_item.next_screen,
         }
     }
 }
@@ -37,9 +54,10 @@ impl FromSql<Text, Sqlite> for MenuItem {
         let parts: Vec<&str> = s.split(',').collect();
         Ok(MenuItem {
             screen_name: parts[0].to_string(),
-            option: parts[1].to_string(),
-            display_name: parts[2].to_string(),
-            next_screen: parts[3].to_string(),
+            name: parts[1].to_string(),
+            option: parts[2].to_string(),
+            display_name: parts[3].to_string(),
+            next_screen: parts[4].to_string(),
         })
     }
 }
@@ -48,6 +66,7 @@ table! {
     menu_items (id) {
         id -> Integer,
         screen_name -> Text,
+        name -> Text,
         option -> Text,
         display_name -> Text,
         next_screen -> Text,
@@ -62,18 +81,20 @@ impl
             diesel::sql_types::Text,
             diesel::sql_types::Text,
             diesel::sql_types::Text,
+            diesel::sql_types::Text,
         ),
         Sqlite,
     > for MenuItem
 {
-    type Row = (i32, String, String, String, String);
+    type Row = (i32, String, String, String, String, String);
 
     fn build(row: Self::Row) -> Result<MenuItem, Box<(dyn StdError + Send + Sync + 'static)>> {
         Ok(MenuItem {
             screen_name: row.1,
-            option: row.2,
-            display_name: row.3,
-            next_screen: row.4,
+            name: row.2,
+            option: row.3,
+            display_name: row.4,
+            next_screen: row.5,
         })
     }
 }

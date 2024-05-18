@@ -8,9 +8,8 @@ use crate::builder::{Database, DatabaseManager};
 use crate::builder::schema::services::model_service::Service;
 
 // Create operation
-pub async fn create(
-    service: web::Json<Service>,
-) -> impl Responder {let service = service.into_inner();
+pub async fn create(service: web::Json<Service>) -> impl Responder {
+    let service = service.into_inner();
 
     let mut manager = DatabaseManager::new();
 
@@ -20,10 +19,7 @@ pub async fn create(
 }
 
 // Update operation
-pub async fn update(
-    
-    service: web::Json<Service>,
-) -> impl Responder {
+pub async fn update(service: web::Json<Service>) -> impl Responder {
     // Implement update logic here
     HttpResponse::Ok().body("Update operation executed")
 }
@@ -62,7 +58,9 @@ pub async fn get_all() -> impl Responder {
 pub async fn get_list() -> impl Responder {
     let mut manager = DatabaseManager::new();
 
-    let services: Vec<Service> = manager.get_by_query("SELECT id, name FROM services".to_string()).unwrap();
+    let services: Vec<Service> = manager
+        .get_by_query("SELECT id, name FROM services".to_string())
+        .unwrap();
 
     HttpResponse::Ok().json(services)
 }

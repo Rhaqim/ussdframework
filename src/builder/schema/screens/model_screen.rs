@@ -39,7 +39,8 @@ impl Screen {
         // create a hashmap of menu items with name as key
         let mut menu_items_map = std::collections::HashMap::new();
         for menu_item in menu_items {
-            menu_items_map.insert(self.name.clone(), menu_item.to_ussd_menu_item());
+            let (name, menu_items) = menu_item.to_ussd_menu_item();
+            menu_items_map.insert(name, menu_items);
         }
 
         // get router options

@@ -32,6 +32,17 @@ impl RouterOption {
             next_screen: self.next_screen.clone(),
         }
     }
+
+    pub fn from_ussd_router_option(
+        screen_name: String,
+        router_option: crate::core::ussd_screens::RouterOption,
+    ) -> RouterOption {
+        RouterOption {
+            screen_name,
+            router_option: router_option.router_option,
+            next_screen: router_option.next_screen,
+        }
+    }
 }
 
 impl

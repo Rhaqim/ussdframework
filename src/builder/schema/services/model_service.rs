@@ -28,7 +28,7 @@ table! {
 }
 
 impl Service {
-    pub fn from(name: &str, service: USSDService) -> Self {
+    pub fn from_ussd_service(name: String, service: USSDService) -> Self {
         Service {
             name: name.to_string(),
             function_name: service.function_name,
