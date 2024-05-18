@@ -13,6 +13,7 @@ use session::InMemorySessionStore;
 async fn main() -> std::io::Result<()> {
     // Start the MenuBuilder server
     // menubuilder::MenuBuilder::server(8080).await?;
+    // menubuilder::MenuBuilder::to_json(Some("menu.json"));
 
     HttpServer::new(move || {
         let session_store = InMemorySessionStore::new();

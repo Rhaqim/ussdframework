@@ -7,7 +7,6 @@ The menu builder is a tool that allows you to create a menu structure for your U
 - Interface and database for building and managing menus
 - Drag and drop menu items
 - Create a menu structure
-- Generate a JSON file
 - Export the JSON file
 - Import a JSON file
 
@@ -52,13 +51,33 @@ use ussdframework::menu_builder::MenuBuilder;
 fn main() {
     let json_file = "menu.json";
     
-    MenuBuilder::new().to_json(Some(json_file));
+    MenuBuilder::to_json(Some(json_file));
 }
 ```
 
 This code will generate a JSON file with the menu structure and save it to the specified file. If none is provided it will save to the root directory with the name `menu.json`.
 
 >Note: The `to_json` method builds and generates a JSON file with the menu structure that exists in the menu builder database. If you have not created a menu structure in the menu builder, the generated JSON file will be empty.
+
+## Importing a JSON File
+
+You can also import a JSON file into the menu builder to load a menu structure. To import a JSON file, click on the "Import JSON" button in the menu builder and select the JSON file you want to import.
+
+```rust
+use ussdframework::menu_builder::MenuBuilder;
+
+fn main() {
+    let json_file = "menu.json";
+    
+    MenuBuilder::from_json(Some(json_file));
+}
+```
+
+This code will import the JSON file with the menu structure and load it into the menu builder database. If none is provided it will load the `menu.json` file from the root directory.
+
+## Benefits
+
+The `to_json` and `from_json` methods are useful for saving and loading menu structures from JSON files, allowing you to create and manage menu structures outside of the menu builder interface. They can also be used in the menu builder interface, just drag and drop the file into the browser window.
 
 ## Conclusion
 
