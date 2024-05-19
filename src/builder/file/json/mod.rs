@@ -1,6 +1,8 @@
+use std::collections::HashMap;
+
 use crate::{
     builder::{Database, DatabaseManager, MenuItem, RouterOption, ScreenModel, ServiceModel},
-    core::USSDMenu,
+    core::{ussd_screens::{USSDMenuItems, USSDRouterOption}, USSDMenu},
     error, info,
 };
 
@@ -57,8 +59,18 @@ pub fn from_json(file_path: Option<&str>) {
             for (name, screen) in m.menus {
                 screens.push(ScreenModel::from_ussd_menu(name.clone(), screen.clone()));
 
-                let items = screen.menu_items.unwrap();
-                let routes = screen.router_options.unwrap();
+                let mut items: HashMap<String, USSDMenuItems> = HashMap::new();
+                let mut routes: Vec<USSDRouterOption> = Vec::new();
+
+                match screen.menu_items {
+                    Some(i) => items = i,
+                    None => error!("No menu items found for screen {}", name),
+                }
+
+                match screen.router_options {
+                    Some(r) => routes = r,
+                    None => error!("No router options found for screen {}", name),
+                }
 
                 for (menu_name, menu_item) in items {
                     let menu_item_db =

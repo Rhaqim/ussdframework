@@ -61,7 +61,7 @@ pub struct USSDScreen {
     #[serde(default)]
     pub function: Option<String>,
     #[serde(default)]
-    pub router_options: Option<Vec<RouterOption>>,
+    pub router_options: Option<Vec<USSDRouterOption>>,
     #[serde(default)]
     pub input_identifier: Option<String>,
     #[serde(default)]
@@ -77,7 +77,7 @@ pub struct USSDMenuItems {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct RouterOption {
+pub struct USSDRouterOption {
     pub router_option: String,
     pub next_screen: String,
 }

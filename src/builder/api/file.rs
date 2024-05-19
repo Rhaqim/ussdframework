@@ -24,6 +24,12 @@ pub async fn process_json_file(mut payload: Multipart) -> Result<HttpResponse, E
         // Create a temporary file to save the uploaded file
         let filepath = format!("./uploads/{}", filename);
 
+        // Ensure the directory exists
+        if let Err(e) = std::fs::create_dir_all("./uploads") {
+            return Ok(HttpResponse::InternalServerError()
+                .body(format!("Failed to create directories: {}", e)));
+        }
+
         let load_filepath = filepath.clone();
 
         let file = web::block(move || File::create(&filepath)).await?;

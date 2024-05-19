@@ -26,8 +26,8 @@ table! {
 }
 
 impl RouterOption {
-    pub fn to_ussd_router_option(&self) -> crate::core::ussd_screens::RouterOption {
-        crate::core::ussd_screens::RouterOption {
+    pub fn to_ussd_router_option(&self) -> crate::core::ussd_screens::USSDRouterOption {
+        crate::core::ussd_screens::USSDRouterOption {
             router_option: self.router_option.clone(),
             next_screen: self.next_screen.clone(),
         }
@@ -35,7 +35,7 @@ impl RouterOption {
 
     pub fn from_ussd_router_option(
         screen_name: String,
-        router_option: crate::core::ussd_screens::RouterOption,
+        router_option: crate::core::ussd_screens::USSDRouterOption,
     ) -> RouterOption {
         RouterOption {
             screen_name,
