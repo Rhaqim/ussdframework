@@ -2,9 +2,9 @@
 
 import React from 'react'
 
+import { Services } from "@/api/route";
 import Form from '@/components/UI/Form'
 import Service from '@/types/service.type'
-import { Services } from "@/api/route";
 
 const ServiceForm = () => {
   const fields = [

@@ -1,5 +1,8 @@
+'use client'
+
 import React from 'react'
 
+import { Screens } from "@/api/route";
 import Form from '@/components/UI/Form'
 import Screen, { RouterOption, MenuItem } from '@/types/screen.type'
 
@@ -51,7 +54,9 @@ const ScreenForm = () => {
   ]
 
   const handleSubmit = (data: Screen) => {
-    console.log(data)
+    Screens.createScreen(data).then((response) => {
+      console.log(response)
+    })
   }
 
   return <Form fields={fields} onSubmit={handleSubmit} />

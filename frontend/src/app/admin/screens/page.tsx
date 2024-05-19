@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
 
+import { Screens } from "@/api/route";
 import Table from "@/components/Model/Screen/Table";
 import Screen, { ScreenType } from "@/types/screen.type";
 
@@ -20,8 +22,17 @@ const ScreenHomePage = () => {
 	];
 	const [screen, setScreen] = useState<Screen[]>(data);
 
+	useEffect(() => {
+		Screens.getAllScreens().then(data => {
+			setScreen(data);
+		});
+	}, []);
+
 	return (
 		<div>
+			<Link href="/admin/screens/create">
+				<p className="btn-primary">Create Screen</p>
+			</Link>
 			<Table data={screen} />
 		</div>
 	);

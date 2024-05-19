@@ -68,7 +68,7 @@ export const Screens = {
 		return fetcher.put(`/api/screens`, screen);
 	},
 
-	getAllServices: () => {
+	getAllScreens: () => {
 		return fetcher.get(`/api/screens`);
 	},
 
