@@ -1,8 +1,12 @@
 import React from 'react'
 
+import Table from '@/components/Model/Service/Table'
+
 const ServiceHomePage = () => {
   return (
-    <div>ServiceHomePage</div>
+    <div>
+      <Table data={[]} />
+    </div>
   )
 }
 
