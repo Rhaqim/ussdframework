@@ -8,7 +8,7 @@ use diesel::sqlite::{Sqlite, SqliteValue};
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
-use crate::builder::{Database, DatabaseManager};
+use crate::builder::{Database, DatabaseManager, QueryEnum};
 use crate::core::ussd_screens::USSDScreen;
 use crate::core::ScreenType;
 
@@ -34,7 +34,8 @@ impl Screen {
         let mut db = DatabaseManager::new();
 
         // get menu items
-        let menu_items: Vec<MenuItem> = db.get_by_query(self.name.clone()).unwrap();
+        // let menu_items: Vec<MenuItem> = db.get_by_query(self.name.clone()).unwrap();
+        let menu_items: Vec<MenuItem> = db.get_by_query_enum(QueryEnum::ScreenName(self.name.clone())).unwrap();
 
         // create a hashmap of menu items with name as key
         let mut menu_items_map = std::collections::HashMap::new();
@@ -44,7 +45,8 @@ impl Screen {
         }
 
         // get router options
-        let router_options: Vec<RouterOption> = db.get_by_query(self.name.clone()).unwrap();
+        // let router_options: Vec<RouterOption> = db.get_by_query(self.name.clone()).unwrap();
+        let router_options: Vec<RouterOption> = db.get_by_query_enum(QueryEnum::ScreenName(self.name.clone())).unwrap();
 
         // create a vector of router options
         let mut router_options_vec = Vec::new();
@@ -184,11 +186,26 @@ impl Database<Screen> for DatabaseManager {
         Ok(result)
     }
 
-    fn get_by_query(&mut self, query: String) -> Result<Vec<Screen>, Box<dyn Error>> {
-        let screens = screens::table
-            .filter(screens::text.like(format!("%{}%", query)))
-            .load::<Screen>(&mut self.connection)?;
+    // fn get_by_query(&mut self, query: String) -> Result<Vec<Screen>, Box<dyn Error>> {
+    //     let screens = screens::table.select(screens::all_columns)
+    //         .filter(screens::name.like(format!("%{}%", query)))
+    //         .load::<Screen>(&mut self.connection)?;
 
-        Ok(screens)
+    //     Ok(screens)
+    // }
+
+    fn get_by_query_enum(&mut self, query: QueryEnum) -> Result<Vec<Screen>, Box<dyn Error>> {
+        use self::screens::dsl::*;
+
+        let result = match query {
+            QueryEnum::ID(q_id) => screens.filter(id.eq(q_id)).load::<Screen>(&mut self.connection)?,
+            QueryEnum::Name(q_name) => screens.filter(name.like(format!("%{}%", q_name))).load::<Screen>(&mut self.connection)?,
+            QueryEnum::ScreenType(q_screen_type) => screens.filter(screen_type.like(format!("%{}%", q_screen_type))).load::<Screen>(&mut self.connection)?,
+            // QueryEnum::ServiceCode(q_service_code) => screens.filter(service_code.like(format!("%{}%", q_service_code))).load::<Screen>(&mut self.connection)?,
+            // QueryEnum::Function(q_function) => screens.filter(function.like(format!("%{}%", q_function))).load::<Screen>(&mut self.connection)?,
+            _ => Vec::new(),
+        };
+
+        Ok(result)
     }
 }

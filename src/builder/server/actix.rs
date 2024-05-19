@@ -2,39 +2,49 @@ use actix_files::Files;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use std::path::PathBuf;
 
-use crate::error;
-
-use crate::builder::DatabaseManager;
-
+use crate::builder::api::file;
 use crate::builder::api::screens;
 use crate::builder::api::services;
+
+use crate::error;
 
 const STATIC_DIR: &str = "src/builder/static";
 const APP_DIR: &str = "src/builder/static/server/app";
 
 pub async fn start_server(port: u16) -> std::io::Result<()> {
     HttpServer::new(|| {
-        let db_manager = DatabaseManager::new();
-
         App::new()
-            .app_data(web::Data::new(db_manager))
             // Serve the API
             .service(
                 web::resource("/api/services")
                     .route(web::post().to(services::create))
                     .route(web::put().to(services::update))
-                    .route(web::delete().to(services::delete))
-                    .route(web::get().to(services::get_list)), // .route(web::get().to(services::get_multiple))
-                                                               // .route(web::get().to(services::get_all)),
+                    .route(web::get().to(services::get_all)),
+            )
+            .service(
+                web::resource("/api/services/{id}")
+                    .route(web::get().to(services::get))
+                    .route(web::delete().to(services::delete)),
+            )
+            .service(
+                web::resource("/api/services/multiple")
+                    .route(web::post().to(services::get_multiple)),
             )
             .service(
                 web::resource("/api/screens")
                     .route(web::post().to(screens::create))
                     .route(web::put().to(screens::update))
-                    .route(web::delete().to(screens::delete))
-                    .route(web::get().to(screens::get_list)), // .route(web::get().to(screens::get_multiple))
-                                                              // .route(web::get().to(screens::get_all)),
+                    .route(web::get().to(screens::get_all)),
             )
+            .service(
+                web::resource("/api/screens/{id}")
+                    .route(web::get().to(screens::get))
+                    .route(web::delete().to(screens::delete)),
+            )
+            .service(
+                web::resource("/api/screens/multiple").route(web::post().to(screens::get_multiple)),
+            )
+            .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Serve static files
             .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))
             // Route for other pages

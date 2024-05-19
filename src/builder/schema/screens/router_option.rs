@@ -6,7 +6,7 @@ use diesel::sqlite::Sqlite;
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
-use crate::builder::{Database, DatabaseManager};
+use crate::builder::{Database, DatabaseManager, QueryEnum};
 
 // Define structure for a router option
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, Queryable, AsChangeset)]
@@ -97,10 +97,26 @@ impl Database<RouterOption> for DatabaseManager {
         Ok(result)
     }
 
-    fn get_by_query(&mut self, query: String) -> Result<Vec<RouterOption>, Box<dyn Error>> {
-        let result = router_options::table
-            .filter(router_options::screen_name.eq(query))
-            .load::<RouterOption>(&mut self.connection)?;
+    // fn get_by_query(&mut self, query: String) -> Result<Vec<RouterOption>, Box<dyn Error>> {
+    //     let result = router_options::table
+    //         .filter(router_options::screen_name.eq(query))
+    //         .load::<RouterOption>(&mut self.connection)?;
+    //     Ok(result)
+    // }
+
+    fn get_by_query_enum(&mut self, query: QueryEnum) -> Result<Vec<RouterOption>, Box<dyn Error>> {
+        use self::router_options::dsl::*;
+
+        let result = match query {
+            QueryEnum::ID(q_id) => router_options
+                .filter(id.eq(q_id))
+                .load::<RouterOption>(&mut self.connection)?,
+            QueryEnum::ScreenName(q_screen_name) => router_options
+                .filter(screen_name.eq(q_screen_name))
+                .load::<RouterOption>(&mut self.connection)?,
+            _ => Vec::new(),
+        };
+
         Ok(result)
     }
 }

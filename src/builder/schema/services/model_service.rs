@@ -4,7 +4,7 @@ use diesel::prelude::*;
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
-use crate::builder::{Database, DatabaseManager};
+use crate::builder::{Database, DatabaseManager, QueryEnum};
 use crate::core::USSDService;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Insertable, QueryableByName, AsChangeset)]
@@ -111,8 +111,25 @@ impl Database<Service> for DatabaseManager {
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }
 
-    fn get_by_query(&mut self, query: String) -> Result<Vec<Service>, Box<dyn Error>> {
-        diesel::sql_query(query)
+    // fn get_by_query(&mut self, query: String) -> Result<Vec<Service>, Box<dyn Error>> {
+    //     diesel::sql_query(query)
+    //         .load(&mut self.connection)
+    //         .map_err(|e| Box::new(e) as Box<dyn Error>)
+    // }
+
+    fn get_by_query_enum(&mut self, query: QueryEnum) -> Result<Vec<Service>, Box<dyn Error>> {
+        let query_string = match query {
+            QueryEnum::ID(id) => format!("SELECT * FROM services WHERE id = {}", id),
+            QueryEnum::Name(name) => format!("SELECT * FROM services WHERE name = '{}'", name),
+            QueryEnum::ServiceCode(service_code) => {
+                format!("SELECT * FROM services WHERE service_code = '{}'", service_code)
+            }
+            QueryEnum::DataKey(data_key) => {
+                format!("SELECT * FROM services WHERE data_key = '{}'", data_key)
+            }
+            _ => "".to_string(),
+        };
+        diesel::sql_query(query_string)
             .load(&mut self.connection)
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }

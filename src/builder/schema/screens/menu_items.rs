@@ -9,7 +9,7 @@ use diesel::deserialize::FromSql;
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
-use crate::builder::{Database, DatabaseManager};
+use crate::builder::{Database, DatabaseManager, QueryEnum};
 use crate::core::ussd_screens::USSDMenuItems;
 
 // Define structure for a menu item
@@ -129,10 +129,29 @@ impl Database<MenuItem> for DatabaseManager {
         Ok(result)
     }
 
-    fn get_by_query(&mut self, query: String) -> Result<Vec<MenuItem>, Box<dyn Error>> {
-        let result = menu_items::table
-            .filter(menu_items::screen_name.eq(query))
-            .load::<MenuItem>(&mut self.connection)?;
+    // fn get_by_query(&mut self, query: String) -> Result<Vec<MenuItem>, Box<dyn Error>> {
+    //     let result = menu_items::table
+    //         .filter(menu_items::screen_name.eq(query))
+    //         .load::<MenuItem>(&mut self.connection)?;
+    //     Ok(result)
+    // }
+
+    fn get_by_query_enum(&mut self, query: QueryEnum) -> Result<Vec<MenuItem>, Box<dyn Error>> {
+        use self::menu_items::dsl::*;
+
+        let result = match query {
+            QueryEnum::ID(q_id) => menu_items
+                .filter(id.eq(q_id))
+                .load::<MenuItem>(&mut self.connection)?,
+            QueryEnum::ScreenName(q_screen_name) => menu_items
+                .filter(screen_name.eq(q_screen_name))
+                .load::<MenuItem>(&mut self.connection)?,
+            QueryEnum::Name(q_name) => menu_items
+                .filter(name.like(format!("%{}%", q_name)))
+                .load::<MenuItem>(&mut self.connection)?,
+            _ => Vec::new(),
+        };
+
         Ok(result)
     }
 }
