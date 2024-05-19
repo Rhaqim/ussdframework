@@ -8,7 +8,7 @@ export default function Home() {
 	const [services, setServices] = useState([]);
 
 	const getServices = async () => {
-		Services.getServiceList().then(data => {
+		Services.getAllServices().then(data => {
 			console.log(data);
 			setServices(data);
 		});

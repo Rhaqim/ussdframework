@@ -14,12 +14,7 @@ export const SideNavLinks = ({
 		children: "Services",
 	},
 	{
-		href: "/admin/build",
-		onClick: () => onSelect("build"),
-		children: "Build",
-	},
-	{
-		href: "/admin/migration",
+		href: "/admin/migrate",
 		onClick: () => onSelect("migrate"),
 		children: "Migrate",
 	},
