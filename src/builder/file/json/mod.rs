@@ -2,8 +2,11 @@ use std::collections::HashMap;
 
 use crate::{
     builder::{Database, DatabaseManager, MenuItem, RouterOption, ScreenModel, ServiceModel},
-    core::{ussd_screens::{USSDMenuItems, USSDRouterOption}, USSDMenu},
-    error, info,
+    core::{
+        ussd_screens::{USSDMenuItems, USSDRouterOption},
+        USSDMenu,
+    },
+    debug, error, info,
 };
 
 /// Loads a `USSDMenu` from a JSON file and populates the database with the menu data.
@@ -33,6 +36,8 @@ use crate::{
 /// // This will load the menu from "menu.json" and populate the database.
 /// ```
 pub fn from_json(file_path: Option<&str>) {
+    info!("Loading menu from JSON file: {:?}", file_path);
+
     let menu = USSDMenu::load_from_json(file_path.unwrap_or("menu.json"));
 
     match menu {
@@ -64,12 +69,12 @@ pub fn from_json(file_path: Option<&str>) {
 
                 match screen.menu_items {
                     Some(i) => items = i,
-                    None => error!("No menu items found for screen {}", name),
+                    None => debug!("No menu items found for screen {}", name),
                 }
 
                 match screen.router_options {
                     Some(r) => routes = r,
-                    None => error!("No router options found for screen {}", name),
+                    None => debug!("No router options found for screen {}", name),
                 }
 
                 for (menu_name, menu_item) in items {

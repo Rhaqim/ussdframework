@@ -1,4 +1,5 @@
-CREATE TABLE services (
+-- Create services table
+CREATE TABLE IF NOT EXISTS services (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     function_name TEXT NOT NULL,
@@ -7,7 +8,8 @@ CREATE TABLE services (
     service_code TEXT
 );
 
-CREATE TABLE screens (
+-- Create screens table
+CREATE TABLE IF NOT EXISTS screens (
     id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
     text TEXT NOT NULL,
@@ -19,20 +21,20 @@ CREATE TABLE screens (
     input_type TEXT
 );
 
-CREATE TABLE menu_items (
+-- Create menu_items table
+CREATE TABLE IF NOT EXISTS menu_items (
     id INTEGER PRIMARY KEY,
-    screen_id INTEGER NOT NULL,
+    screen_name TEXT NOT NULL,
     name TEXT NOT NULL,
     option TEXT NOT NULL,
     display_name TEXT NOT NULL,
-    next_screen TEXT NOT NULL,
-    FOREIGN KEY (screen_id) REFERENCES screens(id) ON DELETE CASCADE
+    next_screen TEXT NOT NULL
 );
 
-CREATE TABLE router_options (
+-- Create router_options table
+CREATE TABLE IF NOT EXISTS router_options (
     id INTEGER PRIMARY KEY,
-    screen_id INTEGER NOT NULL,
+    screen_name TEXT NOT NULL,
     router_option TEXT NOT NULL,
-    next_screen TEXT NOT NULL,
-    FOREIGN KEY (screen_id) REFERENCES screens(id) ON DELETE CASCADE
+    next_screen TEXT NOT NULL
 );

@@ -30,6 +30,7 @@ pub async fn process_json_file(mut payload: Multipart) -> Result<HttpResponse, E
                 .body(format!("Failed to create directories: {}", e)));
         }
 
+        // Clone the filepath for loading the JSON data
         let load_filepath = filepath.clone();
 
         let file = web::block(move || File::create(&filepath)).await?;
@@ -38,11 +39,16 @@ pub async fn process_json_file(mut payload: Multipart) -> Result<HttpResponse, E
         // Write file data to the temporary file
         while let Some(chunk) = field.next().await {
             let data = chunk?;
+
             let file = Arc::clone(&file);
+
             let res = web::block(move || {
                 let mut f = file.lock().unwrap();
+
                 let file = f.as_mut().unwrap(); // Access the File instance from the MutexGuard
+
                 file.write_all(&data)?;
+
                 Ok::<_, std::io::Error>(())
             })
             .await?;
@@ -58,7 +64,9 @@ pub async fn process_json_file(mut payload: Multipart) -> Result<HttpResponse, E
         // Delete the file after processing
         if let Err(e) = std::fs::remove_file(&load_filepath) {
             eprintln!("Error deleting file: {}", e);
-        }
+        };
+
+        return Ok(HttpResponse::Ok().body("File uploaded and processed"));
     }
 
     // If no file was found in the request

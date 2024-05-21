@@ -7,7 +7,7 @@ run-migration:
 	diesel migration generate ussd_services
 
 migrate:
-	diesel migration run --database-url=${DATABASE_URL}
+	diesel migration run --database-url menu.sqlite3
 
 build-frontend:
 	cd frontend && npm install && npm run build
