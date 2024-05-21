@@ -116,6 +116,12 @@ impl USSDAction for USSDScreen {
     fn display(&self, session: &USSDSession) -> Option<String> {
         let mut message = String::new();
 
+        // check if there's an error message in the session if there is then append to message
+        if let Some(error_message) = &session.error_message {
+            message.push_str(&error_message);
+            message.push_str("\n\n");
+        }
+
         match self.screen_type {
             ScreenType::Initial => None,
             ScreenType::Menu => {
@@ -186,6 +192,9 @@ impl USSDAction for USSDScreen {
                                         return;
                                     } else {
                                         error!("Selected menu item not found");
+                                        session.error_message = Some("Invalid menu option".to_string());
+                                        session.current_screen = session.current_screen.clone();
+                                        return;
                                     }
                                 }
                             }
