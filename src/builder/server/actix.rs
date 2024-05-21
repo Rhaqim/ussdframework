@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use crate::builder::api::file;
 use crate::builder::api::screens;
 use crate::builder::api::services;
+use crate::builder::api::menu_items;
+use crate::builder::api::router_options;
 
 use crate::error;
 
@@ -15,6 +17,8 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             // Serve the API
+
+            // Services
             .service(
                 web::resource("/api/services")
                     .route(web::post().to(services::create))
@@ -30,6 +34,8 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                 web::resource("/api/services/multiple")
                     .route(web::post().to(services::get_multiple)),
             )
+
+            // Screens
             .service(
                 web::resource("/api/screens")
                     .route(web::post().to(screens::create))
@@ -44,6 +50,39 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
             .service(
                 web::resource("/api/screens/multiple").route(web::post().to(screens::get_multiple)),
             )
+
+            // MenuItems
+            .service(
+                web::resource("/api/menu_items")
+                    .route(web::post().to(menu_items::create))
+                    .route(web::put().to(menu_items::update))
+                    .route(web::get().to(menu_items::get_all)),
+            )
+            .service(
+                web::resource("/api/menu_items/{id}")
+                    .route(web::get().to(menu_items::get))
+                    .route(web::delete().to(menu_items::delete)),
+            )
+            .service(
+                web::resource("/api/menu_items/multiple").route(web::post().to(menu_items::get_multiple)),
+            )
+
+            // Router Options
+            .service(
+                web::resource("/api/router_options")
+                    .route(web::post().to(router_options::create))
+                    .route(web::put().to(router_options::update))
+                    .route(web::get().to(router_options::get_all)),
+            )
+            .service(
+                web::resource("/api/router_options/{id}")
+                    .route(web::get().to(router_options::get))
+                    .route(web::delete().to(router_options::delete)),
+            )
+            .service(
+                web::resource("/api/router_options/multiple").route(web::post().to(router_options::get_multiple)),
+            )
+
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Serve static files
             .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))

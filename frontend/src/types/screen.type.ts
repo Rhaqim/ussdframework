@@ -1,6 +1,6 @@
 export interface MenuItem {
 	id?: number;
-	screen_id: number;
+	screen_name: string;
 	name: string;
 	option: string;
 	display_name: string;
@@ -9,7 +9,7 @@ export interface MenuItem {
 
 export interface RouterOption {
 	id?: number;
-	screen_id: number;
+	screen_name: string;
 	router_option: string;
 	next_screen: string;
 }

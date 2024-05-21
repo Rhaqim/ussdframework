@@ -22,7 +22,7 @@ const ServiceHomePage = () => {
 	const [service, setService] = useState<Service[]>(data);
 
 	useEffect(() => {
-		Services.getAllServices().then(data => {
+		Services.getAll().then(data => {
 			setService(data);
 		});
 	}, []);

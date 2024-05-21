@@ -54,7 +54,7 @@ const ScreenForm = () => {
   ]
 
   const handleSubmit = (data: Screen) => {
-    Screens.createScreen(data).then((response) => {
+    Screens.create(data).then((response) => {
       console.log(response)
     })
   }

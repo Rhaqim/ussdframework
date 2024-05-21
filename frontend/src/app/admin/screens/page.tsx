@@ -23,7 +23,7 @@ const ScreenHomePage = () => {
 	const [screen, setScreen] = useState<Screen[]>(data);
 
 	useEffect(() => {
-		Screens.getAllScreens().then(data => {
+		Screens.getAll().then(data => {
 			setScreen(data);
 		});
 	}, []);

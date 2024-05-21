@@ -36,7 +36,7 @@ const ServiceForm = () => {
   ]
 
   const handleSubmit = (data: Service) => {
-    Services.createService(data).then((response) => {
+    Services.create(data).then((response) => {
       console.log(response)
     })
   }

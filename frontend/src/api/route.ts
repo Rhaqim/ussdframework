@@ -1,5 +1,5 @@
 import Service from "@/types/service.type";
-import Screen from "@/types/screen.type";
+import Screen, { MenuItem, RouterOption } from "@/types/screen.type";
 
 const fetcher = {
 	post: async (url: string, data: any) => {
@@ -33,70 +33,51 @@ const fetcher = {
 	},
 };
 
-export const Services = {
-	createService: (service: Service) => {
-		return fetcher.post("/api/services", service);
+type Entity = "services" | "screens" | "menu_items" | "router_options";
+
+const apiService = <T>(entity: Entity) => ({
+	create: (item: T) => {
+		return fetcher.post(`/api/${entity}`, item);
 	},
 
-	updateService: (service: Service) => {
-		return fetcher.put(`/api/services`, service);
+	update: (item: T) => {
+		return fetcher.put(`/api/${entity}`, item);
 	},
 
-	getAllServices: () => {
-		return fetcher.get(`/api/services`);
+	getAll: () => {
+		return fetcher.get(`/api/${entity}`);
 	},
 
-	getService: (id: number) => {
-		return fetcher.get(`/api/services/${id}`);
+	get: (id: number) => {
+		return fetcher.get(`/api/${entity}/${id}`);
 	},
 
-	deleteService: (id: number) => {
-		return fetcher.delete(`/api/services/${id}`);
-	},
-
-	getByQuery: (query: string) => {
-		return fetcher.get(`/api/services/multiple/${query}`);
-	},
-};
-
-export const Screens = {
-	createScreen: (screen: Screen) => {
-		return fetcher.post("/api/screens", screen);
-	},
-
-	updateScreen: (screen: Screen) => {
-		return fetcher.put(`/api/screens`, screen);
-	},
-
-	getAllScreens: () => {
-		return fetcher.get(`/api/screens`);
-	},
-
-	getScreen: (id: number) => {
-		return fetcher.get(`/api/screens/${id}`);
-	},
-
-	deleteScreen: (id: number) => {
-		return fetcher.delete(`/api/screens/${id}`);
+	delete: (id: number) => {
+		return fetcher.delete(`/api/${entity}/${id}`);
 	},
 
 	getByQuery: (query: string) => {
-		return fetcher.get(`/api/screens/multiple/${query}`);
+		return fetcher.get(`/api/${entity}/multiple/${query}`);
 	},
-};
+});
+
+export const Services = apiService<Service>("services");
+export const Screens = apiService<Screen>("screens");
+export const MenuItems = apiService<MenuItem>("menu_items");
+export const RouterOptions = apiService<RouterOption>("router_options");
 
 export const uploadFile = async (file: File) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  return fetch("/api/upload", {
-    method: "POST",
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-    body: formData,
-  }).then(response => response.json());
-}
+	const formData = new FormData();
+	formData.append("file", file);
+	return fetch("/api/upload", {
+		method: "POST",
+		headers: {
+			"Content-Type": "multipart/form-data",
+		},
+		body: formData,
+	}).then(response => response.json());
+};
 
 export const downloadFile = async (filename: string) => {
-  return fetch(`/api/download/${filename}`).then(response => response.blob());
-}
+	return fetch(`/api/download/${filename}`).then(response => response.blob());
+};

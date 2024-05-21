@@ -3,9 +3,11 @@ use std::future::Future;
 use actix_web::{HttpResponse, Responder};
 use serde::Deserialize;
 
-use super::{DatabaseManager, ScreenModel, ServiceModel};
+use super::{DatabaseManager, MenuItem, RouterOption, ScreenModel, ServiceModel};
 
 pub mod file;
+pub mod menu_items;
+pub mod router_options;
 pub mod screens;
 pub mod services;
 
@@ -33,4 +35,16 @@ pub struct ServiceModelUpdate {
 pub struct ScreeModelUpdate {
     pub id: i32,
     pub screen: ScreenModel,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct MenuItemUpdate {
+    pub id: i32,
+    pub menu_item: MenuItem,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RouterOptionUpdate {
+    pub id: i32,
+    pub router_option: RouterOption,
 }
