@@ -1,9 +1,12 @@
 import React from "react";
 
+import { useRouter } from "next/navigation";
+
 import Service from "@/types/service.type";
 import TableBase from "@/components/UI/Table";
 
 const Table = ({ data }: { data: Service[] }) => {
+	const router = useRouter();
 	return (
 		<TableBase
 			columns={[
@@ -15,7 +18,7 @@ const Table = ({ data }: { data: Service[] }) => {
 				{ key: "service_code", title: "Service Code" },
 			]}
 			data={data}
-			onPress={() => {console.log("Pressed")}}
+			onPress={id => router.push(`/admin/services/${id}`)}
 		/>
 	);
 };
