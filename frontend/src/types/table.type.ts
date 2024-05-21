@@ -3,9 +3,10 @@ export interface TableColumn {
 	title: string;
 }
 
-declare interface TableProps {
+declare interface TableProps<T = any>{
 	columns: TableColumn[];
-	data: any[];
+	data: T[];
+	onPress: (id: string | number) => void;
 }
 
 export default TableProps;

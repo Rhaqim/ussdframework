@@ -10,6 +10,20 @@ const homeLinks = [
 		color: "blue",
 	},
 	{
+		title: "Menu Items",
+		description: "Manage USSD Menu Items",
+		href: "/admin/menu_items",
+		icon: "M12 14l9-5-9-5 9 5z",
+		color: "blue",
+	},
+	{
+		title: "Router Options",
+		description: "Manage USSD Router Options",
+		href: "/admin/router_options",
+		icon: "M12 14l9-5-9-5 9 5z",
+		color: "blue",
+	},
+	{
 		title: "Services",
 		description: "Manage USSD Services",
 		href: "/admin/services",

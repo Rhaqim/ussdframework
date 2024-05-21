@@ -18,6 +18,7 @@ const Table = ({ data }: { data: Screen[] }) => {
 				{ key: "input_type", title: "Input Type" },
 			]}
 			data={data}
+			onPress={() => {console.log("Pressed")}}
 		/>
 	);
 };

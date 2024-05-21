@@ -15,6 +15,7 @@ const Table = ({ data }: { data: Service[] }) => {
 				{ key: "service_code", title: "Service Code" },
 			]}
 			data={data}
+			onPress={() => {console.log("Pressed")}}
 		/>
 	);
 };

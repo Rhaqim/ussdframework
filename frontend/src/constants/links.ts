@@ -9,6 +9,16 @@ export const SideNavLinks = ({
 		children: "Screens",
 	},
 	{
+		href: "/admin/router_options",
+		onClick: () => onSelect("router_options"),
+		children: "Router Options",
+	},
+	{
+		href: "/admin/menu_items",
+		onClick: () => onSelect("menu_items"),
+		children: "Menu Items",
+	},
+	{
 		href: "/admin/services",
 		onClick: () => onSelect("services"),
 		children: "Services",

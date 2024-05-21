@@ -2,7 +2,7 @@ import React from "react";
 
 import TableProps from "@/types/table.type";
 
-const Table: React.FC<TableProps> = ({ data, columns }) => {
+const Table = <T,>({ data, columns, onPress }: TableProps<T>) => {
 	return (
 		<div className="overflow-x-auto">
 			<table className="min-w-full divide-y divide-gray-200">
@@ -21,9 +21,16 @@ const Table: React.FC<TableProps> = ({ data, columns }) => {
 				</thead>
 				<tbody className="bg-white divide-y divide-gray-200">
 					{data.map((item: any, index: number) => (
-						<tr key={index}>
+						<tr
+							key={index}
+							onClick={() => onPress(item.id)}
+							className="cursor-pointer hover:bg-gray-100"
+						>
 							{columns.map(column => (
-								<td key={column.key} className="px-6 py-4 whitespace-nowrap text-black">
+								<td
+									key={column.key}
+									className="px-6 py-4 whitespace-nowrap text-black"
+								>
 									{item[column.key]}
 								</td>
 							))}
