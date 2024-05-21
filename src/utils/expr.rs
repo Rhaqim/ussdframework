@@ -144,7 +144,10 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
         let operator = caps.get(2).map_or("", |m| m.as_str());
         let value = caps.get(3).map_or("", |m| m.as_str());
 
-        debug!("Field: {}, Operator: {}, Value: {}", field, operator, value);
+        debug!(
+            "Field: {}, object: {}, fields: {:?}, operator: {}, value: {}",
+            field, object, fields, operator, value
+        );
 
         info!(
             "Evaluating expression: object: {}, field: {}, operator: {}, value: {}",
@@ -154,19 +157,19 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
         if let Some(data_object) = session.data.get(object) {
             match data_object {
                 USSDData::Dict(inner_data) => {
-                    if field.is_empty() {
+                    if fields.is_empty() {
                         debug!("Field is empty");
-                        if let Some(USSDData::Str(data_value)) = inner_data.get(object) {
-                            return compare_strings(operator, data_value, value);
+                        if let Some(inner_value) = inner_data.get(object) {
+                            let val = get_nested_value(inner_value, &[object]);
+                            if let Some(val) = val {
+                                return compare_strings(operator, &val, value);
+                            }
                         }
                     } else {
-                        if let Some(inner_value) = inner_data.get(field) {
-                            match inner_value {
-                                USSDData::Str(data_value) => {
-                                    return compare_strings(operator, data_value, value);
-                                }
-                                _ => {}
-                            }
+                        debug!("Field is not empty");
+                        let val = get_nested_value(data_object, fields);
+                        if let Some(val) = val {
+                            return compare_strings(operator, &val, value);
                         }
                     }
                 }
@@ -354,6 +357,34 @@ mod tests {
     }
 
     #[test]
+    fn test_evaluate_expression_op_nested() {
+        let mut session = new_session();
+        let mut data = HashMap::new();
+        let mut inner_data = HashMap::new();
+        inner_data.insert("age".to_string(), USSDData::Str("30".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
+        session.data = data;
+
+        let text = "Is 30? {{session.age == '30'}}";
+        let evaluated_text = evaluate_expression_op(&session, text);
+        assert_eq!(evaluated_text, true);
+    }
+
+    #[test]
+    fn test_evaluate_expression_op_nested_field() {
+        let mut session = new_session();
+        let mut data = HashMap::new();
+        let mut inner_data = HashMap::new();
+        inner_data.insert("name".to_string(), USSDData::Str("John".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
+        session.data = data;
+
+        let text = "Is John? {{session.name == 'John'}}";
+        let evaluated_text = evaluate_expression_op(&session, text);
+        assert_eq!(evaluated_text, true);
+    }
+
+    #[test]
     fn test_evaluate_expression_op_gt() {
         let mut session = new_session();
         let mut data = HashMap::new();
@@ -361,6 +392,20 @@ mod tests {
         session.data = data;
 
         let text = "Is 30 > 20? {{age > '20'}}";
+        let evaluated_text = evaluate_expression_op(&session, text);
+        assert_eq!(evaluated_text, true);
+    }
+
+    #[test]
+    fn test_evaluate_expression_op_gt_nested() {
+        let mut session = new_session();
+        let mut data = HashMap::new();
+        let mut inner_data = HashMap::new();
+        inner_data.insert("age".to_string(), USSDData::Str("30".to_string()));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
+        session.data = data;
+
+        let text = "Is 30 > 20? {{session.age > '20'}}";
         let evaluated_text = evaluate_expression_op(&session, text);
         assert_eq!(evaluated_text, true);
     }
