@@ -5,19 +5,14 @@ import React, { useEffect, useState } from "react";
 import { Services } from "@/api/route";
 import Service from "@/types/service.type";
 
-const ServicePage = ({ params }: { params: { id: string } }) => {
+const ServicePage = ({ params }: { params: { slug: string } }) => {
 	const [service, setService] = useState<Service | null>(null);
 
-    console.log("Params", params);
-
 	useEffect(() => {
-        // conver id to number
-        const id = parseInt(params.id);
-
-		Services.get(id).then(data => {
+		Services.get(params.slug).then(data => {
 			setService(data);
 		});
-	}, [params.id]);
+	}, [params.slug]);
 
 	return (
 		<div className="container mx-auto">

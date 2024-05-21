@@ -1,3 +1,5 @@
+use serde::ser::StdError;
+
 use actix_web::{web, HttpResponse, Responder};
 
 use crate::builder::{Database, DatabaseManager, QueryEnum, RouterOption};
@@ -42,7 +44,7 @@ pub async fn delete(path: web::Path<PathInfo>) -> impl Responder {
     with_database(move |_manager| {
         // Delete the screen from the database
 
-        let _id = path.into_inner().id;
+        let _id = path.into_inner().id.unwrap_or_default();
 
         let result = <DatabaseManager as Database<RouterOption>>::delete(_manager, _id);
 
@@ -61,9 +63,17 @@ pub async fn get(path: web::Path<PathInfo>) -> impl Responder {
     with_database(move |_manager| {
         // Get the screen from the database
 
-        let _id = path.into_inner().id;
+        let path = path.into_inner();
 
-        let result = <DatabaseManager as Database<RouterOption>>::get_by_id(_manager, _id);
+        let result = match path.id {
+            Some(id) => <DatabaseManager as Database<RouterOption>>::get_by_id(_manager, id),
+            None => match path.name {
+                Some(name) => {
+                    <DatabaseManager as Database<RouterOption>>::get_by_name(_manager, name)
+                }
+                None => Err(Box::<dyn StdError>::from("No id or name provided")),
+            },
+        };
 
         async move {
             match result {

@@ -26,7 +26,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(services::get_all)),
             )
             .service(
-                web::resource("/api/services/{id}")
+                web::resource("/api/services/{name}")
                     .route(web::get().to(services::get))
                     .route(web::delete().to(services::delete)),
             )
@@ -43,7 +43,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(screens::get_all)),
             )
             .service(
-                web::resource("/api/screens/{id}")
+                web::resource("/api/screens/{name}")
                     .route(web::get().to(screens::get))
                     .route(web::delete().to(screens::delete)),
             )
@@ -59,7 +59,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(menu_items::get_all)),
             )
             .service(
-                web::resource("/api/menu_items/{id}")
+                web::resource("/api/menu_items/{name}")
                     .route(web::get().to(menu_items::get))
                     .route(web::delete().to(menu_items::delete)),
             )
@@ -75,7 +75,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(router_options::get_all)),
             )
             .service(
-                web::resource("/api/router_options/{id}")
+                web::resource("/api/router_options/{name}")
                     .route(web::get().to(router_options::get))
                     .route(web::delete().to(router_options::delete)),
             )

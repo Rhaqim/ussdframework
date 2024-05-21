@@ -23,7 +23,7 @@ const Table = <T,>({ data, columns, onPress }: TableProps<T>) => {
 					{data.map((item: any, index: number) => (
 						<tr
 							key={index}
-							onClick={() => onPress(item.id)}
+							onClick={() => onPress(item.name || item.screen_name || item.id)}
 							className="cursor-pointer hover:bg-gray-100"
 						>
 							{columns.map(column => (

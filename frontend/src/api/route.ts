@@ -48,12 +48,12 @@ const apiService = <T>(entity: Entity) => ({
 		return fetcher.get(`/api/${entity}`);
 	},
 
-	get: (id: number) => {
-		return fetcher.get(`/api/${entity}/${id}`);
+	get: (name: string) => {
+		return fetcher.get(`/api/${entity}/${name}`);
 	},
 
-	delete: (id: number) => {
-		return fetcher.delete(`/api/${entity}/${id}`);
+	delete: (name: string) => {
+		return fetcher.delete(`/api/${entity}/${name}`);
 	},
 
 	getByQuery: (query: string) => {

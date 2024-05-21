@@ -92,6 +92,13 @@ impl Database<RouterOption> for DatabaseManager {
         Ok(result)
     }
 
+    fn get_by_name(&mut self, name: String) -> Result<RouterOption, Box<dyn Error>> {
+        let result = router_options::table
+            .filter(router_options::screen_name.eq(name))
+            .first(&mut self.connection)?;
+        Ok(result)
+    }
+
     fn get_many(&mut self) -> Result<Vec<RouterOption>, Box<dyn Error>> {
         let result = router_options::table.load::<RouterOption>(&mut self.connection)?;
         Ok(result)

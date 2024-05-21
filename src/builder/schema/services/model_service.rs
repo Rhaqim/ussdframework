@@ -105,6 +105,13 @@ impl Database<Service> for DatabaseManager {
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }
 
+    fn get_by_name(&mut self, name: String) -> Result<Service, Box<dyn Error>> {
+        services::table
+            .filter(services::name.eq(name))
+            .first(&mut self.connection)
+            .map_err(|e| Box::new(e) as Box<dyn Error>)
+    }
+
     fn get_many(&mut self) -> Result<Vec<Service>, Box<dyn Error>> {
         services::table
             .load(&mut self.connection)
@@ -122,7 +129,10 @@ impl Database<Service> for DatabaseManager {
             QueryEnum::ID(id) => format!("SELECT * FROM services WHERE id = {}", id),
             QueryEnum::Name(name) => format!("SELECT * FROM services WHERE name = '{}'", name),
             QueryEnum::ServiceCode(service_code) => {
-                format!("SELECT * FROM services WHERE service_code = '{}'", service_code)
+                format!(
+                    "SELECT * FROM services WHERE service_code = '{}'",
+                    service_code
+                )
             }
             QueryEnum::DataKey(data_key) => {
                 format!("SELECT * FROM services WHERE data_key = '{}'", data_key)

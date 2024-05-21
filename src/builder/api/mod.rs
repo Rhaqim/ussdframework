@@ -22,7 +22,8 @@ where
 
 #[derive(Deserialize)]
 pub struct PathInfo {
-    id: i32,
+    id: Option<i32>,
+    name: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

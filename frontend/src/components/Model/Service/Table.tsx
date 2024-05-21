@@ -18,7 +18,7 @@ const Table = ({ data }: { data: Service[] }) => {
 				{ key: "service_code", title: "Service Code" },
 			]}
 			data={data}
-			onPress={id => router.push(`/admin/services/${id}`)}
+			onPress={name => router.push(`/admin/services/${name}`)}
 		/>
 	);
 };

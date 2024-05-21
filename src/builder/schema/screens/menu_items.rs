@@ -124,6 +124,13 @@ impl Database<MenuItem> for DatabaseManager {
         Ok(result)
     }
 
+    fn get_by_name(&mut self, name: String) -> Result<MenuItem, Box<dyn Error>> {
+        let result = menu_items::table
+            .filter(menu_items::name.eq(name))
+            .first(&mut self.connection)?;
+        Ok(result)
+    }
+
     fn get_many(&mut self) -> Result<Vec<MenuItem>, Box<dyn Error>> {
         let result = menu_items::table.load::<MenuItem>(&mut self.connection)?;
         Ok(result)

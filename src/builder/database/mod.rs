@@ -27,6 +27,7 @@ pub trait Database<T> {
     fn update(&mut self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
     fn delete(&mut self, id: i32) -> Result<(), Box<dyn Error>>;
     fn get_by_id(&mut self, id: i32) -> Result<T, Box<dyn Error>>;
+    fn get_by_name(&mut self, name: String) -> Result<T, Box<dyn Error>>;
     fn get_many(&mut self) -> Result<Vec<T>, Box<dyn Error>>;
     // fn get_by_query(&mut self, query: String) -> Result<Vec<T>, Box<dyn Error>>;
     fn get_by_query_enum(&mut self, query: QueryEnum) -> Result<Vec<T>, Box<dyn Error>>;
