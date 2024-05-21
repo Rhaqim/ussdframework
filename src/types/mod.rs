@@ -161,6 +161,52 @@ impl USSDData {
         USSDData::Dict(dict)
     }
 
+    /// Returns the value of a nested field in the dictionary.
+    /// This function is recursive and will return the value of a nested field in the dictionary.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `field` - A vector of strings representing the nested field to retrieve
+    /// 
+    /// # Returns
+    /// 
+    /// An optional string value representing the value of the nested field
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// let dict = USSDData::Dict({
+    ///   let mut dict = HashMap::new();
+    ///  dict.insert("one".to_string(), USSDData::Str("1".to_string()));
+    /// dict.insert("two".to_string(), USSDData::Str("2".to_string()));
+    /// dict
+    /// });
+    /// 
+    /// let value = dict.get_nested_value(&["one"]);
+    /// ```
+    pub fn get_nested_value(&self, field: &[&str]) -> Option<String> {
+        if field.is_empty() {
+            return None;
+        }
+        
+        match self {
+            USSDData::Str(value) => Some(value.clone()),
+            USSDData::Dict(inner_data) => {
+                if field.is_empty() {
+                    return None;
+                }
+
+                if let Some(inner_value) = inner_data.get(field[0]) {
+                    inner_value.get_nested_value(&field[1..])
+                } else {
+                    None
+                }
+            }
+            USSDData::ListStr(value) => Some(value.join(", ")),
+            _ => None,
+        }
+    }
+
     /// Convert a JSON value to a USSDData value
     /// This function is recursive and will convert nested JSON values to USSDData values
     /// The USSDData type is a custom enum type that can represent any JSON value

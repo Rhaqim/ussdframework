@@ -2,6 +2,25 @@ use crate::core::USSDSession;
 use crate::types::USSDData;
 use crate::{debug, info};
 
+fn get_nested_value(data: &USSDData, field: &[&str]) -> Option<String> {
+    match data {
+        USSDData::Str(value) => Some(value.clone()),
+        USSDData::Dict(inner_data) => {
+            if field.is_empty() {
+                return None;
+            }
+
+            if let Some(inner_value) = inner_data.get(field[0]) {
+                get_nested_value(inner_value, &field[1..])
+            } else {
+                None
+            }
+        }
+        USSDData::ListStr(value) => Some(value.join(", ")),
+        _ => None,
+    }
+}
+
 /// Function to evaluate an expression
 ///
 /// This function takes a string and a session and evaluates the string as an expression
@@ -32,39 +51,40 @@ use crate::{debug, info};
 /// assert_eq!(evaluated_text, "Hello John");
 /// ```
 pub fn evaluate_expression(text: &str, session: &USSDSession) -> String {
-    let pattern = regex::Regex::new(r"\{\{(\w+)(?:\.(\w+))?\}\}").unwrap(); // Updated regex pattern
+    // let pattern = regex::Regex::new(r"\{\{(\w+)(?:\.(\w+))?\}\}").unwrap(); // Updated regex pattern
+    let pattern = regex::Regex::new(r"\{\{([\w.]+)\}\}").unwrap();
+
     let evaluated_text = pattern.replace_all(text, |caps: &regex::Captures| {
         // Closure to handle expression evaluation
-        let object = caps.get(1).unwrap().as_str(); // Extract the object name
-        let field = caps.get(2).map_or("", |m| m.as_str()); // Extract the field name if exists
+        let _field = caps.get(1).unwrap().as_str(); // Extract the entire field string including dots
+
+        let _field_parts: Vec<&str> = _field.split('.').collect();
+
+        let object = _field_parts[0]; // Extract the object name
+
+        let fields = &_field_parts[1..]; // Extract the field name if exists
 
         info!(
-            "Evaluating expression: object: {}, field: {}",
-            object, field
+            "Evaluating expression: field: {} object: {} nested fields: {:?}",
+            _field, object, fields
         );
 
         if let Some(data_object) = session.data.get(object) {
             match data_object {
                 USSDData::Dict(inner_data) => {
-                    if field.is_empty() {
+                    if fields.is_empty() {
                         // If field is empty, directly look up the object key
-                        if let Some(USSDData::Str(value)) = inner_data.get(object) {
-                            return value.to_string(); // Replace with value if found
+                        if let Some(inner_value) = inner_data.get(object) {
+                            return get_nested_value(inner_value, &[object])
+                                .unwrap_or_else(|| caps.get(0).unwrap().as_str().to_string());
                         }
                     } else {
-                        // If field is not empty, look up object key first, then field key
-                        if let Some(inner_value) = inner_data.get(field) {
-                            match inner_value {
-                                USSDData::Str(value) => {
-                                    return value.to_string(); // Replace with value if found
-                                }
-                                _ => {}
-                            }
-                        }
+                        return get_nested_value(data_object, fields)
+                            .unwrap_or_else(|| caps.get(0).unwrap().as_str().to_string());
                     }
                 }
                 USSDData::Str(value) => {
-                    if field.is_empty() {
+                    if fields.is_empty() {
                         return value.to_string(); // Replace with value if found
                     }
                 }
@@ -101,14 +121,30 @@ pub fn evaluate_expression(text: &str, session: &USSDSession) -> String {
 /// assert_eq!(result, true);
 /// ```
 pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
-    let pattern_str = r"\{\{(\w+)(?:\.(\w+))?(?:\s*(==|>|>=|<|<=)\s*\'?(\w+)\'?)?\}\}";
+    // let pattern_str = r"\{\{(\w+)(?:\.(\w+))?(?:\s*(==|>|>=|<|<=)\s*\'?(\w+)\'?)?\}\}";
+    let pattern_str = r"\{\{([\w.]+)(?:\s*(==|>|>=|<|<=)\s*\'?(\w+)\'?)?\}\}";
     let pattern = regex::Regex::new(pattern_str).unwrap();
+
     let matched = pattern.captures(text);
+
     if let Some(caps) = matched {
-        let object = caps.get(1).unwrap().as_str();
-        let field = caps.get(2).map_or("", |m| m.as_str());
-        let operator = caps.get(3).map_or("", |m| m.as_str());
-        let value = caps.get(4).map_or("", |m| m.as_str());
+        // let object = caps.get(1).unwrap().as_str();
+        // let field = caps.get(2).map_or("", |m| m.as_str());
+        // let operator = caps.get(3).map_or("", |m| m.as_str());
+        // let value = caps.get(4).map_or("", |m| m.as_str());
+
+        let field = caps.get(1).unwrap().as_str(); // Extract the entire field string including dots
+
+        let _field_parts: Vec<&str> = field.split('.').collect();
+
+        let object = _field_parts[0]; // Extract the object name
+
+        let fields = &_field_parts[1..]; // Extract the field name if exists
+
+        let operator = caps.get(2).map_or("", |m| m.as_str());
+        let value = caps.get(3).map_or("", |m| m.as_str());
+
+        debug!("Field: {}, Operator: {}, Value: {}", field, operator, value);
 
         info!(
             "Evaluating expression: object: {}, field: {}, operator: {}, value: {}",
@@ -224,6 +260,43 @@ mod tests {
         session.data = data;
 
         let text = "Hello {{session.name}}";
+        let evaluated_text = evaluate_expression(text, &session);
+        assert_eq!(evaluated_text, "Hello John");
+    }
+
+    #[test]
+    fn test_evaluate_expression_deep_nested_field() {
+        let mut session = new_session();
+        let mut data = HashMap::new();
+        let mut inner_data = HashMap::new();
+        let mut inner_inner_data = HashMap::new();
+        inner_inner_data.insert("name".to_string(), USSDData::Str("John".to_string()));
+        inner_data.insert("person".to_string(), USSDData::new_dict(inner_inner_data));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
+        session.data = data;
+
+        let text = "Hello {{session.person.name}}";
+        let evaluated_text = evaluate_expression(text, &session);
+        assert_eq!(evaluated_text, "Hello John");
+    }
+
+    #[test]
+    fn test_evaluate_expression_deep_nested_field_3() {
+        let mut session = new_session();
+        let mut data = HashMap::new();
+        let mut inner_data = HashMap::new();
+        let mut inner_inner_data = HashMap::new();
+        let mut inner_inner_inner_data = HashMap::new();
+        inner_inner_inner_data.insert("name".to_string(), USSDData::Str("John".to_string()));
+        inner_inner_data.insert(
+            "person".to_string(),
+            USSDData::new_dict(inner_inner_inner_data),
+        );
+        inner_data.insert("session".to_string(), USSDData::new_dict(inner_inner_data));
+        data.insert("session".to_string(), USSDData::new_dict(inner_data));
+        session.data = data;
+
+        let text = "Hello {{session.session.person.name}}";
         let evaluated_text = evaluate_expression(text, &session);
         assert_eq!(evaluated_text, "Hello John");
     }
