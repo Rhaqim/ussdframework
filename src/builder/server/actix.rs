@@ -1,5 +1,7 @@
 use actix_files::Files;
+use actix_web::HttpResponse;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
+use awc::{http::header, Client};
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -84,13 +86,45 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
             // File Upload
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Serve static files
-            .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))
+            // .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))
             // Route for other pages
-            .route("/{filename:.*}", web::get().to(index))
+            // .route("/{filename:.*}", web::get().to(index))
+            // Proxy all other requests to Next.js
+            .default_service(web::route().to(proxy_to_next_server))
     })
     .bind(format!("127.0.0.1:{}", port))?
     .run()
     .await
+}
+
+async fn proxy_to_next_server(req: HttpRequest) -> Result<HttpResponse> {
+    let client = Client::default();
+
+    let mut new_req = client
+        .request_from(format!("http://localhost:3000{}", req.uri()), req.head())
+        .no_decompress();
+
+    for (key, value) in req.headers() {
+        new_req = new_req.append_header((key.clone(), value.clone()));
+    }
+
+    let response = new_req.send().await;
+
+    match response {
+        Ok(mut response) => {
+            let mut client_resp = &mut HttpResponse::build(response.status());
+
+            for (key, value) in response.headers() {
+                client_resp = client_resp.append_header((key.clone(), value.clone()));
+            }
+
+            Ok(client_resp.body(response.body().await?))
+        }
+        Err(e) => {
+            error!("Error proxying request: {:?}", e);
+            Ok(HttpResponse::InternalServerError().finish())
+        }
+    }
 }
 
 async fn index(req: HttpRequest) -> Result<actix_web::HttpResponse> {
@@ -144,28 +178,3 @@ fn is_dynamic_route(path: &str) -> bool {
         .iter()
         .any(|segment| path.contains(segment))
 }
-
-// async fn index(req: HttpRequest) -> Result<actix_files::NamedFile> {
-//     let path: PathBuf = req.match_info().query("filename").parse().unwrap();
-
-//     let full_path: String = match path.to_str() {
-//         Some(p) => match p {
-//             "" => format!("{}/index.html", APP_DIR),
-//             _ => format!("{}/{}.html", APP_DIR, p),
-//         },
-//         None => format!("{}/_not-found.html", APP_DIR),
-//     };
-
-//     let res = actix_files::NamedFile::open(full_path.clone());
-
-//     match res {
-//         Ok(file) => Ok(file),
-//         Err(e) => {
-//             error!("Error opening file: {:?} at path: {}", e, full_path);
-//             Ok(actix_files::NamedFile::open(format!(
-//                 "{}/_not-found.html",
-//                 APP_DIR
-//             ))?)
-//         }
-//     }
-// }

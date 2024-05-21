@@ -12,6 +12,11 @@ migrate:
 build-frontend:
 	cd frontend && npm install && npm run build
 
+serve-frontend:
+	cd frontend && npm run start
+
+frontend: build-frontend serve-frontend
+
 copy-frontend:
 	cp -r frontend/.next/* src/builder/static/
 
