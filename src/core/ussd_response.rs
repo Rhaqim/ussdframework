@@ -5,5 +5,6 @@ use serde::{Deserialize, Serialize};
 pub struct USSDResponse {
     pub msisdn: String,
     pub session_id: String,
+    pub end_session: bool,
     pub message: String,
 }

@@ -95,7 +95,7 @@ fn home(session: &mut USSDSession) {
 }
 
 pub trait USSDAction {
-    fn display(&self, session: &USSDSession) -> Option<String>;
+    fn display(&self, session: &mut USSDSession) -> Option<String>;
     fn execute(
         &self,
         session: &mut USSDSession,
@@ -113,7 +113,7 @@ impl USSDAction for USSDScreen {
     /// - For an input screen, the message comprises the screen text alone.
     /// - For a function screen, no message is displayed.
     /// - For a router screen, no message is displayed.
-    fn display(&self, session: &USSDSession) -> Option<String> {
+    fn display(&self, session: &mut USSDSession) -> Option<String> {
         let mut message = String::new();
 
         // check if there's an error message in the session if there is then append to message
@@ -154,6 +154,7 @@ impl USSDAction for USSDScreen {
             ScreenType::Quit => {
                 let text = evaluate_expression(&self.text, session);
                 message.push_str(&text);
+                session.end_session = true;
                 Some(message)
             }
         }

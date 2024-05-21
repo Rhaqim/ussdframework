@@ -29,6 +29,7 @@ pub fn process_request(
     let mut response: USSDResponse = USSDResponse {
         msisdn: request.msisdn.clone(),
         session_id: request.session_id.clone(),
+        end_session: session.end_session,
         message: "Something went wrong, please try again later".to_string(),
     };
 
@@ -67,10 +68,12 @@ pub fn process_request(
                     if !*current_screen_displayed {
                         debug!("Displaying message for screen: {}", current_screen);
 
-                        response.message = screen.display(&session).unwrap_or_else(|| {
+                        response.message = screen.display(&mut session).unwrap_or_else(|| {
                             error!("Failed to display message for screen: {} please ensure the screen has a message", current_screen);
                             "Something went wrong, please stop".to_string()
                         });
+
+                        response.end_session = session.end_session;
 
                         session.displayed.insert(current_screen.clone(), true);
                         session.current_screen = current_screen.clone();

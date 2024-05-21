@@ -13,5 +13,6 @@ pub async fn handle_ussd(
 ) -> HttpResponse {
     let request = req.into_inner();
     let response = app.run(request, menus.get_ref().clone());
+    print!("Response: {:?}", response);
     HttpResponse::Ok().body(response.message)
 }
