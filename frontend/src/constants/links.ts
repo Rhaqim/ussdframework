@@ -4,6 +4,11 @@ export const SideNavLinks = ({
 	onSelect: (screen: string) => void;
 }) => [
 	{
+		href: "/admin/menu_nodes",
+		onClick: () => onSelect("menu_nodes"),
+		children: "Nodes",
+	},
+	{
 		href: "/admin/screens",
 		onClick: () => onSelect("screens"),
 		children: "Screens",

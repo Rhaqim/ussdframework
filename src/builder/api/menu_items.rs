@@ -94,7 +94,7 @@ pub async fn get_multiple(query: web::Json<QueryEnum>) -> impl Responder {
 
         async move {
             match result {
-                Ok(screens) => HttpResponse::Ok().json(screens),
+                Ok(menu_items) => HttpResponse::Ok().json(menu_items),
                 Err(_) => HttpResponse::InternalServerError().body("Error getting screens"),
             }
         }

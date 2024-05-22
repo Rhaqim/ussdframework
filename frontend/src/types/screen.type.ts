@@ -21,7 +21,7 @@ declare interface Screen {
 	screen_type: ScreenType;
 	default_next_screen: string;
 	service_code?: string;
-	menu_items?: { [key: string]: MenuItem };
+	menu_items?: MenuItem[];
 	function?: string;
 	router_options?: RouterOption[];
 	input_identifier?: string;

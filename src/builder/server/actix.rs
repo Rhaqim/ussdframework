@@ -13,7 +13,6 @@ use crate::error;
 pub async fn start_server(port: u16) -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            // Serve the API
             // Services
             .service(
                 web::resource("/api/services")
@@ -27,7 +26,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::delete().to(services::delete)),
             )
             .service(
-                web::resource("/api/services/multiple")
+                web::resource("/api/services/multiple/")
                     .route(web::post().to(services::get_multiple)),
             )
             // Screens
@@ -43,7 +42,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::delete().to(screens::delete)),
             )
             .service(
-                web::resource("/api/screens/multiple").route(web::post().to(screens::get_multiple)),
+                web::resource("/api/screens/multiple/").route(web::post().to(screens::get_multiple)),
             )
             // MenuItems
             .service(
@@ -58,7 +57,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::delete().to(menu_items::delete)),
             )
             .service(
-                web::resource("/api/menu_items/multiple")
+                web::resource("/api/menu_items/multiple/")
                     .route(web::post().to(menu_items::get_multiple)),
             )
             // Router Options
@@ -74,7 +73,7 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::delete().to(router_options::delete)),
             )
             .service(
-                web::resource("/api/router_options/multiple")
+                web::resource("/api/router_options/multiple/")
                     .route(web::post().to(router_options::get_multiple)),
             )
             // File Upload

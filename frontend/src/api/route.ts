@@ -1,6 +1,10 @@
 import Service from "@/types/service.type";
 import Screen, { MenuItem, RouterOption } from "@/types/screen.type";
 
+type QueryBy = {
+	ScreenName: string;
+}
+
 const fetcher = {
 	post: async (url: string, data: any) => {
 		return fetch(url, {
@@ -56,8 +60,10 @@ const apiService = <T>(entity: Entity) => ({
 		return fetcher.delete(`/api/${entity}/${name}`);
 	},
 
-	getByQuery: (query: string) => {
-		return fetcher.get(`/api/${entity}/multiple/${query}`);
+	getByQuery: (data: QueryBy ) => {
+		const response =  fetcher.post(`/api/${entity}/multiple/`, data);
+		console.log(`Fetched ${entity} by query: ${response}`);
+		return response;
 	},
 });
 
