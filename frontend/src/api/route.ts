@@ -78,6 +78,15 @@ export const uploadFile = async (file: File) => {
 	}).then(response => response.json());
 };
 
-export const downloadFile = async (filename: string) => {
-	return fetch(`/api/download/${filename}`).then(response => response.blob());
+export const downloadFile = async () => {
+	// server returns response in body
+	return fetch(`/api/download`).then(response => response.blob()
+		.then(blob => {
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement
+			("a");
+			a.href = url;
+			a.download = "data.json";
+			a.click();
+		}));
 };
