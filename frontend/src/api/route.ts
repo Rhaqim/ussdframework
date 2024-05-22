@@ -61,9 +61,7 @@ const apiService = <T>(entity: Entity) => ({
 	},
 
 	getByQuery: (data: QueryBy ) => {
-		const response =  fetcher.post(`/api/${entity}/multiple/`, data);
-		console.log(`Fetched ${entity} by query: ${response}`);
-		return response;
+		return fetcher.post(`/api/${entity}/multiple/`, data);
 	},
 });
 

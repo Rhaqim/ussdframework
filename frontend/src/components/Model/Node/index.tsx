@@ -13,13 +13,15 @@ import ReactFlow, {
 
 import "reactflow/dist/style.css";
 
-import { Screens } from "@/api/route";
+import { MenuItems, RouterOptions, Screens } from "@/api/route";
 
 import { CustomNode } from "@/components/Model/Node/nodes/CustomeNode";
 import { CustomEdge } from "@/components/Model/Node/edges/CustomeEdge";
 
 import { initialNodes } from "@/components/Model/Node/nodes";
 import { initialEdges } from "@/components/Model/Node/edges";
+
+import Screen, { ScreenType } from "@/types/screen.type";
 
 export default function MenuNode() {
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -46,9 +48,29 @@ export default function MenuNode() {
 
 	useEffect(() => {
 		async function loadScreens() {
-			Screens.getAll().then(data => {
-				setNodes(initialNodes(data));
-				setEdges(initialEdges(data));
+			Screens.getAll().then((screens_: Screen[]) => {
+				let screens: Screen[] = screens_;
+
+				for (let i = 0; i < screens_.length; i++) {
+					const req = {
+						ScreenName: screens_[i].name,
+					};
+
+					if (screens_[i].screen_type === ScreenType.MENU) {
+						MenuItems.getByQuery(req).then(items => {
+							screens_[i].menu_items = items;
+						});
+					}
+
+					if (screens_[i].screen_type === ScreenType.ROUTER) {
+						RouterOptions.getByQuery(req).then(options => {
+							screens_[i].router_options = options;
+						});
+					}
+				}
+
+				setNodes(initialNodes(screens));
+				setEdges(initialEdges(screens));
 			});
 		}
 		loadScreens();

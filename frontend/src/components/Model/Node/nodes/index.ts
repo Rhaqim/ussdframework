@@ -1,4 +1,4 @@
-import type { Node, NodeTypes } from "reactflow";
+import type { Node } from "reactflow";
 
 import Screen from "@/types/screen.type";
 
@@ -8,7 +8,7 @@ export const initialNodes = (screens: Screen[]) => {
 	const nodes = screens.map((screen, idx) => ({
 		id: screen.name,
 		type: "screen",
-		position: { x: idx * 100, y: idx * 200 },
+		position: { x: idx * 300, y: idx * 0 },
 		data: { screen },
 	})) satisfies Node[];
 

@@ -15,11 +15,15 @@ export function CustomNode({ data }: NodeProps<CustomScreenNodeData>) {
 
 	return (
 		<div
+			// className="w-80 mx-4 h-full bg-blue-500"
 			className="react-flow__node-default"
 			style={{
 				border: "1px solid black",
 				padding: "10px",
 				borderRadius: "5px",
+				width: "200px",
+				height: "100px",
+				marginRight: "10px",
 			}}
 		>
 			<div>
@@ -33,8 +37,8 @@ export function CustomNode({ data }: NodeProps<CustomScreenNodeData>) {
 					</p>
 				</div>
 			</div>
-			<Handle type="target" position={Position.Top} />
-			<Handle type="source" position={Position.Bottom} />
+			<Handle id={screen.name} type="target" position={Position.Right} />
+			<Handle id={screen.name} type="source" position={Position.Left} />
 		</div>
 	);
 }

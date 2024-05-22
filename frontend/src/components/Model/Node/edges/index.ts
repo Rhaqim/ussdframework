@@ -1,31 +1,10 @@
 import type { Edge } from "reactflow";
 
-import { MenuItems, RouterOptions } from "@/api/route";
-
-import Screen, { MenuItem, RouterOption, ScreenType } from "@/types/screen.type";
+import Screen from "@/types/screen.type";
 
 export const initialEdges = (screens: Screen[]) =>
 	screens.flatMap(screen => {
 		const edges: Edge[] = [];
-
-		const req = {
-			"ScreenName": screen.name,
-		}
-
-		if (screen.screen_type === ScreenType.MENU) {
-			MenuItems.getByQuery(req).then((items: MenuItem[]) => {
-				console.log(`Fetched menu items for ${screen.name}: ${items[0]}`);
-				screen.menu_items = items;
-			});
-		}
-	
-		if (screen.screen_type === ScreenType.ROUTER) {
-			RouterOptions.getByQuery(req).then((options: RouterOption[]) => {
-				console.log(`Fetched router options for ${screen.name}: ${options}`);
-				screen.router_options = options;
-			});
-
-		}
 
 		// Handle all screens
 		if (screen.default_next_screen) {

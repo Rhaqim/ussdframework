@@ -12,7 +12,7 @@ use session::InMemorySessionStore;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Start the MenuBuilder server
-    menubuilder::MenuBuilder::server(8080).await?;
+    // menubuilder::MenuBuilder::server(8080).await?;
     // menubuilder::MenuBuilder::to_json(Some("menu.json"));
 
     HttpServer::new(move || {
