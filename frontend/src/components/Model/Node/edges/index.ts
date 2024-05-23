@@ -7,16 +7,14 @@ export const initialEdges = (screens: Screen[]) =>
 		const edges: Edge[] = [];
 
 		// Handle all screens
-		if (screen.default_next_screen) {
-			edges.push({
-				id: `${screen.name}->${screen.default_next_screen}`,
-				source: screen.name,
-				target: screen.default_next_screen,
-				animated: true,
-				label: "Next",
-				type: "custom",
-			});
-		}
+		edges.push({
+			id: `${screen.name}->${screen.default_next_screen}`,
+			source: screen.name,
+			target: screen.default_next_screen,
+			animated: true,
+			label: "Next",
+			type: "custom",
+		});
 		// Handle menu_items
 		if (screen.menu_items) {
 			screen.menu_items.forEach(item => {

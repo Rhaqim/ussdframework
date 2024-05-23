@@ -46,6 +46,21 @@ export default function MenuNode() {
 		[setEdges]
 	);
 
+	const sortedScreens = (screens: Screen[]) => {
+		const screenOrder = {
+		  [ScreenType.INITIAL]: 1,
+		  [ScreenType.MENU]: 2,
+		  [ScreenType.INPUT]: 3,
+		  [ScreenType.FUNCTION]: 4,
+		  [ScreenType.ROUTER]: 5,
+		  [ScreenType.QUIT]: 6,
+		};
+	  
+		return screens.sort((a, b) => {
+		  return screenOrder[a.screen_type] - screenOrder[b.screen_type];
+		});
+	  };
+
 	useEffect(() => {
 		async function loadScreens() {
 			Screens.getAll().then((screens_: Screen[]) => {
@@ -69,6 +84,8 @@ export default function MenuNode() {
 					}
 				}
 
+				screens = sortedScreens(screens);
+
 				setNodes(initialNodes(screens));
 				setEdges(initialEdges(screens));
 			});
@@ -77,7 +94,7 @@ export default function MenuNode() {
 	}, [setNodes, setEdges]);
 
 	return (
-		<div style={{ width: "90vw", height: "90vh" }}>
+		<div style={{ width: "90vw", height: "90vh", margin: "auto" }}>
 			<ReactFlow
 				nodes={nodes}
 				edges={edges}
