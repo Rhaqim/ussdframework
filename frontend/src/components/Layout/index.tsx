@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 	return (
 		<div className="flex h-screen">
 			<SideBar onSelect={handleScreenSelect} />
-			<div className="flex flex-col flex-1">
+			<div className="flex flex-col ml-40 overflow-auto">
 				<Header />
 				<main className="flex-1 bg-gray-100 overflow-y-auto">
 					{children}

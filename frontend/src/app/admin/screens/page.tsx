@@ -12,12 +12,13 @@ const ScreenHomePage = () => {
 		{
 			id: 1,
 			name: "BuyAirtime",
-			text: "Enter Amount",
+			text: "Enter Amount You would like to send to the recipient",
 			screen_type: ScreenType.INPUT,
 			default_next_screen: "DefaultNoneScreen",
 			service_code: "#123",
 			function: "buy_airtime",
-			input_identifier: "amount",
+			input_identifier: "amount_to_send",
+			input_type: "number",
 		},
 	];
 	const [screen, setScreen] = useState<Screen[]>(data);
