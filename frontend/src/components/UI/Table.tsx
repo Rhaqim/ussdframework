@@ -24,7 +24,7 @@ const Table = <T,>({ data, columns, onPress }: TableProps<T>) => {
 						<tr
 							key={index}
 							onClick={() => onPress(item.name || item.screen_name || item.id)}
-							className="cursor-pointer hover:bg-gray-100"
+							className="cursor-pointer hover:bg-gray-100 hover:bg-opacity-50"
 						>
 							{columns.map(column => (
 								<td

@@ -2,8 +2,11 @@ import React from "react";
 
 import Screen from "@/types/screen.type";
 import TableBase from "@/components/UI/Table";
+import { useRouter } from "next/navigation";
 
 const Table = ({ data }: { data: Screen[] }) => {
+	const router = useRouter();
+
 	return (
 		<TableBase
 			columns={[
@@ -18,7 +21,7 @@ const Table = ({ data }: { data: Screen[] }) => {
 				{ key: "input_type", title: "Input Type" },
 			]}
 			data={data}
-			onPress={() => {console.log("Pressed")}}
+			onPress={name => router.push(`/admin/screens/${name}`)}
 		/>
 	);
 };
