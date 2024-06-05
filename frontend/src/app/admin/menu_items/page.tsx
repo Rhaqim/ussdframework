@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 
 import { MenuItems } from "@/api/route";
 import Table from "@/components/Model/Screen/Menu/Table";
 import { MenuItem } from "@/types/screen.type";
+import { LinkButton } from "@/components/UI/Button";
 
 const RouterOptionHomePage = () => {
 	const data: MenuItem[] = [
@@ -27,10 +27,10 @@ const RouterOptionHomePage = () => {
 	}, []);
 
 	return (
-		<div>
-			<Link href="/admin/router_options/create">
-				<p className="btn-primary">Create Router Option</p>
-			</Link>
+		<div className="flex flex-col space-y-4">
+			<LinkButton className="w-60" href="/admin/menu_items/create">
+				Create Menu Item
+			</LinkButton>
 			<Table data={menuItems} />
 		</div>
 	);

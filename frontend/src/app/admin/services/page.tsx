@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Services } from "@/api/route";
 import Table from "@/components/Model/Service/Table";
 import Service from "@/types/service.type";
+import { LinkButton } from "@/components/UI/Button";
 
 const ServiceHomePage = () => {
 	const data: Service[] = [
@@ -28,10 +29,10 @@ const ServiceHomePage = () => {
 	}, []);
 
 	return (
-		<div>
-			<Link href="/admin/services/create">
-				<p className="btn-primary">Create Service</p>
-			</Link>
+		<div className="flex flex-col space-y-4">
+			<LinkButton className="w-60" href="/admin/services/create">
+				Create Service
+			</LinkButton>
 			<Table data={service} />
 		</div>
 	);

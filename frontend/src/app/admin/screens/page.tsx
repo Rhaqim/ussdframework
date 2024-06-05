@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 
 import { Screens } from "@/api/route";
 import Table from "@/components/Model/Screen/Table";
 import Screen, { ScreenType } from "@/types/screen.type";
+import { LinkButton } from "@/components/UI/Button";
 
 const ScreenHomePage = () => {
 	const data: Screen[] = [
@@ -30,10 +30,10 @@ const ScreenHomePage = () => {
 	}, []);
 
 	return (
-		<div>
-			<Link href="/admin/screens/create">
-				<p className="btn-primary">Create Screen</p>
-			</Link>
+		<div className="flex flex-col space-y-4">
+			<LinkButton className="w-40" href="/admin/screens/create">
+				Create Screen
+			</LinkButton>
 			<Table data={screen} />
 		</div>
 	);
