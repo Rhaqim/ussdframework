@@ -205,6 +205,39 @@ Using make:
 make run-example
 ```
 
+## Usecase
+
+USSD applications interact with telecom networks to provide services to users. They are commonly used for mobile banking, airtime top-up, and other financial services. USSD applications are widely used in developing countries where internet access is limited or expensive. They are also used in emergency services, healthcare, and other critical applications. In order to make full use of the framework a developer would need to have access to the telecom network's USSD specification document. Provided is the architecutre to build a fully functional USSD application.
+
+```bash
++---------------------------------------------------+
+|                    Telco Layer                    |
+|                                                   |
+| - Gets data from various telcos                   |
+| - Formats data for USSD requests                  |
+| - Formats/serializes responses for telcos         |
++--------------------------+------------------------+
+                           |
+                           v
++---------------------------------------------------+
+|                USSD Framework Layer               |
+|                                                   |
+| - Receives formatted data from Telco Layer        |
+| - Sends formatted data to Service Layer           |
+| - Receives responses from Service Layer           |
+| - Processes responses according to menu config    |
++--------------------+------------------------------+
+                     |
+                     v
++---------------------------------------------------+
+|                    Service Layer                  |
+|                                                   |
+| - Interacts with other services                   |
+| - Receives HTTP requests from USSD Framework      |
+| - Returns responses to USSD Framework             |
++---------------------------------------------------+
+```
+
 ## License
 
 The USSD Framework is open source software licensed under the [MIT license](LICENSE).
