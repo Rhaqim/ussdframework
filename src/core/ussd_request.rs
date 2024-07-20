@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 
 /// Represents a USSD request.
 ///
-/// The `USSDRequest` struct represents a request in the context of Unstructured Supplementary 
-/// Service Data (USSD) communication. It encapsulates various request parameters, including 
+/// The `USSDRequest` struct represents a request in the context of Unstructured Supplementary
+/// Service Data (USSD) communication. It encapsulates various request parameters, including
 /// the mobile subscriber ISDN (MSISDN), input data, session ID, service code, and language.
 ///
 /// This struct is used to capture user input and metadata associated with a USSD session.
@@ -18,10 +18,10 @@ use serde::{Deserialize, Serialize};
 ///
 /// # Derives
 ///
-/// The `USSDRequest` struct derives `Debug`, `Clone`, `Serialize`, and `Deserialize` traits 
+/// The `USSDRequest` struct derives `Debug`, `Clone`, `Serialize`, and `Deserialize` traits
 /// to enable debugging, cloning, serialization, and deserialization of request instances.
 ///
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct USSDRequest {
     pub msisdn: String,
     pub input: String,

@@ -6,7 +6,7 @@ use crate::{error, info, types::USSDData, utils::FUNCTION_MAP};
 
 use super::USSDSession;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct USSDService {
     pub function_name: String,
     pub function_url: Option<String>,

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 // Define structure for USSD response
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct USSDResponse {
     pub msisdn: String,
     pub session_id: String,

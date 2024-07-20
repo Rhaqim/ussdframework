@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::core::{
-    ussd_screens::{USSDScreen, ScreenType},
+    ussd_screens::{ScreenType, USSDScreen},
     ussd_service::USSDService,
 };
 
@@ -28,7 +28,7 @@ use crate::core::{
 /// The `USSDMenu` struct derives `Debug`, `Clone`, `Deserialize`, and `Serialize` traits
 /// to enable debugging, cloning, and serialization/deserialization of menu instances.
 ///
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct USSDMenu {
     pub menus: HashMap<String, USSDScreen>,
     pub services: HashMap<String, USSDService>,

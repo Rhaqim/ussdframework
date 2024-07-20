@@ -66,7 +66,7 @@ impl Display for RouterOptions {
 /// The `USSDData` enum derives `Debug`, `Clone`, `Serialize`, `Deserialize`, and `PartialEq` traits
 /// to enable debugging, cloning, serialization/deserialization, and comparison of data instances.
 ///
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum USSDData {
     /// Represents a string value
     Str(String),
@@ -81,6 +81,7 @@ pub enum USSDData {
     /// Represents a dictionary of key-value pairs with USSDData values.
     Dict(HashMap<String, USSDData>),
     /// Represents a null-like value
+    #[default]
     None,
 }
 
@@ -163,17 +164,17 @@ impl USSDData {
 
     /// Returns the value of a nested field in the dictionary.
     /// This function is recursive and will return the value of a nested field in the dictionary.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `field` - A vector of strings representing the nested field to retrieve
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// An optional string value representing the value of the nested field
-    /// 
+    ///
     /// # Example
-    /// 
+    ///
     /// ```
     /// let dict = USSDData::Dict({
     ///   let mut dict = HashMap::new();
@@ -181,14 +182,14 @@ impl USSDData {
     /// dict.insert("two".to_string(), USSDData::Str("2".to_string()));
     /// dict
     /// });
-    /// 
+    ///
     /// let value = dict.get_nested_value(&["one"]);
     /// ```
     pub fn get_nested_value(&self, field: &[&str]) -> Option<String> {
         if field.is_empty() {
             return None;
         }
-        
+
         match self {
             USSDData::Str(value) => Some(value.clone()),
             USSDData::Dict(inner_data) => {

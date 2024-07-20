@@ -12,9 +12,9 @@ use super::USSDRequest;
 
 /// Represents a USSD session.
 ///
-/// The `USSDSession` struct represents a session in the context of Unstructured Supplementary 
-/// Service Data (USSD) communication. It encapsulates various session-related data, including 
-/// session ID, session data, current screen, displayed screens, visited screens, last interaction 
+/// The `USSDSession` struct represents a session in the context of Unstructured Supplementary
+/// Service Data (USSD) communication. It encapsulates various session-related data, including
+/// session ID, session data, current screen, displayed screens, visited screens, last interaction
 /// time, session termination status, language, and mobile subscriber ISDN (MSISDN) number.
 ///
 /// This struct is used to maintain and manage the state of USSD sessions throughout their lifecycle.
@@ -34,10 +34,10 @@ use super::USSDRequest;
 ///
 /// # Derives
 ///
-/// The `USSDSession` struct derives `Debug`, `Deserialize`, `Serialize`, and `Clone` traits 
+/// The `USSDSession` struct derives `Debug`, `Deserialize`, `Serialize`, and `Clone` traits
 /// to enable debugging, serialization/deserialization, and cloning of session instances.
 ///
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct USSDSession {
     pub session_id: String,
     pub data: HashMap<String, USSDData>,

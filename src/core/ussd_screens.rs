@@ -10,8 +10,9 @@ use std::collections::HashMap;
 use super::{ussd_service::USSDServiceTrait, USSDRequest, USSDService, USSDSession};
 
 // Define types of screens
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub enum ScreenType {
+    #[default]
     Initial,
     Menu,
     Input,
@@ -49,7 +50,7 @@ impl ScreenType {
 }
 
 // Define structure for a screen
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct USSDScreen {
     pub text: String,
     pub screen_type: ScreenType,
@@ -69,14 +70,14 @@ pub struct USSDScreen {
     // Additional fields based on screen type
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct USSDMenuItems {
     pub option: String,
     pub display_name: String,
     pub next_screen: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize)]
 pub struct USSDRouterOption {
     pub router_option: String,
     pub next_screen: String,
@@ -193,7 +194,8 @@ impl USSDAction for USSDScreen {
                                         return;
                                     } else {
                                         error!("Selected menu item not found");
-                                        session.error_message = Some("Invalid menu option".to_string());
+                                        session.error_message =
+                                            Some("Invalid menu option".to_string());
                                         session.current_screen = session.current_screen.clone();
                                         return;
                                     }
