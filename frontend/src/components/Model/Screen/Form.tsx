@@ -23,12 +23,12 @@ const ScreenForm = () => {
       label: 'Screen Type',
       type: 'dropdown',
       options: [
-        { value: 'initial', label: 'Initial' },
-        { value: 'quit', label: 'Quit' },
-        { value: 'function', label: 'Function' },
-        { value: 'router', label: 'Router' },
-        { value: 'menu', label: 'Menu' },
-        { value: 'input', label: 'Input' },
+        { value: 'Initial', label: 'Initial' },
+        { value: 'Quit', label: 'Quit' },
+        { value: 'Function', label: 'Function' },
+        { value: 'Router', label: 'Router' },
+        { value: 'Menu', label: 'Menu' },
+        { value: 'Input', label: 'Input' },
       ],
     },
     {

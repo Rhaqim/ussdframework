@@ -9,9 +9,10 @@ import ReactFlow, {
 	useEdgesState,
 	addEdge,
 	BackgroundVariant,
+	type NodeMouseHandler,
 } from "reactflow";
 
-import "reactflow/dist/style.css";
+// import "reactflow/dist/style.css";
 
 import { MenuItems, RouterOptions, Screens } from "@/api/route";
 
@@ -21,11 +22,13 @@ import { CustomEdge } from "@/components/Model/Node/edges/CustomeEdge";
 import { initialNodes } from "@/components/Model/Node/nodes";
 import { initialEdges } from "@/components/Model/Node/edges";
 
+import { useNav } from "@/context/navigation.context";
 import Screen, { ScreenType } from "@/types/screen.type";
 
 export default function MenuNode() {
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+	const { setSelectedScreen } = useNav();
 
 	const nodeTypes = useMemo(
 		() => ({
@@ -46,49 +49,36 @@ export default function MenuNode() {
 		[setEdges]
 	);
 
-	const sortedScreens = (screens: Screen[]) => {
-		const screenOrder = {
-		  [ScreenType.INITIAL]: 1,
-		  [ScreenType.MENU]: 2,
-		  [ScreenType.INPUT]: 3,
-		  [ScreenType.FUNCTION]: 4,
-		  [ScreenType.ROUTER]: 5,
-		  [ScreenType.QUIT]: 6,
-		};
-	  
-		return screens.sort((a, b) => {
-		  return screenOrder[a.screen_type] - screenOrder[b.screen_type];
-		});
-	  };
+	const onNodeClick: NodeMouseHandler = useCallback(
+		(_event, node) => {
+			setSelectedScreen(node.id);
+		},
+		[setSelectedScreen]
+	);
 
 	useEffect(() => {
 		async function loadScreens() {
-			Screens.getAll().then((screens_: Screen[]) => {
-				let screens: Screen[] = screens_;
+			try {
+				const screens_: Screen[] = await Screens.getAll();
 
-				for (let i = 0; i < screens_.length; i++) {
-					const req = {
-						ScreenName: screens_[i].name,
-					};
+				// Fetch menu items and router options in parallel for all relevant screens
+				await Promise.all(
+					screens_.map(async screen => {
+						const req = { ScreenName: screen.name };
+						if (screen.screen_type === ScreenType.MENU) {
+							screen.menu_items = await MenuItems.getByQuery(req);
+						}
+						if (screen.screen_type === ScreenType.ROUTER) {
+							screen.router_options = await RouterOptions.getByQuery(req);
+						}
+					})
+				);
 
-					if (screens_[i].screen_type === ScreenType.MENU) {
-						MenuItems.getByQuery(req).then(items => {
-							screens_[i].menu_items = items;
-						});
-					}
-
-					if (screens_[i].screen_type === ScreenType.ROUTER) {
-						RouterOptions.getByQuery(req).then(options => {
-							screens_[i].router_options = options;
-						});
-					}
-				}
-
-				screens = sortedScreens(screens);
-
-				setNodes(initialNodes(screens));
-				setEdges(initialEdges(screens));
-			});
+				setNodes(initialNodes(screens_));
+				setEdges(initialEdges(screens_));
+			} catch (err) {
+				console.error("Failed to load screens:", err);
+			}
 		}
 		loadScreens();
 	}, [setNodes, setEdges]);
@@ -103,9 +93,24 @@ export default function MenuNode() {
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
 				onConnect={onConnect}
+				onNodeClick={onNodeClick}
+				fitView
 			>
 				<Controls />
-				<MiniMap />
+				<MiniMap
+					nodeColor={node => {
+						const colorMap: Record<string, string> = {
+							Initial: "#d1d5db",
+							Menu: "#fde68a",
+							Input: "#bfdbfe",
+							Function: "#bbf7d0",
+							Router: "#fed7aa",
+							Quit: "#fecaca",
+						};
+						const screenType = (node.data as any)?.screen?.screen_type;
+						return colorMap[screenType] ?? "#e5e7eb";
+					}}
+				/>
 				<Background variant={BackgroundVariant.Cross} gap={12} size={1} />
 			</ReactFlow>
 		</div>

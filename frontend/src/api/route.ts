@@ -73,11 +73,9 @@ export const RouterOptions = apiService<RouterOption>("router_options");
 export const uploadFile = async (file: File) => {
 	const formData = new FormData();
 	formData.append("file", file);
+	// Do NOT set Content-Type manually — the browser must set it with the multipart boundary
 	return fetch("/api/upload", {
 		method: "POST",
-		headers: {
-			"Content-Type": "multipart/form-data",
-		},
 		body: formData,
 	}).then(response => response.json());
 };

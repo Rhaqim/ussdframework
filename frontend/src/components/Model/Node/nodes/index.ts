@@ -1,71 +1,69 @@
+import dagre from "@dagrejs/dagre";
 import type { Node } from "reactflow";
 
-import Screen from "@/types/screen.type";
+import Screen, { ScreenType } from "@/types/screen.type";
 
-const calculateNodePositions = (
-	nodes: Screen[],
-	nodeMap: Map<string, Screen>,
-	startNode: Screen,
-	visited: Set<string>,
-	depth: number = 0,
-	yOffset: number = 0
-): Node[] => {
-	if (visited.has(startNode.name)) return [];
+const NODE_WIDTH = 240;
+const NODE_HEIGHT = 120;
 
-	visited.add(startNode.name);
+/**
+ * Builds all edges (default, menu, router) from a set of screens and returns
+ * the list of [source, target] pairs used by the Dagre layout.
+ */
+function buildEdgePairs(screens: Screen[]): [string, string][] {
+	const pairs: [string, string][] = [];
+	for (const screen of screens) {
+		if (screen.default_next_screen) {
+			pairs.push([screen.name, screen.default_next_screen]);
+		}
+		if (screen.menu_items) {
+			for (const item of screen.menu_items) {
+				if (item.next_screen) pairs.push([screen.name, item.next_screen]);
+			}
+		}
+		if (screen.router_options) {
+			for (const opt of screen.router_options) {
+				if (opt.next_screen) pairs.push([screen.name, opt.next_screen]);
+			}
+		}
+	}
+	return pairs;
+}
 
-	const x = depth * 300; // Horizontal space between levels
-	const y = yOffset;
+/**
+ * Lays out screens using the Dagre graph library (top-down) and returns
+ * React Flow Node objects with computed positions.
+ */
+export const initialNodes = (screens: Screen[]): Node[] => {
+	const g = new dagre.graphlib.Graph();
+	g.setDefaultEdgeLabel(() => ({}));
+	g.setGraph({ rankdir: "TB", ranksep: 80, nodesep: 40 });
 
-	const node: Node = {
-		id: startNode.name,
-		type: "screen",
-		position: { x, y },
-		data: { screen: startNode },
-	};
+	// Add every screen as a Dagre node
+	const screenMap = new Map(screens.map(s => [s.name, s]));
+	for (const screen of screens) {
+		g.setNode(screen.name, { width: NODE_WIDTH, height: NODE_HEIGHT });
+	}
 
-	const nextNode = nodeMap.get(startNode.default_next_screen!);
+	// Add all connections so Dagre knows the hierarchy
+	for (const [source, target] of buildEdgePairs(screens)) {
+		if (screenMap.has(source) && screenMap.has(target)) {
+			g.setEdge(source, target);
+		}
+	}
 
-	const childNodes = nextNode
-		? calculateNodePositions(
-				nodes,
-				nodeMap,
-				nextNode,
-				visited,
-				depth + 1,
-				yOffset + 100
-		  )
-		: [];
+	dagre.layout(g);
 
-	return [node, ...childNodes];
-};
-
-export const initialNodes = (screens: Screen[]) => {
-	console.log("Initial Nodes", screens);
-
-	// Create a map of node names to nodes for quick lookup
-	const nodeMap = new Map(screens.map(screen => [screen.name, screen]));
-
-	// Identify root nodes (nodes that are not the default_next_screen of any other node)
-	const rootNodes = screens.filter(
-		screen => !screens.some(s => s.default_next_screen === screen.name)
-	);
-
-	// Calculate positions starting from each root node
-	let yOffset = 0;
-	const nodes = rootNodes.flatMap(rootNode => {
-		const visited = new Set<string>();
-		const positionedNodes = calculateNodePositions(
-			screens,
-			nodeMap,
-			rootNode,
-			visited,
-			0,
-			yOffset
-		);
-		yOffset += positionedNodes.length * 100; // Adjust vertical spacing for each root subtree
-		return positionedNodes;
+	return screens.map(screen => {
+		const node = g.node(screen.name);
+		return {
+			id: screen.name,
+			type: "screen",
+			position: {
+				x: node ? node.x - NODE_WIDTH / 2 : 0,
+				y: node ? node.y - NODE_HEIGHT / 2 : 0,
+			},
+			data: { screen },
+		};
 	});
-
-	return nodes;
 };

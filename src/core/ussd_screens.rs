@@ -4,6 +4,7 @@ use crate::{
     utils::{evaluate_expression, evaluate_expression_op},
 };
 
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -67,6 +68,13 @@ pub struct USSDScreen {
     pub input_identifier: Option<String>,
     #[serde(default)]
     pub input_type: Option<String>,
+    /// Optional regex pattern to validate Input screen entries.
+    /// If the user's input does not match, an error is shown and the screen is re-displayed.
+    #[serde(default)]
+    pub validation_regex: Option<String>,
+    /// Optional maximum number of characters accepted for an Input screen.
+    #[serde(default)]
+    pub max_length: Option<usize>,
     // Additional fields based on screen type
 }
 
@@ -206,6 +214,34 @@ impl USSDAction for USSDScreen {
                         self.default_next_screen.clone()
                     }
                     ScreenType::Input => {
+                        // Max-length check
+                        if let Some(max) = self.max_length {
+                            if input.len() > max {
+                                session.error_message = Some(format!(
+                                    "Input too long. Maximum {} characters allowed.",
+                                    max
+                                ));
+                                // Stay on the current screen so it re-displays
+                                return;
+                            }
+                        }
+                        // Regex validation check
+                        if let Some(pattern) = &self.validation_regex {
+                            match Regex::new(pattern) {
+                                Ok(re) => {
+                                    if !re.is_match(input) {
+                                        session.error_message =
+                                            Some("Invalid input. Please try again.".to_string());
+                                        return;
+                                    }
+                                }
+                                Err(e) => {
+                                    error!("Invalid validation regex '{}': {}", pattern, e);
+                                }
+                            }
+                        }
+                        // Clear any previous error after successful validation
+                        session.error_message = None;
                         if let Some(input_identifier) = &self.input_identifier {
                             session.data.insert(
                                 input_identifier.to_string(),

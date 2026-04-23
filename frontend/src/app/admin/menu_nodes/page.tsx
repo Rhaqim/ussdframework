@@ -1,11 +1,18 @@
 import React from "react";
 
 import Node from "@/components/Model/Node";
-
-// import Node from "@/components/NodeEx/2"
+import ScreenEditPanel from "@/components/Model/Node/ScreenEditPanel";
+import { NavigationProvider } from "@/context/navigation.context";
 
 const MenuNode = () => {
-	return <Node />;
+	return (
+		<NavigationProvider>
+			<div className="relative">
+				<Node />
+				<ScreenEditPanel />
+			</div>
+		</NavigationProvider>
+	);
 };
 
 export default MenuNode;

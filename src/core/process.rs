@@ -1,6 +1,11 @@
 use crate::{debug, error, info, USSDMenu};
 
+use std::time::Duration;
+
 use super::{ScreenType, SessionCache, USSDAction, USSDRequest, USSDResponse, USSDSession};
+
+/// Sessions idle longer than this are treated as expired and restarted.
+const SESSION_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 
 /// Entry point for processing USSD requests.
 ///
@@ -24,6 +29,12 @@ pub fn process_request(
 
     // Generate or retrieve the session
     let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
+
+    // If the session has timed out, restart it from the initial screen
+    if session.has_timed_out(SESSION_TIMEOUT) {
+        info!("Session {} timed out — restarting", session.session_id);
+        session.restart(&initial_screen);
+    }
 
     // Create a response object
     let mut response: USSDResponse = USSDResponse {
