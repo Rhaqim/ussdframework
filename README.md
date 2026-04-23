@@ -1,10 +1,13 @@
 # USSD Framework
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/ussdframework.svg)](https://crates.io/crates/ussdframework)
 
 ## Overview
 
 The USSD Framework is a powerful, flexible, and easy-to-extend toolkit for building USSD applications in Rust. It handles session management, screen navigation, input validation, function dispatch, and routing — letting you focus on your business logic.
+
+An optional **Menu Builder** module adds a full-stack admin portal and REST API for managing your menu configuration in a database, with a visual flow editor, JSON import/export, and support for both SQLite and PostgreSQL backends.
 
 ---
 
@@ -22,6 +25,13 @@ The USSD Framework is a powerful, flexible, and easy-to-extend toolkit for build
 - [Multi-Language Support](#multi-language-support)
 - [Input Validation & Max Retries](#input-validation--max-retries)
 - [Routing](#routing)
+- [Menu Builder](#menu-builder)
+  - [Feature Flags](#feature-flags)
+  - [Starting the Server](#starting-the-server)
+  - [Admin Portal](#admin-portal)
+  - [Visual Editor](#visual-editor)
+  - [REST API](#rest-api)
+  - [Utility Methods](#utility-methods)
 - [Example](#example)
 - [License](#license)
 
@@ -38,16 +48,36 @@ The USSD Framework is a powerful, flexible, and easy-to-extend toolkit for build
 | Function dispatch | Call Rust functions from any screen; results are stored in session data |
 | Expression router | Route to different screens based on session-data conditions |
 | Multi-language text | Define screen text per language code with automatic fallback |
-| Menu builder | Optional admin UI for managing screens stored in a database |
+| Menu Builder | Optional admin UI + REST API for managing screens in a database (SQLite or PostgreSQL) |
+| Visual editor | ReactFlow-based graph editor — see your entire USSD flow as a node graph |
+| JSON import / export | Seed the database from a JSON file; export the live database back to JSON |
 
 ---
 
 ## Installation
 
+### Core framework only
+
 ```toml
 [dependencies]
 ussdframework = "0.1.0"
 ```
+
+### With Menu Builder (SQLite — default)
+
+```toml
+[dependencies]
+ussdframework = { version = "0.1.0", features = ["menubuilder"] }
+```
+
+### With Menu Builder (PostgreSQL)
+
+```toml
+[dependencies]
+ussdframework = { version = "0.1.0", features = ["menubuilder", "db-postgres"], default-features = false }
+```
+
+> The `db-sqlite` feature is enabled by default. Use `default-features = false` alongside `db-postgres` to disable it if you only want PostgreSQL.
 
 ---
 
@@ -372,9 +402,179 @@ Router expressions that do not match the pattern are logged as warnings at menu-
 
 ---
 
+## Menu Builder
+
+The Menu Builder is an optional module that provides a database-backed admin portal for managing your USSD menu configuration at runtime — no code changes or redeploys needed to edit screens.
+
+### Feature Flags
+
+| Feature | Default | Description |
+|---|:---:|---|
+| `db-sqlite` | ✅ Yes | SQLite database backend |
+| `db-postgres` | No | PostgreSQL database backend |
+| `menubuilder` | No | Enables the admin portal and REST API |
+
+```toml
+# SQLite (default backend)
+ussdframework = { version = "0.1.0", features = ["menubuilder"] }
+
+# PostgreSQL
+ussdframework = { version = "0.1.0", features = ["menubuilder", "db-postgres"], default-features = false }
+```
+
+For PostgreSQL, set your connection URL via the `USSD_DATABASE_URL` environment variable:
+
+```bash
+export USSD_DATABASE_URL=postgres://user:password@localhost/ussd_menu
+```
+
+### Starting the Server
+
+`app.serve()` starts a single Actix-web server that handles both USSD requests (`POST /ussd`) and the admin portal. It runs database migrations automatically on startup.
+
+```rust
+use ussdframework::prelude::*;
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let mut app = UssdApp::new(true, None);
+    app.register_functions(my_functions());
+
+    app.serve(
+        8080,                              // port
+        Some("examples/data/menu.json"),   // optional JSON seed file (loaded once on first run)
+        None,                              // optional DB URL (falls back to USSD_DATABASE_URL or "menu.sqlite3")
+    ).await
+}
+```
+
+You can also use `MenuBuilder` directly:
+
+```rust
+use ussdframework::builder::menubuilder::MenuBuilder;
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    MenuBuilder::server(8080, my_functions(), Some("examples/data/menu.json"), None).await
+}
+```
+
+### Admin Portal
+
+Once the server is running, open `http://localhost:8080` in your browser. The admin portal lets you:
+
+- **Manage screens** — create, edit, and delete USSD screens with all their properties
+- **Manage menu items** — add/remove options for Menu-type screens
+- **Manage router options** — configure branching conditions for Router-type screens
+- **Manage services** — register function-backed services and their URLs
+- **Import / Export JSON** — upload a JSON file to seed the database, or download the live configuration as JSON
+
+| Home | Dashboard |
+|---|---|
+| ![Home screen](docs/home_screen.png) | ![Dashboard](docs/dashboard_screen.png) |
+
+### Visual Editor
+
+Navigate to `/admin/menu_nodes` for the ReactFlow-based visual flow editor. All screens are loaded in three parallel requests and grouped client-side — no per-screen round-trips.
+
+![Visual Editor](docs/visual_editor_screen.png)
+
+- **Dark theme** node graph with colour-coded screen types
+- **Edges** labelled with menu options and router conditions show how screens connect
+- **Click any node** to open the edit panel inline
+- **Fit View** and **+ New Screen** toolbar buttons
+- **Legend** and **MiniMap** for navigating large flows
+
+### Import / Export
+
+You can import a JSON file into the menu builder to load a menu structure or export the current menu structure to a JSON file.
+
+![Import / Export](docs/import_export_screen.png)
+
+#### Screen type colours
+
+| Type | Colour |
+|---|---|
+| Initial | Slate |
+| Menu | Amber |
+| Input | Blue |
+| Function | Emerald |
+| Router | Orange |
+| Quit | Red |
+
+### REST API
+
+All endpoints are available at `http://localhost:8080/api/`.
+
+#### Screens
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/screens` | List all screens |
+| `POST` | `/api/screens` | Create a screen |
+| `PUT` | `/api/screens` | Update a screen |
+| `GET` | `/api/screens/{name}` | Get a screen by name |
+| `DELETE` | `/api/screens/{name}` | Delete a screen |
+| `GET` | `/api/screens/multiple?ScreenName=X` | Get screens matching a query |
+
+#### Menu Items
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/menu_items` | List all menu items |
+| `POST` | `/api/menu_items` | Create a menu item |
+| `PUT` | `/api/menu_items` | Update a menu item |
+| `GET` | `/api/menu_items/{name}` | Get a menu item by name |
+| `DELETE` | `/api/menu_items/{name}` | Delete a menu item |
+| `GET` | `/api/menu_items/multiple?ScreenName=X` | Get menu items for a screen |
+
+#### Router Options
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/router_options` | List all router options |
+| `POST` | `/api/router_options` | Create a router option |
+| `PUT` | `/api/router_options` | Update a router option |
+| `GET` | `/api/router_options/{name}` | Get a router option by name |
+| `DELETE` | `/api/router_options/{name}` | Delete a router option |
+| `GET` | `/api/router_options/multiple?ScreenName=X` | Get router options for a screen |
+
+#### Services
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/services` | List all services |
+| `POST` | `/api/services` | Create a service |
+| `PUT` | `/api/services` | Update a service |
+| `GET` | `/api/services/{name}` | Get a service by name |
+| `DELETE` | `/api/services/{name}` | Delete a service |
+
+#### File Operations
+
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/upload` | Upload a JSON file to seed the database |
+| `GET` | `/api/download` | Download the current database as a JSON file |
+
+### Utility Methods
+
+```rust
+use ussdframework::builder::menubuilder::MenuBuilder;
+
+// Export the live database to a JSON file
+MenuBuilder::to_json(Some("output/menu.json"));
+
+// Import a JSON file into the database
+MenuBuilder::from_json(Some("input/menu.json"));
+```
+
+If `None` is passed, both methods default to `menu.json` in the current directory.
+
+---
+
 ## Example
 
-A complete working example with actix-web lives in [examples/](examples/). It covers:
+A complete working example lives in [examples/](examples/). It covers:
 
 - Main menu navigation
 - Balance inquiry with PIN validation and max retries
@@ -385,14 +585,14 @@ A complete working example with actix-web lives in [examples/](examples/). It co
 - Error screens, network-error fallbacks, and session lockout
 
 ```bash
-# Run the example server
-cargo run --example basic_usage
+# Run the example (starts Menu Builder server on port 8080)
+cargo run --manifest-path examples/Cargo.toml --bin basic_usage
 
 # Or using make
-make run-example
+make run
 ```
 
-The server listens on `http://127.0.0.1:3000/ussd` and accepts POST requests:
+The USSD endpoint listens at `http://127.0.0.1:8080/ussd` and accepts `POST` requests:
 
 ```json
 {
@@ -404,46 +604,18 @@ The server listens on `http://127.0.0.1:3000/ussd` and accepts POST requests:
 }
 ```
 
+The admin portal is at `http://localhost:8080` (or `http://localhost:3000` when running the Next.js dev server separately).
+
 ---
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
-## Contributing
-
-Issues and pull requests are welcome. See the [contributing guidelines](CONTRIBUTING.md) for details.
-
 ## Authors
 
 - [Rhaqim](https://rhaqim.com)
 
-
-The USSD Framework is a powerful and flexible framework designed to be easy to use and extensible for building USSD applications. It provides a set of tools and utilities to simplify the development of USSD menus, navigation, and user interactions. With a simple API for creating USSD menus and handling user input. It supports session management and stateful interactions, with built-in validation and error handling mechanisms.
-
-## Features
-
-- Easy-to-use API for creating USSD menus and handling user input
-- Support for session management and stateful interactions
-- Built-in validation and error handling mechanisms
-- Extensible architecture to support custom USSD applications
-- [Menu builder](src/builder/README.md) for creating custom menus in the application and storing them in a database (Optional)
-- Cross-platform compatibility for users from other programming languages
-
-## Installation
-
-To use the USSD Framework in your Rust project, add the following line to your `Cargo.toml` file:
-
-```toml
-[dependencies]
-ussdframework = "0.1.0"
-```
-
-## Usage
-
-### Initialization
-
-To create a new USSD application, you need to create a new instance of the USSD Framework and configure it with the necessary settings. You can then start the application by calling the `run` method.
 
 ```rust
     use ussdframework::prelude::*;
