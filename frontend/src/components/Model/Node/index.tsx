@@ -84,7 +84,44 @@ export default function MenuNode() {
 	}, [setNodes, setEdges]);
 
 	return (
-		<div style={{ width: "90vw", height: "90vh", margin: "auto" }}>
+		<div style={{ width: "100%", height: "100%" }} className="relative">
+			{/* Toolbar */}
+			<div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+				<a
+					href="/admin/screens/create"
+					className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+				>
+					+ New Screen
+				</a>
+				<button
+					onClick={() => {
+						// React Flow fitView is not directly accessible here; handled by fitView prop
+						window.dispatchEvent(new Event("rf:fitview"));
+					}}
+					className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
+				>
+					Fit View
+				</button>
+			</div>
+
+			{/* Legend */}
+			<div className="absolute bottom-16 right-3 z-10 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-3 text-xs space-y-1.5">
+				<div className="text-slate-500 font-medium mb-2 uppercase tracking-wider text-[10px]">Screen Types</div>
+				{[
+					{ label: "Initial",  color: "bg-slate-500" },
+					{ label: "Menu",     color: "bg-amber-500" },
+					{ label: "Input",    color: "bg-blue-500" },
+					{ label: "Function", color: "bg-emerald-500" },
+					{ label: "Router",   color: "bg-orange-500" },
+					{ label: "Quit",     color: "bg-red-500" },
+				].map(t => (
+					<div key={t.label} className="flex items-center gap-2">
+						<span className={`w-2.5 h-2.5 rounded-full ${t.color} shrink-0`} />
+						<span className="text-slate-400">{t.label}</span>
+					</div>
+				))}
+			</div>
+
 			<ReactFlow
 				nodes={nodes}
 				edges={edges}
@@ -96,23 +133,25 @@ export default function MenuNode() {
 				onNodeClick={onNodeClick}
 				fitView
 			>
-				<Controls />
+				<Controls className="!bg-slate-900 !border-slate-700 !rounded-lg [&>button]:!bg-slate-900 [&>button]:!text-slate-400 [&>button:hover]:!bg-slate-800 [&>button]:!border-slate-700" />
 				<MiniMap
+					className="!bg-slate-900 !border-slate-700"
 					nodeColor={node => {
 						const colorMap: Record<string, string> = {
-							Initial: "#d1d5db",
-							Menu: "#fde68a",
-							Input: "#bfdbfe",
-							Function: "#bbf7d0",
-							Router: "#fed7aa",
-							Quit: "#fecaca",
+							Initial: "#6b7280",
+							Menu: "#f59e0b",
+							Input: "#3b82f6",
+							Function: "#10b981",
+							Router: "#f97316",
+							Quit: "#ef4444",
 						};
 						const screenType = (node.data as any)?.screen?.screen_type;
-						return colorMap[screenType] ?? "#e5e7eb";
+						return colorMap[screenType] ?? "#475569";
 					}}
 				/>
-				<Background variant={BackgroundVariant.Cross} gap={12} size={1} />
+				<Background variant={BackgroundVariant.Cross} gap={16} size={1} color="#1e293b" />
 			</ReactFlow>
 		</div>
 	);
 }
+

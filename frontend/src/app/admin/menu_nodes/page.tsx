@@ -7,7 +7,8 @@ import { NavigationProvider } from "@/context/navigation.context";
 const MenuNode = () => {
 	return (
 		<NavigationProvider>
-			<div className="relative">
+			{/* Pull out of the p-6 padding so the canvas fills all available space */}
+			<div className="-m-6 relative" style={{ height: "calc(100vh - 3.5rem)" }}>
 				<Node />
 				<ScreenEditPanel />
 			</div>
@@ -16,3 +17,4 @@ const MenuNode = () => {
 };
 
 export default MenuNode;
+

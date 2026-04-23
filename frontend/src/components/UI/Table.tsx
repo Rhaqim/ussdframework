@@ -4,42 +4,58 @@ import TableProps from "@/types/table.type";
 
 const Table = <T,>({ data, columns, onPress }: TableProps<T>) => {
 	return (
-		<div className="overflow-x-auto">
-			<table className="min-w-full divide-y divide-gray-200">
-				<thead className="bg-gray-50">
-					<tr>
-						{columns.map(column => (
-							<th
-								key={column.key}
-								scope="col"
-								className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-							>
-								{column.title}
-							</th>
-						))}
-					</tr>
-				</thead>
-				<tbody className="bg-white divide-y divide-gray-200">
-					{data.map((item: any, index: number) => (
-						<tr
-							key={index}
-							onClick={() => onPress(item.name || item.screen_name || item.id)}
-							className="cursor-pointer hover:bg-gray-100 hover:bg-opacity-50"
-						>
-							{columns.map(column => (
-								<td
-									key={column.key}
-									className="px-6 py-4 whitespace-nowrap text-black"
+		<div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+			<div className="overflow-x-auto">
+				<table className="w-full">
+					<thead>
+						<tr className="border-b border-slate-800">
+							{columns.map(col => (
+								<th
+									key={col.key}
+									scope="col"
+									className="px-5 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
 								>
-									{item[column.key]}
-								</td>
+									{col.title}
+								</th>
 							))}
 						</tr>
-					))}
-				</tbody>
-			</table>
+					</thead>
+					<tbody className="divide-y divide-slate-800">
+						{data.length === 0 ? (
+							<tr>
+								<td
+									colSpan={columns.length}
+									className="px-5 py-8 text-center text-sm text-slate-500"
+								>
+									No data found.
+								</td>
+							</tr>
+						) : (
+							(data as any[]).map((item, index) => (
+								<tr
+									key={index}
+									onClick={() =>
+										onPress(item.name ?? item.screen_name ?? item.id)
+									}
+									className="hover:bg-slate-800/50 transition-colors cursor-pointer"
+								>
+									{columns.map(col => (
+										<td
+											key={col.key}
+											className="px-5 py-3.5 text-sm text-slate-300 whitespace-nowrap"
+										>
+											{item[col.key] ?? "—"}
+										</td>
+									))}
+								</tr>
+							))
+						)}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	);
 };
 
 export default Table;
+
