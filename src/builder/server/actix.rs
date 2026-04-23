@@ -26,7 +26,18 @@ async fn handle_ussd(
     HttpResponse::Ok().json(response)
 }
 
-pub async fn start_server(port: u16, function_map: FunctionMap, json_seed: Option<String>) -> std::io::Result<()> {
+pub async fn start_server(
+    port: u16,
+    function_map: FunctionMap,
+    json_seed: Option<String>,
+    database_url: Option<String>,
+) -> std::io::Result<()> {
+    // Set the database URL env var before any DatabaseManager is created.
+    // All internal calls to establish_connection() / establish_pool() pick this up.
+    if let Some(ref url) = database_url {
+        std::env::set_var("USSD_DATABASE_URL", url);
+    }
+
     let session_store: Arc<Box<dyn SessionCache>> =
         Arc::new(Box::new(InMemorySessionStore::new()));
     let session_data = web::Data::new(session_store);

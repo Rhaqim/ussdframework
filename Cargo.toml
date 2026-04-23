@@ -42,11 +42,13 @@ serde_json = "1.0"
 # async
 tokio = { version = "1.0", features = ["full"] }
 
-# feature dependencies // change to optional for build
-diesel = { version = "2.3.7", features = ["sqlite", "r2d2"], optional = false }
-diesel_migrations = { version = "2.3.1", optional = false }
-dotenv = { version = "0.15.0", optional = false }
+# feature dependencies
+diesel = { version = "2.3.7", features = ["r2d2"] }
+diesel_migrations = { version = "2.3.1" }
+dotenv = { version = "0.15.0" }
 
 [features]
-# menubuilder = ["diesel", "diesel_migrations", "dotenv"]
+default = ["db-sqlite"]
+db-sqlite = ["diesel/sqlite"]
+db-postgres = ["diesel/postgres"]
 menubuilder = []

@@ -39,10 +39,23 @@ pub mod menubuilder {
         ///
         /// * `json_seed` — optional path to a JSON file used to seed the database
         ///   on first run when it contains no screens yet.
-        pub async fn server(port: u16, function_map: FunctionMap, json_seed: Option<&str>) -> std::io::Result<()> {
+        /// * `database_url` — optional SQLite database URL; defaults to `menu.sqlite3`
+        ///   in the current directory. Set this to use a different file path.
+        ///   Can also be set via the `USSD_DATABASE_URL` environment variable.
+        pub async fn server(
+            port: u16,
+            function_map: FunctionMap,
+            json_seed: Option<&str>,
+            database_url: Option<&str>,
+        ) -> std::io::Result<()> {
             run_migration();
 
-            start_server(port, function_map, json_seed.map(str::to_owned)).await
+            start_server(
+                port,
+                function_map,
+                json_seed.map(str::to_owned),
+                database_url.map(str::to_owned),
+            ).await
         }
     }
 }

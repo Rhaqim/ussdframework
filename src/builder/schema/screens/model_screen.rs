@@ -3,7 +3,12 @@ use std::error::Error;
 use diesel::deserialize::FromSqlRow;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::sqlite::{Sqlite, SqliteValue};
+
+#[cfg(feature = "db-postgres")]
+use diesel::pg::Pg;
 
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
@@ -118,26 +123,24 @@ table! {
     }
 }
 
-impl
-    diesel::Queryable<
-        (
-            diesel::sql_types::Integer,
-            Text,
-            Text,
-            Text,
-            Text,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<diesel::sql_types::Integer>,
-            diesel::sql_types::Nullable<diesel::sql_types::Integer>,
-            diesel::sql_types::Nullable<Text>,
-        ),
-        Sqlite,
-    > for Screen
-{
+type ScreenSqlTypes = (
+    diesel::sql_types::Integer,
+    Text,
+    Text,
+    Text,
+    Text,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<diesel::sql_types::Integer>,
+    diesel::sql_types::Nullable<diesel::sql_types::Integer>,
+    diesel::sql_types::Nullable<Text>,
+);
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+impl diesel::Queryable<ScreenSqlTypes, Sqlite> for Screen {
     type Row = (
         i32,
         String,
@@ -172,6 +175,43 @@ impl
     }
 }
 
+#[cfg(feature = "db-postgres")]
+impl diesel::Queryable<ScreenSqlTypes, Pg> for Screen {
+    type Row = (
+        i32,
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<i32>,
+        Option<i32>,
+        Option<String>,
+    );
+
+    fn build(row: Self::Row) -> Result<Screen, Box<dyn StdError + Send + Sync + 'static>> {
+        Ok(Self {
+            name: row.1,
+            text: row.2,
+            screen_type: row.3,
+            default_next_screen: row.4,
+            service_code: row.5,
+            function: row.6,
+            input_identifier: row.7,
+            input_type: row.8,
+            validation_regex: row.9,
+            max_length: row.10,
+            max_retries: row.11,
+            timeout_screen: row.12,
+        })
+    }
+}
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 impl diesel::deserialize::FromSql<Text, Sqlite> for Screen {
     fn from_sql(
         bytes: SqliteValue<'_, '_, '_>,

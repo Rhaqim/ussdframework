@@ -7,8 +7,8 @@ async fn main() -> std::io::Result<()> {
     let mut app = UssdApp::new(true, None);
     app.register_functions(functions::get_functions());
 
-    // menubuilder mode: menus are loaded from the SQLite database.
-    // The admin frontend (Next.js) is proxied at every route except /ussd and /api/*.
-    // Pass a JSON path to seed the database on first run when it is empty.
-    app.serve(8080, Some("examples/data/menu.json")).await
+    // Start the MenuBuilder server.
+    // - json_seed:    path to JSON file used to seed the DB on first run (pass None to skip)
+    // - database_url: SQLite file path (None = "menu.sqlite3" in cwd, or set USSD_DATABASE_URL)
+    app.serve(8080, Some("examples/data/menu.json"), None).await
 }

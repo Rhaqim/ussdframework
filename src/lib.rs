@@ -94,13 +94,32 @@ impl UssdApp {
     ///
     /// When the `menubuilder` feature is **not** enabled, call `run()` with a
     /// developer-provided `USSDMenu` instead.
+    /// # Database
+    ///
+    /// By default the SQLite database file is `menu.sqlite3` in the current working directory.
+    /// Pass a `database_url` (e.g. `Some("path/to/my.sqlite3")`) to use a different file, or
+    /// set the `USSD_DATABASE_URL` environment variable before starting the server.
     #[cfg(feature = "menubuilder")]
-    pub async fn serve(&self, port: u16, json_seed: Option<&str>) -> std::io::Result<()> {
+    pub async fn serve(
+        &self,
+        port: u16,
+        json_seed: Option<&str>,
+        database_url: Option<&str>,
+    ) -> std::io::Result<()> {
         use builder::database::run_migration;
         use builder::server::actix::start_server;
 
+        if let Some(url) = database_url {
+            std::env::set_var("USSD_DATABASE_URL", url);
+        }
+
         run_migration();
-        start_server(port, self.function_map.clone(), json_seed.map(str::to_owned)).await
+        start_server(
+            port,
+            self.function_map.clone(),
+            json_seed.map(str::to_owned),
+            None, // env var already set above
+        ).await
     }
 }
 

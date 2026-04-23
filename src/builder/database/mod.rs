@@ -9,14 +9,35 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
-pub fn establish_connection() -> SqliteConnection {
-    let database_url = "menu.sqlite3";
-    SqliteConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url))
+// Backend-specific connection type alias.
+// db-postgres takes precedence if both features are enabled.
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]  
+pub type DbConnection = diesel::sqlite::SqliteConnection;
+
+#[cfg(feature = "db-postgres")]
+pub type DbConnection = diesel::pg::PgConnection;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+fn default_db_url() -> String {
+    "menu.sqlite3".to_string()
 }
 
-pub fn establish_pool() -> Pool<ConnectionManager<SqliteConnection>> {
-    let manager = ConnectionManager::<SqliteConnection>::new("menu.sqlite3");
+#[cfg(feature = "db-postgres")]
+fn default_db_url() -> String {
+    "postgres://localhost/ussd_menu".to_string()
+}
+
+pub fn establish_connection() -> DbConnection {
+    let database_url = std::env::var("USSD_DATABASE_URL")
+        .unwrap_or_else(|_| default_db_url());
+    DbConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+}
+
+pub fn establish_pool() -> Pool<ConnectionManager<DbConnection>> {
+    let database_url = std::env::var("USSD_DATABASE_URL")
+        .unwrap_or_else(|_| default_db_url());
+    let manager = ConnectionManager::<DbConnection>::new(database_url);
     Pool::builder()
         .build(manager)
         .expect("Failed to create pool")
@@ -34,8 +55,8 @@ pub trait Database<T> {
 }
 
 pub struct DatabaseManager {
-    pub connection: SqliteConnection,
-    pub pool: Pool<ConnectionManager<SqliteConnection>>,
+    pub connection: DbConnection,
+    pub pool: Pool<ConnectionManager<DbConnection>>,
 }
 
 impl DatabaseManager {
