@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix_web::HttpResponse;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use awc::Client;
@@ -7,12 +9,32 @@ use crate::builder::api::menu_items;
 use crate::builder::api::router_options;
 use crate::builder::api::screens;
 use crate::builder::api::services;
+use crate::builder::file::build;
+use crate::core::{process_request, InMemorySessionStore, SessionCache, USSDRequest};
+use crate::types::FunctionMap;
 
 use crate::error;
 
-pub async fn start_server(port: u16) -> std::io::Result<()> {
-    HttpServer::new(|| {
+async fn handle_ussd(
+    req: web::Json<USSDRequest>,
+    session_cache: web::Data<Arc<Box<dyn SessionCache>>>,
+    function_map: web::Data<FunctionMap>,
+) -> HttpResponse {
+    let menus = build();
+    let response = process_request(&req.into_inner(), session_cache.as_ref(), &menus, &function_map);
+    HttpResponse::Ok().json(response)
+}
+
+pub async fn start_server(port: u16, function_map: FunctionMap) -> std::io::Result<()> {
+    let session_store: Arc<Box<dyn SessionCache>> =
+        Arc::new(Box::new(InMemorySessionStore::new()));
+    let session_data = web::Data::new(session_store);
+    let function_data = web::Data::new(function_map);
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(session_data.clone())
+            .app_data(function_data.clone())
             // Services
             .service(
                 web::resource("/api/services")
@@ -80,10 +102,8 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Download
             .service(web::resource("/api/download").route(web::get().to(file::download_json_file)))
-            // Serve static files
-            // .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))
-            // Route for other pages
-            // .route("/{filename:.*}", web::get().to(index))
+            // USSD request handler
+            .service(web::resource("/ussd").route(web::post().to(handle_ussd)))
             // Proxy all other requests to Next.js
             .default_service(web::route().to(proxy_to_next_server))
     })

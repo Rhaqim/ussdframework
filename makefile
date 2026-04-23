@@ -1,4 +1,4 @@
-PHONY: run-example run-migration migrate build-frontend copy-frontend clean-frontend start-frontend
+PHONY: run-example run-migration migrate build-frontend copy-frontend clean-frontend start-frontend run-all
 
 run-example:
 	cargo run --example basic_usage
@@ -25,3 +25,9 @@ clean-frontend:
 
 start-frontend:
 	cd frontend && npm run dev
+
+# Run the MenuBuilder server (port 8080) and Next.js dev server (port 3000) together.
+# The MenuBuilder server proxies all non-API requests to Next.js.
+run-all:
+	cd frontend && npm run dev &
+	cargo run --features menubuilder --example basic_usage

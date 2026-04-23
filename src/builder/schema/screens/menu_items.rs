@@ -88,7 +88,7 @@ impl
 {
     type Row = (i32, String, String, String, String, String);
 
-    fn build(row: Self::Row) -> Result<MenuItem, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<MenuItem, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(MenuItem {
             screen_name: row.1,
             name: row.2,

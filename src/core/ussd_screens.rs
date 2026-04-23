@@ -246,14 +246,12 @@ impl USSDAction for USSDScreen {
                 // Capture the screen name before any mutation.
                 let screen_name = session.current_screen.clone();
 
-                // Record that the user is navigating AWAY from this screen so
-                // that pressing "0" (back) can return here.
-                session.visited_screens.push(screen_name.clone());
-
                 session.current_screen = match self.screen_type {
                     ScreenType::Initial => self.default_next_screen.clone(),
 
                     ScreenType::Menu => {
+                        // Only interactive screens go into the back-stack.
+                        session.visited_screens.push(screen_name.clone());
                         match input.parse::<usize>() {
                             Ok(selected_option) if selected_option > 0 => {
                                 if let Some(items) = self.menu_items.as_ref() {
@@ -285,6 +283,8 @@ impl USSDAction for USSDScreen {
                     }
 
                     ScreenType::Input => {
+                        // Only interactive screens go into the back-stack.
+                        session.visited_screens.push(screen_name.clone());
                         // Max-length check.
                         if let Some(max) = self.max_length {
                             if input.len() > max {
