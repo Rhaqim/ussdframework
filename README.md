@@ -608,15 +608,6 @@ The admin portal is at `http://localhost:8080` (or `http://localhost:3000` when 
 
 ---
 
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-## Authors
-
-- [Rhaqim](https://rhaqim.com)
-
-
 ```rust
     use ussdframework::prelude::*;
 
@@ -828,10 +819,6 @@ USSD applications interact with telecom networks to provide services to users. T
 ## License
 
 The USSD Framework is open source software licensed under the [MIT license](LICENSE).
-
-## Contributing
-
-Contributions are welcome! For feature requests, bug reports, or other issues, please create an [issue](https://github.com/Rhaqim/ussdframework/issues) on GitHub. For pull requests, please read the [contributing guidelines](CONTRIBUTING.md) first.
 
 ## Authors
 
