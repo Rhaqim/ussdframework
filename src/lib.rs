@@ -74,6 +74,34 @@ impl UssdApp {
     pub fn display_menu(&self, ussd_response: &USSDResponse) {
         println!("{}", ussd_response.message);
     }
+
+    /// Starts the MenuBuilder server.
+    ///
+    /// Only available when the `menubuilder` feature is enabled.
+    ///
+    /// This mode is intended for **building** menus: it serves the admin frontend (proxied
+    /// from the Next.js dev server), exposes the CRUD API for screens/services, and handles
+    /// `/ussd` requests by loading menus directly from the SQLite database.
+    ///
+    /// # Arguments
+    ///
+    /// * `port`      — TCP port the Actix server will bind to (e.g. `8080`).
+    /// * `json_seed` — Optional path to a JSON file used to seed the database on first run
+    ///   when it contains no screens yet. Pass `None` if you're managing the database
+    ///   exclusively through the admin portal.
+    ///
+    /// # Non-menubuilder mode
+    ///
+    /// When the `menubuilder` feature is **not** enabled, call `run()` with a
+    /// developer-provided `USSDMenu` instead.
+    #[cfg(feature = "menubuilder")]
+    pub async fn serve(&self, port: u16, json_seed: Option<&str>) -> std::io::Result<()> {
+        use builder::database::run_migration;
+        use builder::server::actix::start_server;
+
+        run_migration();
+        start_server(port, self.function_map.clone(), json_seed.map(str::to_owned)).await
+    }
 }
 
 
