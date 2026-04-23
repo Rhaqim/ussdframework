@@ -19,7 +19,7 @@ async fn main() -> std::io::Result<()> {
         let session_store = InMemorySessionStore::new();
 
         // Create a new instance of UssdApp
-        let app = UssdApp::new(false, Some(Box::new(session_store)));
+        let mut app = UssdApp::new(false, Some(Box::new(session_store)));
 
         // Register functions
         app.register_functions(functions::get_functions());

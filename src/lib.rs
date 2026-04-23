@@ -9,41 +9,24 @@ extern crate serde;
 use core::{
     process_request, InMemorySessionStore, SessionCache, USSDMenu, USSDRequest, USSDResponse,
 };
-use utils::{register_function, FUNCTION_MAP, REGISTERED_FUNCTIONS};
 
 #[cfg(feature = "menubuilder")]
 mod builder;
 
 /// Represents a USSD application.
-/// The USSD application is responsible for processing USSD requests and responses.
 ///
-/// # Fields
-///
-/// * `functions_path` - The path to the functions used by the USSD application.
-/// * `session_cache` - The session cache implementation used by the USSD application.
-///
-/// # Examples
-///
-/// ```
-/// use ussdframework::prelude::*;
-///
-/// let app = UssdApp::new(false, None);
-/// ```
+/// The application owns the registered function map (previously a process-global).
+/// This makes the app self-contained, testable, and safe for multi-app processes.
 pub struct UssdApp {
     pub session_cache: Box<dyn SessionCache>,
+    function_map: types::FunctionMap,
 }
 
 impl UssdApp {
     /// Creates a new instance of `UssdApp`.
     ///
-    /// # Arguments
-    ///
-    /// * `built_in_session_manager` - A boolean value indicating whether to use the built-in session manager.
-    /// * `session_cache` - The session cache implementation used by the USSD application.
-    ///
-    /// # Returns
-    ///
-    /// A new instance of `UssdApp`.
+    /// * `built_in_session_manager` — use the in-process in-memory store.
+    /// * `session_manager` — supply an external cache implementation.
     pub fn new(
         built_in_session_manager: bool,
         session_manager: Option<Box<dyn SessionCache>>,
@@ -55,97 +38,42 @@ impl UssdApp {
                 session_manager.unwrap()
             };
 
-        UssdApp { session_cache }
+        UssdApp {
+            session_cache,
+            function_map: types::FunctionMap::new(),
+        }
     }
 
-    /// Registers a batch of USSD functions provided in the `functions_map`.
+    /// Register a batch of USSD functions.
     ///
-    /// The `register_functions` function is responsible for registering a batch of USSD (Unstructured
-    /// Supplementary Service Data) functions provided in the `functions_map`. It iterates through
-    /// each function in the map, checks if it has already been registered, and if not, registers it
-    /// by calling the `register_function` function. Once registered, the path of the function is added
-    /// to the set of registered functions to prevent redundant registrations.
-    ///
-    /// # Arguments
-    ///
-    /// * `functions_map`: A `HashMap<String, USSDFunction>` containing the mapping of function paths to
-    ///                    USSD functions. Each function is identified by its unique path.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use ussdframework::prelude::*;
-    ///
-    /// use std::collections::HashMap;
-    ///
-    /// // Define your USSD function
-    /// fn my_function(request: &USSDRequest, url: &str) -> USSDData {
-    ///    // Your function logic here
-    ///    return USSDData::Str("Hello".to_string());
-    /// }
-    ///
-    /// // Define a function that returns a map of functions
-    /// fn functions () -> FunctionMap {
-    ///   let mut functions_map = HashMap::new();
-    ///
-    ///   functions_map.insert("my_function".to_string(), my_function as USSDFunction);
-    ///
-    ///   functions_map
-    /// }
-    ///
-    /// // Register the functions
-    /// register_functions(functions());
-    ///
-    /// ```
-    ///
-    /// # Panics
-    ///
-    /// This function panics if it fails to acquire the lock on either the function map or the set of
-    /// registered functions.
-    ///
-    /// # Safety
-    ///
-    /// This function is safe to call as long as the `FUNCTION_MAP` and `REGISTERED_FUNCTIONS` are correctly
-    /// initialized and accessible by the current thread.
-    ///
-    pub fn register_functions(&self, functions_map: types::FunctionMap) {
-        let mut function_map_guard = FUNCTION_MAP.lock().expect("Failed to lock function map");
-        let mut registered_functions_guard = REGISTERED_FUNCTIONS
-            .lock()
-            .expect("Failed to lock registered functions");
-
+    /// Functions are stored in the app instance rather than a process global,
+    /// so multiple independent `UssdApp` instances can have different function sets.
+    pub fn register_functions(&mut self, functions_map: types::FunctionMap) {
         for (path, function) in functions_map {
-            if registered_functions_guard.contains(&path) {
-                // Function already registered, skip it
-                continue;
-            }
-
-            register_function(&path, function, &mut function_map_guard);
-            registered_functions_guard.insert(path);
+            self.function_map.entry(path).or_insert(function);
         }
     }
 
     /// Runs the USSD application with the given request and screens.
     ///
-    /// # Arguments
-    ///
-    /// * `request` - The USSD request.
-    /// * `screens` - The USSD menu screens.
-    ///
-    /// # Returns
-    ///
-    /// The USSD response.
+    /// Router expressions in the menu are validated before processing begins.
+    /// Invalid expressions are logged as errors but do not abort the request —
+    /// the affected router screen will fall through to `default_next_screen`.
     pub fn run(&self, request: USSDRequest, screens: USSDMenu) -> USSDResponse {
-        process_request(&request, &self.session_cache, &screens)
+        // Validate router expressions and log any problems at startup time.
+        if let Err(expr_errors) = screens.validate_router_expressions() {
+            for msg in &expr_errors {
+                crate::error!("Router expression validation: {}", msg);
+            }
+        }
+
+        process_request(&request, &self.session_cache, &screens, &self.function_map)
     }
 
-    /// Displays the menu to the user.
-    ///
-    /// # Arguments
-    ///
-    /// * `ussd_response` - The USSD response containing the menu message.
+    /// Displays the menu message to stdout.
     pub fn display_menu(&self, ussd_response: &USSDResponse) {
-        // Display the menu to the user
         println!("{}", ussd_response.message);
     }
 }
+
+

@@ -45,6 +45,8 @@ pub struct USSDSession {
     pub error_message: Option<String>,
     pub displayed: HashMap<String, bool>,
     pub visited_screens: Vec<String>,
+    /// Tracks how many failed attempts have been made on each screen (used for max_retries).
+    pub screen_attempts: HashMap<String, u8>,
     pub last_interaction_time: SystemTime,
     pub end_session: bool,
     pub language: String,
@@ -65,6 +67,7 @@ impl USSDSession {
             error_message: None,
             displayed: HashMap::new(),
             visited_screens: Vec::new(),
+            screen_attempts: HashMap::new(),
             last_interaction_time: SystemTime::now(),
             end_session: false,
             language,
@@ -84,11 +87,12 @@ impl USSDSession {
 
     // Restart the session
     pub fn restart(&mut self, initial_screen: &str) {
-        // clear visited screens
         self.visited_screens.clear();
+        self.screen_attempts.clear();
+        self.displayed.clear();
+        self.error_message = None;
         self.current_screen = initial_screen.to_string();
         self.update_last_interaction_time();
-        // Reset any other session-related data as needed
     }
 
     // Display screen history with an arrow pointing to the current screen
@@ -143,6 +147,7 @@ impl USSDSession {
                     error_message: None,
                     displayed: HashMap::new(),
                     visited_screens: Vec::new(),
+                    screen_attempts: HashMap::new(),
                     last_interaction_time: SystemTime::now(),
                     end_session: false,
                     language: request.language.clone(),
