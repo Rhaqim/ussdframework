@@ -60,8 +60,9 @@ const apiService = <T>(entity: Entity) => ({
 		return fetcher.delete(`/api/${entity}/${name}`);
 	},
 
-	getByQuery: (data: QueryBy ) => {
-		return fetcher.post(`/api/${entity}/multiple/`, data);
+	getByQuery: (data: QueryBy) => {
+		const params = new URLSearchParams({ ScreenName: data.ScreenName });
+		return fetcher.get(`/api/${entity}/multiple?${params}`);
 	},
 });
 

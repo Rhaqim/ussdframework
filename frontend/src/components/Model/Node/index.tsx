@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactFlow, {
 	MiniMap,
 	Controls,
@@ -12,7 +12,8 @@ import ReactFlow, {
 	type NodeMouseHandler,
 } from "reactflow";
 
-// import "reactflow/dist/style.css";
+// @ts-ignore
+import "reactflow/dist/style.css";
 
 import { MenuItems, RouterOptions, Screens } from "@/api/route";
 
@@ -23,11 +24,13 @@ import { initialNodes } from "@/components/Model/Node/nodes";
 import { initialEdges } from "@/components/Model/Node/edges";
 
 import { useNav } from "@/context/navigation.context";
-import Screen, { ScreenType } from "@/types/screen.type";
+import Screen, { MenuItem, RouterOption } from "@/types/screen.type";
 
 export default function MenuNode() {
 	const [nodes, setNodes, onNodesChange] = useNodesState([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+	const [loading, setLoading] = useState(true);
+	const [screenCount, setScreenCount] = useState(0);
 	const { setSelectedScreen } = useNav();
 
 	const nodeTypes = useMemo(
@@ -58,33 +61,75 @@ export default function MenuNode() {
 
 	useEffect(() => {
 		async function loadScreens() {
+			setLoading(true);
 			try {
-				const screens_: Screen[] = await Screens.getAll();
+				// 3 parallel requests instead of 1 + N per-screen requests
+				const [screens_, allMenuItems, allRouterOptions] = await Promise.all([
+					Screens.getAll() as Promise<Screen[]>,
+					MenuItems.getAll() as Promise<MenuItem[]>,
+					RouterOptions.getAll() as Promise<RouterOption[]>,
+				]);
 
-				// Fetch menu items and router options in parallel for all relevant screens
-				await Promise.all(
-					screens_.map(async screen => {
-						const req = { ScreenName: screen.name };
-						if (screen.screen_type === ScreenType.MENU) {
-							screen.menu_items = await MenuItems.getByQuery(req);
-						}
-						if (screen.screen_type === ScreenType.ROUTER) {
-							screen.router_options = await RouterOptions.getByQuery(req);
-						}
-					})
+				// Group by screen_name client-side
+				const menuItemsByScreen = allMenuItems.reduce<Record<string, MenuItem[]>>(
+					(acc, item) => { (acc[item.screen_name] ??= []).push(item); return acc; },
+					{}
+				);
+				const routerOptionsByScreen = allRouterOptions.reduce<Record<string, RouterOption[]>>(
+					(acc, opt) => { (acc[opt.screen_name] ??= []).push(opt); return acc; },
+					{}
 				);
 
+				for (const screen of screens_) {
+					screen.menu_items = menuItemsByScreen[screen.name] ?? [];
+					screen.router_options = routerOptionsByScreen[screen.name] ?? [];
+				}
+
+				setScreenCount(screens_.length);
 				setNodes(initialNodes(screens_));
 				setEdges(initialEdges(screens_));
 			} catch (err) {
 				console.error("Failed to load screens:", err);
+			} finally {
+				setLoading(false);
 			}
 		}
 		loadScreens();
 	}, [setNodes, setEdges]);
 
 	return (
-		<div style={{ width: "100%", height: "100%" }} className="relative">
+		<div style={{ width: "100%", height: "100%" }} className="relative bg-slate-950">
+			{/* Loading overlay */}
+			{loading && (
+				<div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+					<div className="flex flex-col items-center gap-3">
+						<div className="w-8 h-8 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
+						<p className="text-sm text-slate-400">Loading screens…</p>
+					</div>
+				</div>
+			)}
+
+			{/* Empty state overlay */}
+			{!loading && screenCount === 0 && (
+				<div className="absolute inset-0 z-20 flex items-center justify-center">
+					<div className="text-center space-y-4">
+						<div className="w-16 h-16 mx-auto rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-3xl">
+							🗺️
+						</div>
+						<div>
+							<p className="text-slate-200 font-semibold">No screens yet</p>
+							<p className="text-slate-500 text-sm mt-1">Create your first screen to start building the flow</p>
+						</div>
+						<a
+							href="/admin/screens/create"
+							className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+						>
+							+ New Screen
+						</a>
+					</div>
+				</div>
+			)}
+
 			{/* Toolbar */}
 			<div className="absolute top-3 left-3 z-10 flex items-center gap-2">
 				<a
@@ -132,6 +177,7 @@ export default function MenuNode() {
 				onConnect={onConnect}
 				onNodeClick={onNodeClick}
 				fitView
+				style={{ background: "#020617" }}
 			>
 				<Controls className="!bg-slate-900 !border-slate-700 !rounded-lg [&>button]:!bg-slate-900 [&>button]:!text-slate-400 [&>button:hover]:!bg-slate-800 [&>button]:!border-slate-700" />
 				<MiniMap

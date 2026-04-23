@@ -26,6 +26,20 @@ pub struct PathInfo {
     name: Option<String>,
 }
 
+/// Query parameters for the /multiple/ GET endpoints.
+/// All fields are optional; callers supply whichever key is relevant.
+#[derive(Debug, Clone, Deserialize)]
+pub struct MultipleQuery {
+    #[serde(rename = "ScreenName")]
+    pub screen_name: Option<String>,
+    #[serde(rename = "Name")]
+    pub name: Option<String>,
+    #[serde(rename = "ID")]
+    pub id: Option<i32>,
+    #[serde(rename = "ServiceCode")]
+    pub service_code: Option<String>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServiceModelUpdate {
     pub id: i32,

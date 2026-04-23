@@ -57,13 +57,13 @@ pub async fn start_server(
                     .route(web::get().to(services::get_all)),
             )
             .service(
+                web::resource("/api/services/multiple")
+                    .route(web::get().to(services::get_multiple)),
+            )
+            .service(
                 web::resource("/api/services/{name}")
                     .route(web::get().to(services::get))
                     .route(web::delete().to(services::delete)),
-            )
-            .service(
-                web::resource("/api/services/multiple/")
-                    .route(web::post().to(services::get_multiple)),
             )
             // Screens
             .service(
@@ -73,12 +73,12 @@ pub async fn start_server(
                     .route(web::get().to(screens::get_all)),
             )
             .service(
+                web::resource("/api/screens/multiple").route(web::get().to(screens::get_multiple)),
+            )
+            .service(
                 web::resource("/api/screens/{name}")
                     .route(web::get().to(screens::get))
                     .route(web::delete().to(screens::delete)),
-            )
-            .service(
-                web::resource("/api/screens/multiple/").route(web::post().to(screens::get_multiple)),
             )
             // MenuItems
             .service(
@@ -88,13 +88,13 @@ pub async fn start_server(
                     .route(web::get().to(menu_items::get_all)),
             )
             .service(
+                web::resource("/api/menu_items/multiple")
+                    .route(web::get().to(menu_items::get_multiple)),
+            )
+            .service(
                 web::resource("/api/menu_items/{name}")
                     .route(web::get().to(menu_items::get))
                     .route(web::delete().to(menu_items::delete)),
-            )
-            .service(
-                web::resource("/api/menu_items/multiple/")
-                    .route(web::post().to(menu_items::get_multiple)),
             )
             // Router Options
             .service(
@@ -104,13 +104,13 @@ pub async fn start_server(
                     .route(web::get().to(router_options::get_all)),
             )
             .service(
+                web::resource("/api/router_options/multiple")
+                    .route(web::get().to(router_options::get_multiple)),
+            )
+            .service(
                 web::resource("/api/router_options/{name}")
                     .route(web::get().to(router_options::get))
                     .route(web::delete().to(router_options::delete)),
-            )
-            .service(
-                web::resource("/api/router_options/multiple/")
-                    .route(web::post().to(router_options::get_multiple)),
             )
             // File Upload
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))

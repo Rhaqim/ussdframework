@@ -35,7 +35,12 @@ export function CustomEdge({
 
 	return (
 		<>
-			<BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
+			<BaseEdge
+				id={id}
+				path={edgePath}
+				markerEnd={markerEnd}
+				style={{ stroke: "#475569", strokeWidth: 1.5, ...style }}
+			/>
 			{data?.label && (
 				<EdgeLabelRenderer>
 					<div
@@ -44,7 +49,7 @@ export function CustomEdge({
 							transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
 							pointerEvents: "all",
 						}}
-						className="nodrag nopan bg-white border border-gray-300 rounded px-1 py-0.5 text-xs text-gray-700 shadow-sm"
+						className="nodrag nopan bg-slate-800 border border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-slate-300 shadow-md"
 					>
 						{data.label}
 					</div>
