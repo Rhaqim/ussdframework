@@ -162,15 +162,13 @@ impl USSDSession {
         }
     }
 
-    /// Update the session with the current screen and last interaction time
+    /// Persist the session: update the last-interaction timestamp and save to the cache.
+    ///
+    /// `visited_screens` is NOT pushed here — that happens inside `execute()` in
+    /// `ussd_screens.rs` so that only screens the user *navigates away from* are
+    /// recorded (enabling correct "0" / back behaviour).
     pub fn update_session(&mut self, session_cache: &Box<dyn SessionCache>) {
-        // Store the current screen in the session's visited screens
-        self.visited_screens.push(self.current_screen.clone());
-
-        // Update the session's last interaction time
         self.update_last_interaction_time();
-
-        // Store the session
         self.store_session(&session_cache).unwrap();
     }
 

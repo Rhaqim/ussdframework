@@ -4,6 +4,421 @@
 
 ## Overview
 
+The USSD Framework is a powerful, flexible, and easy-to-extend toolkit for building USSD applications in Rust. It handles session management, screen navigation, input validation, function dispatch, and routing — letting you focus on your business logic.
+
+---
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Architecture](#architecture)
+- [Quick Start](#quick-start)
+- [Screen Types](#screen-types)
+- [Screen Properties](#screen-properties)
+- [Menu Configuration](#menu-configuration)
+- [Session Management](#session-management)
+- [Functions](#functions)
+- [Multi-Language Support](#multi-language-support)
+- [Input Validation & Max Retries](#input-validation--max-retries)
+- [Routing](#routing)
+- [Example](#example)
+- [License](#license)
+
+---
+
+## Features
+
+| Feature | Description |
+|---|---|
+| Declarative menus | JSON-driven screen definitions — no code changes required to reshape flows |
+| Session management | Built-in in-memory store; plug in Redis, Postgres, or any custom store |
+| Input validation | Per-screen regex patterns and max-length constraints |
+| Max retries | Limit failed attempts per screen and redirect to a timeout screen |
+| Function dispatch | Call Rust functions from any screen; results are stored in session data |
+| Expression router | Route to different screens based on session-data conditions |
+| Multi-language text | Define screen text per language code with automatic fallback |
+| Menu builder | Optional admin UI for managing screens stored in a database |
+
+---
+
+## Installation
+
+```toml
+[dependencies]
+ussdframework = "0.1.0"
+```
+
+---
+
+## Architecture
+
+```
++-------------------------------+
+|         Telco / Gateway       |
+|  formats USSD requests and    |
+|  serializes responses         |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+|      USSD Framework Layer     |
+|                               |
+|  ┌──────────┐  ┌───────────┐  |
+|  │  Router  │  │  Session  │  |
+|  └────┬─────┘  └─────┬─────┘  |
+|       │              │        |
+|  ┌────▼──────────────▼─────┐  |
+|  │     Screen Executor     │  |
+|  │  Menu / Input / Router  │  |
+|  │  Function / Quit        │  |
+|  └────────────┬────────────┘  |
++---------------+---------------+
+                |
+                v
++-------------------------------+
+|        Service Layer          |
+|  Your Rust functions, HTTP    |
+|  calls, database queries      |
++-------------------------------+
+```
+
+### Request lifecycle
+
+```
+Incoming request
+      │
+      ▼
+ Resolve or create session
+      │
+      ▼
+ Has session timed out? ──Yes──► Restart from InitialScreen
+      │ No
+      ▼
+ Loop over current screen:
+  ├── Initial  ──► auto-advance, no display
+  ├── Function ──► call registered function, advance
+  ├── Router   ──► evaluate expressions, advance
+  ├── Menu     ──► display options, wait for input
+  ├── Input    ──► display prompt, validate input, wait
+  └── Quit     ──► display message, end session
+      │
+      ▼
+ Persist session, return response
+```
+
+---
+
+## Quick Start
+
+```rust
+use ussdframework::prelude::*;
+
+fn main() {
+    let mut app = UssdApp::new(true, None);
+
+    // Load screen definitions
+    let content = include_str!("../examples/data/menu.json");
+    let menus: USSDMenu = serde_json::from_str(content).unwrap();
+
+    // Register your business-logic functions
+    app.register_functions(my_functions());
+
+    let request = USSDRequest {
+        msisdn: "1234567890".to_string(),
+        session_id: "session-abc".to_string(),
+        input: "1".to_string(),
+        service_code: "*123#".to_string(),
+        language: "en".to_string(),
+    };
+
+    let response = app.run(request, menus);
+    println!("{}", response.message);
+}
+```
+
+---
+
+## Screen Types
+
+Each screen in the menu has a `screen_type` that determines how the framework handles it.
+
+| Type | Displays to user | Waits for input | Typical use |
+|---|:---:|:---:|---|
+| `Initial` | No | No | Entry point; auto-advances to `default_next_screen` |
+| `Menu` | Yes | Yes | Numbered list of options; validates selection |
+| `Input` | Yes | Yes | Free-text prompt; supports regex + max-length validation |
+| `Function` | No | No | Calls a registered Rust function; stores result in session |
+| `Router` | No | No | Evaluates conditions against session data; branches to matching screen |
+| `Quit` | Yes | No | Final message; ends the session |
+
+### Navigation shortcuts (built-in, any screen)
+
+| User input | Action |
+|---|---|
+| `0` | Go back one screen |
+| `00` | Return to the first screen visited |
+
+---
+
+## Screen Properties
+
+| Property | Type | Required | Description |
+|---|---|:---:|---|
+| `text` | string or `{"lang": "..."}` map | Yes* | Display text. Supports `{{variable}}` interpolation. *Not rendered for Function/Router/Initial. |
+| `screen_type` | string | Yes | One of the six screen types above |
+| `default_next_screen` | string | Yes | Fallback next screen when no specific condition matches |
+| `menu_items` | object | Menu only | Map of named option objects (see below) |
+| `input_identifier` | string | Input only | Key under which the user's input is stored in session data |
+| `validation_regex` | string | No | Regex the input must match; shows error and retries on failure |
+| `max_length` | number | No | Maximum character count for the input |
+| `max_retries` | number | No | Max failed attempts on this screen before redirecting |
+| `timeout_screen` | string | No | Screen to redirect to when `max_retries` is exceeded |
+| `function` | string | Function only | Name of the registered Rust function to call |
+| `router_options` | array | Router only | Ordered list of `{ router_option, next_screen }` pairs |
+| `service_code` | string | No | Service code that activates this entry point |
+
+### Menu item structure
+
+```json
+"menu_items": {
+  "UniqueKey": {
+    "option": "1",
+    "display_name": "Balance Inquiry",
+    "next_screen": "BalanceScreen"
+  }
+}
+```
+
+### Router option structure
+
+```json
+"router_options": [
+  { "router_option": "{{balance.status == 'success'}}", "next_screen": "BalanceResultScreen" },
+  { "router_option": "{{balance.status == 'failed'}}",  "next_screen": "NetworkErrorScreen" }
+]
+```
+
+---
+
+## Menu Configuration
+
+The top-level JSON object has two keys:
+
+```json
+{
+  "menus": {
+    "ScreenName": { ... }
+  },
+  "services": {
+    "service_name": {
+      "function_name": "rust_function_name",
+      "function_url":  "http://...",
+      "data_key":      "key_in_session"
+    }
+  }
+}
+```
+
+### Services table
+
+| Field | Description |
+|---|---|
+| `function_name` | Must match a key registered via `app.register_functions()` |
+| `function_url` | Passed as `url: &str` to your function — use it for HTTP calls |
+| `data_key` | The result is stored in `session.data` under this key; use `{{data_key.field}}` in text and router expressions |
+
+A full annotated example lives at [examples/data/menu.json](examples/data/menu.json).
+
+---
+
+## Session Management
+
+The framework keeps a session per `session_id`. The session stores:
+
+| Field | Description |
+|---|---|
+| `session_id` | Unique identifier from the incoming request |
+| `msisdn` | Caller's phone number |
+| `language` | Language code (`en`, `fr`, …) used for multi-language text lookup |
+| `data` | Key-value store for all collected inputs and function results |
+| `current_screen` | Screen being processed |
+| `visited_screens` | Stack used for `0` (back) navigation |
+| `screen_attempts` | Per-screen failed-attempt counter (for `max_retries`) |
+| `end_session` | `true` once a Quit screen is reached |
+
+### Providing a custom session store
+
+Implement `SessionCache` and pass it to `UssdApp::new`:
+
+```rust
+use ussdframework::prelude::*;
+
+pub struct RedisSession { /* ... */ }
+
+impl SessionCache for RedisSession {
+    fn store_session(&self, session: &USSDSession) -> Result<(), String> {
+        let json = serde_json::to_string(session).map_err(|e| e.to_string())?;
+        // write json to Redis under session.session_id
+        Ok(())
+    }
+
+    fn retrieve_session(&self, session_id: &str) -> Result<Option<USSDSession>, String> {
+        // read from Redis, deserialize, return
+        Ok(None)
+    }
+}
+
+fn main() {
+    let mut app = UssdApp::new(false, Some(Box::new(RedisSession::new())));
+    // ...
+}
+```
+
+> **Note:** The built-in in-memory store is suitable for development and single-instance deployments. For production, use a shared store (Redis, Postgres, etc.) so sessions survive restarts and work across multiple replicas.
+
+---
+
+## Functions
+
+Functions are plain Rust `fn` pointers with the signature:
+
+```rust
+fn my_fn(session: &USSDSession, url: &str) -> USSDData;
+```
+
+Register them before calling `run`:
+
+```rust
+fn get_balance(_session: &USSDSession, url: &str) -> USSDData {
+    // call url, parse response …
+    let json = serde_json::json!({ "status": "success", "amount": "1,250.00" });
+    USSDData::new(None).json_to_hash_str_any(json)
+}
+
+fn main() {
+    let mut app = UssdApp::new(true, None);
+
+    let mut fns = std::collections::HashMap::new();
+    fns.insert("get_balance".to_string(), get_balance as USSDFunction);
+
+    app.register_functions(fns);
+}
+```
+
+The return value is stored in `session.data` under the service's `data_key`. You can then reference it as `{{data_key.field}}` in screen text and router expressions.
+
+---
+
+## Multi-Language Support
+
+`text` can be either a plain string (backward-compatible) or a language map:
+
+```json
+"text": "Welcome"
+```
+
+```json
+"text": {
+  "en": "Welcome to Demo Bank",
+  "fr": "Bienvenue à Demo Banque",
+  "sw": "Karibu Demo Benki"
+}
+```
+
+The framework resolves `text` using `session.language`, falling back to `"default"` (the value stored when a plain string is used), then to an empty string. Set the user's language via an Input screen that stores a value into a session key, then use that key in subsequent screens.
+
+---
+
+## Input Validation & Max Retries
+
+```json
+"EnterPinScreen": {
+  "text": "Enter your 4-digit PIN:",
+  "screen_type": "Input",
+  "input_identifier": "pin",
+  "validation_regex": "^[0-9]{4}$",
+  "max_length": 4,
+  "max_retries": 3,
+  "timeout_screen": "PinLockedScreen",
+  "default_next_screen": "VerifyPinFunctionScreen"
+}
+```
+
+| Property | Effect |
+|---|---|
+| `validation_regex` | Input is rejected and the screen is re-displayed with an error if the pattern does not match |
+| `max_length` | Input longer than this is rejected before the regex is checked |
+| `max_retries` | After this many consecutive failures the user is sent to `timeout_screen` |
+| `timeout_screen` | Usually a Quit screen explaining the lockout |
+
+---
+
+## Routing
+
+A Router screen evaluates `router_options` in order and jumps to the first matching `next_screen`. If nothing matches it falls through to `default_next_screen`.
+
+Expression syntax: `{{<session_key> <op> '<value>'}}`
+
+| Operator | Example |
+|---|---|
+| `==` | `{{airtime.status == 'success'}}` |
+| `>`  | `{{user.age > 18}}` |
+| `>=` | `{{balance.amount >= 100}}` |
+| `<`  | `{{retry.count < 3}}` |
+| `<=` | `{{pin.attempts <= 5}}` |
+
+Router expressions that do not match the pattern are logged as warnings at menu-load time (via `validate_router_expressions`).
+
+---
+
+## Example
+
+A complete working example with actix-web lives in [examples/](examples/). It covers:
+
+- Main menu navigation
+- Balance inquiry with PIN validation and max retries
+- Send money with phone/amount/PIN input chain and confirmation
+- Buy airtime for own or another number
+- Account management (view profile, change PIN)
+- Multi-language selection (English / Français)
+- Error screens, network-error fallbacks, and session lockout
+
+```bash
+# Run the example server
+cargo run --example basic_usage
+
+# Or using make
+make run-example
+```
+
+The server listens on `http://127.0.0.1:3000/ussd` and accepts POST requests:
+
+```json
+{
+  "msisdn": "0712345678",
+  "session_id": "test-session-1",
+  "input": "",
+  "service_code": "*123#",
+  "language": "en"
+}
+```
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Contributing
+
+Issues and pull requests are welcome. See the [contributing guidelines](CONTRIBUTING.md) for details.
+
+## Authors
+
+- [Rhaqim](https://rhaqim.com)
+
+
 The USSD Framework is a powerful and flexible framework designed to be easy to use and extensible for building USSD applications. It provides a set of tools and utilities to simplify the development of USSD menus, navigation, and user interactions. With a simple API for creating USSD menus and handling user input. It supports session management and stateful interactions, with built-in validation and error handling mechanisms.
 
 ## Features
