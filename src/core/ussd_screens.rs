@@ -172,7 +172,12 @@ fn back(session: &mut USSDSession) {
 }
 
 fn home(session: &mut USSDSession) {
-    session.current_screen = session.visited_screens.first().unwrap().clone();
+    if let Some(first) = session.visited_screens.first().cloned() {
+        session.current_screen = first;
+        session.visited_screens.clear();
+        session.displayed.clear();
+    }
+    // If visited_screens is empty the user is already at the start — do nothing.
 }
 
 pub trait USSDAction {

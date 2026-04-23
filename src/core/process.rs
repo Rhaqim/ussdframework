@@ -56,7 +56,15 @@ pub fn process_request(
             );
 
             match screen.screen_type {
-                ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
+                ScreenType::Initial => {
+                    // The initial screen is a pass-through: always advance to
+                    // default_next_screen regardless of input.  It is never
+                    // interactive and has no display output, so back/home input
+                    // handling does not apply here.
+                    session.current_screen = screen.default_next_screen.clone();
+                }
+
+                ScreenType::Function | ScreenType::Router => {
                     screen.execute(&mut session, request, &screens.services, function_map);
                 }
 

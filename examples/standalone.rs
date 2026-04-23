@@ -1,45 +1,53 @@
-/// Standalone example — no `menubuilder` feature required.
+/// Standalone HTTP server example — no `menubuilder` feature required.
 ///
-/// The developer provides the `USSDMenu` directly (loaded from a JSON file here,
-/// but it can be built in code or loaded from any source).  `UssdApp::run()` handles
-/// each request synchronously without starting any HTTP server.
+/// The developer provides the `USSDMenu` directly (loaded from JSON here, but it
+/// can be built from any source).  A single `/ussd` POST endpoint processes
+/// incoming USSD requests exactly as a real gateway would call it.
+///
+/// Run with:   make run-standalone
+/// Then POST to http://localhost:8081/ussd
+use std::sync::Arc;
+
+use actix_web::{web, App, HttpResponse, HttpServer};
 use ussdframework::prelude::*;
 
 mod functions;
 
-fn main() {
-    // Load the menu definition from a JSON file.
-    // In a real application you would build this from your own data source.
-    let menu = USSDMenu::load_from_json("examples/data/menu.json")
-        .expect("Failed to load menu.json");
+struct AppState {
+    app: UssdApp,
+    menu: USSDMenu,
+}
 
-    // Create the app and register the function handlers.
+async fn handle_ussd(
+    state: web::Data<Arc<AppState>>,
+    req: web::Json<USSDRequest>,
+) -> HttpResponse {
+    let response = state.app.run(req.into_inner(), state.menu.clone());
+    HttpResponse::Ok().json(response)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // Load the menu from JSON. In production this can come from any source.
+    let menu = USSDMenu::load_from_json("examples/data/menu.json")
+        .expect("Failed to load examples/data/menu.json");
+
     let mut app = UssdApp::new(true, None);
     app.register_functions(functions::get_functions());
 
-    // Simulate a session by processing a sequence of user inputs.
-    let session_id = "demo-session-001".to_string();
-    let msisdn = "+2348100000000".to_string();
-    let service_code = "*123#".to_string();
+    let state = Arc::new(AppState { app, menu });
+    let state_data = web::Data::new(state);
 
-    let inputs = vec![
-        "",   // Initial dial — no input yet
-        "1",  // Balance Inquiry
-        "6",  // Exit
-    ];
+    let port = 8081u16;
+    println!("Standalone USSD server listening on http://127.0.0.1:{}", port);
+    println!("POST http://127.0.0.1:{}/ussd", port);
 
-    for input in inputs {
-        let request = USSDRequest {
-            session_id: session_id.clone(),
-            service_code: service_code.clone(),
-            msisdn: msisdn.clone(),
-            input: input.to_string(),
-            language: "en".to_string(),
-        };
-
-        let response = app.run(request, menu.clone());
-        println!(">>> Input: {:?}", input);
-        println!("    {}", response.message);
-        println!();
-    }
+    HttpServer::new(move || {
+        App::new()
+            .app_data(state_data.clone())
+            .service(web::resource("/ussd").route(web::post().to(handle_ussd)))
+    })
+    .bind(format!("127.0.0.1:{}", port))?
+    .run()
+    .await
 }
