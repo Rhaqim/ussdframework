@@ -1,174 +1,364 @@
 {
-	"menus": {
-		"InitialScreen": {
-			"text": "Welcome to the system",
-			"screen_type": "Initial",
-			"default_next_screen": "MainScreen"
-		},
-		"MainScreen": {
-			"text": "Main Menu",
-			"screen_type": "Menu",
-			"default_next_screen": "DefaultNoneScreen",
-			"menu_items": {
-				"BalanceOption": {
-					"option": "1",
-					"display_name": "Balance Inquiry",
-					"next_screen": "BalanceInquiryScreen"
-				},
-				"SendMoneyOption": {
-					"option": "2",
-					"display_name": "Send Money",
-					"next_screen": "SendMoneyScreen"
-				},
-				"AirtimeOption": {
-					"option": "3",
-					"display_name": "Buy Airtime",
-					"next_screen": "AirtimeScreen"
-				}
-			}
-		},
-		"DefaultNoneScreen": {
-			"text": "Thank you for using the system",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		},
-		"BalanceInquiryScreen": {
-			"text": "Select Account",
-			"screen_type": "Menu",
-			"default_next_screen": "MainScreen",
-			"menu_items": {
-				"SavingsOption": {
-					"option": "1",
-					"display_name": "Savings",
-					"next_screen": "MainScreen"
-				},
-				"CurrentOption": {
-					"option": "2",
-					"display_name": "Current",
-					"next_screen": "MainScreen"
-				}
-			}
-		},
-		"SendMoneyScreen": {
-			"text": "Select option",
-			"screen_type": "Menu",
-			"default_next_screen": "MainScreen",
-			"menu_items": {
-				"OwnAccountOption": {
-					"option": "1",
-					"display_name": "Own Account",
-					"next_screen": "MainScreen"
-				},
-				"OtherAccountOption": {
-					"option": "2",
-					"display_name": "Other Account",
-					"next_screen": "MainScreen"
-				}
-			}
-		},
-		"AirtimeScreen": {
-			"text": "Select option",
-			"screen_type": "Menu",
-			"default_next_screen": "MainScreen",
-			"menu_items": {
-				"OwnNumberOption": {
-					"option": "1",
-					"display_name": "Own Number",
-					"next_screen": "OwnNumberAmountScreen"
-				},
-				"OtherNumberOption": {
-					"option": "2",
-					"display_name": "Other Number",
-					"next_screen": "OtherNumberPhoneScreen"
-				}
-			}
-		},
-		"OtherNumberPhoneScreen": {
-			"text": "Enter phone number",
-			"screen_type": "Input",
-			"input_identifier": "phone_number",
-			"default_next_screen": "OtherNumberAmountScreen"
-		},
-		"OtherNumberAmountScreen": {
-			"text": "Enter amount",
-			"screen_type": "Input",
-			"input_identifier": "amount",
-			"default_next_screen": "OtherNumberFunctionScreen"
-		},
-		"OtherNumberFunctionScreen": {
-			"text": "Processing...",
-			"screen_type": "Function",
-			"function": "buy_airtime",
-			"default_next_screen": "OtherNumberRouterScreen"
-		},
-		"OtherNumberRouterScreen": {
-			"text": "Selecting...",
-			"screen_type": "Router",
-			"router": "AirtimeScreen",
-			"router_options": [
-				{
-					"router_option": "{{airtime.status == 'success'}}",
-					"next_screen": "SuccessScreen"
-				},
-				{
-					"router_option": "{{airtime.status == 'failed'}}",
-					"next_screen": "FailureScreen"
-				},
-				{
-					"router_option": "{{airtime.status == 'error'}}",
-					"next_screen": "FailureScreen"
-				}
-			],
-			"default_next_screen": "DefaultNoneScreen"
-		},
-		"OwnNumberAmountScreen": {
-			"text": "Enter amount",
-			"screen_type": "Input",
-			"input_identifier": "amount",
-			"default_next_screen": "OwnNumberFunctionScreen"
-		},
-		"OwnNumberFunctionScreen": {
-			"text": "Processing...",
-			"screen_type": "Function",
-			"function": "buy_airtime",
-			"default_next_screen": "OwnNumberRouterScreen"
-		},
-		"OwnNumberRouterScreen": {
-			"text": "Selecting...",
-			"screen_type": "Router",
-			"router": "AirtimeScreen",
-			"router_options": [
-				{
-					"router_option": "{{airtime.status == 'success'}}",
-					"next_screen": "SuccessScreen"
-				},
-				{
-					"router_option": "{{airtime.status == 'failed'}}",
-					"next_screen": "FailureScreen"
-				},
-				{
-					"router_option": "{{airtime.status == 'error'}}",
-					"next_screen": "FailureScreen"
-				}
-			],
-			"default_next_screen": "DefaultNoneScreen"
-		},
-		"SuccessScreen": {
-			"text": "Transaction Successful {{airtime.message}}",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		},
-		"FailureScreen": {
-			"text": "Transaction Failed {{airtime.message}}",
-			"screen_type": "Quit",
-			"default_next_screen": "MainScreen"
-		}
-	},
-	"services": {
-		"buy_airtime": {
-			"function_name": "buy_airtime",
-			"function_url": "http://localhost:3000/buy_airtime",
-			"data_key": "airtime"
-		}
-	}
+  "menus": {
+
+    "InitialScreen": {
+      "text": "Welcome",
+      "screen_type": "Initial",
+      "default_next_screen": "MainMenu"
+    },
+
+    "MainMenu": {
+      "text": {
+        "en": "Welcome to Demo Bank\n1. Balance Inquiry\n2. Send Money\n3. Buy Airtime\n4. My Account\n5. Language\n6. Exit",
+        "fr": "Bienvenue à Demo Banque\n1. Solde\n2. Envoyer argent\n3. Acheter crédit\n4. Mon compte\n5. Langue\n6. Quitter"
+      },
+      "screen_type": "Menu",
+      "default_next_screen": "ExitScreen",
+      "menu_items": {
+        "BalanceOption":  { "option": "1", "display_name": "Balance Inquiry", "next_screen": "BalanceAccountMenu" },
+        "SendOption":     { "option": "2", "display_name": "Send Money",       "next_screen": "SendMoneyRecipientMenu" },
+        "AirtimeOption":  { "option": "3", "display_name": "Buy Airtime",      "next_screen": "AirtimeMenu" },
+        "AccountOption":  { "option": "4", "display_name": "My Account",       "next_screen": "AccountFunctionScreen" },
+        "LanguageOption": { "option": "5", "display_name": "Language",         "next_screen": "LanguageMenu" },
+        "ExitOption":     { "option": "6", "display_name": "Exit",             "next_screen": "ExitScreen" }
+      }
+    },
+
+    "ExitScreen": {
+      "text": {
+        "en": "Thank you for banking with Demo Bank. Goodbye!",
+        "fr": "Merci d'avoir utilisé Demo Banque. Au revoir!"
+      },
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "MaxRetriesScreen": {
+      "text": "Too many failed attempts. Your session has been ended for security. Please call again.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "NetworkErrorScreen": {
+      "text": "A network error occurred. Please try again later.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "LanguageMenu": {
+      "text": "Select language / Choisir langue\n1. English\n2. Français",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "EnglishOption": { "option": "1", "display_name": "English",   "next_screen": "LanguageEnScreen" },
+        "FrenchOption":  { "option": "2", "display_name": "Français",  "next_screen": "LanguageFrScreen" }
+      }
+    },
+
+    "LanguageEnScreen": {
+      "text": {
+        "en": "Language set to English.",
+        "fr": "Langue définie sur anglais."
+      },
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "LanguageFrScreen": {
+      "text": {
+        "en": "Language set to French.",
+        "fr": "Langue définie sur français."
+      },
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "BalanceAccountMenu": {
+      "text": "Balance Inquiry\nSelect account type:\n1. Savings\n2. Current",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "SavingsOption": { "option": "1", "display_name": "Savings Account", "next_screen": "BalancePinScreen" },
+        "CurrentOption": { "option": "2", "display_name": "Current Account", "next_screen": "BalancePinScreen" }
+      }
+    },
+
+    "BalancePinScreen": {
+      "text": "Enter your 4-digit PIN:",
+      "screen_type": "Input",
+      "input_identifier": "balance_pin",
+      "validation_regex": "^[0-9]{4}$",
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "BalanceFunctionScreen"
+    },
+
+    "BalanceFunctionScreen": {
+      "text": "Fetching balance...",
+      "screen_type": "Function",
+      "function": "get_balance",
+      "default_next_screen": "BalanceRouterScreen"
+    },
+
+    "BalanceRouterScreen": {
+      "text": "Routing...",
+      "screen_type": "Router",
+      "router_options": [
+        { "router_option": "{{balance.status == 'success'}}", "next_screen": "BalanceResultScreen" }
+      ],
+      "default_next_screen": "NetworkErrorScreen"
+    },
+
+    "BalanceResultScreen": {
+      "text": "Account Balance\n{{balance.message}}\n\nPress any key to return.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "SendMoneyRecipientMenu": {
+      "text": "Send Money\nRecipient:\n1. Own account\n2. Another person",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "OwnOption":   { "option": "1", "display_name": "Own account",    "next_screen": "SendMoneyAmountScreen" },
+        "OtherOption": { "option": "2", "display_name": "Another person", "next_screen": "SendMoneyPhoneScreen" }
+      }
+    },
+
+    "SendMoneyPhoneScreen": {
+      "text": "Enter recipient phone number (10-12 digits):",
+      "screen_type": "Input",
+      "input_identifier": "recipient_phone",
+      "validation_regex": "^[0-9]{10,12}$",
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "SendMoneyAmountScreen"
+    },
+
+    "SendMoneyAmountScreen": {
+      "text": "Enter amount to send (digits only):",
+      "screen_type": "Input",
+      "input_identifier": "amount",
+      "validation_regex": "^[0-9]+$",
+      "max_length": 6,
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "SendMoneyPinScreen"
+    },
+
+    "SendMoneyPinScreen": {
+      "text": "Enter your 4-digit PIN to confirm:",
+      "screen_type": "Input",
+      "input_identifier": "send_pin",
+      "validation_regex": "^[0-9]{4}$",
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "SendMoneyConfirmMenu"
+    },
+
+    "SendMoneyConfirmMenu": {
+      "text": "Confirm transfer of {{amount}} to {{recipient_phone}}\n1. Confirm\n2. Cancel",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "ConfirmOption": { "option": "1", "display_name": "Confirm", "next_screen": "SendMoneyFunctionScreen" },
+        "CancelOption":  { "option": "2", "display_name": "Cancel",  "next_screen": "MainMenu" }
+      }
+    },
+
+    "SendMoneyFunctionScreen": {
+      "text": "Processing transfer...",
+      "screen_type": "Function",
+      "function": "buy_airtime",
+      "default_next_screen": "SendMoneyRouterScreen"
+    },
+
+    "SendMoneyRouterScreen": {
+      "text": "Routing...",
+      "screen_type": "Router",
+      "router_options": [
+        { "router_option": "{{airtime.status == 'success'}}", "next_screen": "SendMoneySuccessScreen" },
+        { "router_option": "{{airtime.status == 'failed'}}",  "next_screen": "SendMoneyFailureScreen" }
+      ],
+      "default_next_screen": "NetworkErrorScreen"
+    },
+
+    "SendMoneySuccessScreen": {
+      "text": "Transfer successful!\n{{airtime.message}}\nThank you.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "SendMoneyFailureScreen": {
+      "text": "Transfer failed.\n{{airtime.message}}\nPlease try again.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "AirtimeMenu": {
+      "text": "Buy Airtime\n1. For my number\n2. For another number",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "OwnOption":  { "option": "1", "display_name": "My number",     "next_screen": "AirtimeAmountScreen" },
+        "OtherOption":{ "option": "2", "display_name": "Other number",  "next_screen": "AirtimePhoneScreen" }
+      }
+    },
+
+    "AirtimePhoneScreen": {
+      "text": "Enter phone number (10-12 digits):",
+      "screen_type": "Input",
+      "input_identifier": "airtime_phone",
+      "validation_regex": "^[0-9]{10,12}$",
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "AirtimeAmountScreen"
+    },
+
+    "AirtimeAmountScreen": {
+      "text": "Enter airtime amount:",
+      "screen_type": "Input",
+      "input_identifier": "amount",
+      "validation_regex": "^[0-9]+$",
+      "max_length": 5,
+      "max_retries": 3,
+      "timeout_screen": "MaxRetriesScreen",
+      "default_next_screen": "AirtimeFunctionScreen"
+    },
+
+    "AirtimeFunctionScreen": {
+      "text": "Processing...",
+      "screen_type": "Function",
+      "function": "buy_airtime",
+      "default_next_screen": "AirtimeRouterScreen"
+    },
+
+    "AirtimeRouterScreen": {
+      "text": "Routing...",
+      "screen_type": "Router",
+      "router_options": [
+        { "router_option": "{{airtime.status == 'success'}}", "next_screen": "AirtimeSuccessScreen" },
+        { "router_option": "{{airtime.status == 'failed'}}",  "next_screen": "AirtimeFailureScreen" }
+      ],
+      "default_next_screen": "NetworkErrorScreen"
+    },
+
+    "AirtimeSuccessScreen": {
+      "text": "Airtime purchased!\n{{airtime.message}}",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "AirtimeFailureScreen": {
+      "text": "Airtime purchase failed.\n{{airtime.message}}",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "AccountFunctionScreen": {
+      "text": "Fetching account...",
+      "screen_type": "Function",
+      "function": "get_account",
+      "default_next_screen": "AccountRouterScreen"
+    },
+
+    "AccountRouterScreen": {
+      "text": "Routing...",
+      "screen_type": "Router",
+      "router_options": [
+        { "router_option": "{{account.status == 'success'}}", "next_screen": "AccountMenu" }
+      ],
+      "default_next_screen": "NetworkErrorScreen"
+    },
+
+    "AccountMenu": {
+      "text": "My Account\n{{account.message}}\n\n1. View Profile\n2. Change PIN\n3. Back",
+      "screen_type": "Menu",
+      "default_next_screen": "MainMenu",
+      "menu_items": {
+        "ProfileOption": { "option": "1", "display_name": "View Profile", "next_screen": "ProfileScreen" },
+        "PinOption":     { "option": "2", "display_name": "Change PIN",   "next_screen": "ChangePinScreen" },
+        "BackOption":    { "option": "3", "display_name": "Back",         "next_screen": "MainMenu" }
+      }
+    },
+
+    "ProfileScreen": {
+      "text": "Profile\nPhone: {{msisdn}}\nStatus: Active\nPlan: Standard",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "ChangePinScreen": {
+      "text": "Enter your new 4-digit PIN:",
+      "screen_type": "Input",
+      "input_identifier": "new_pin",
+      "validation_regex": "^[0-9]{4}$",
+      "max_retries": 3,
+      "timeout_screen": "PinMaxRetriesScreen",
+      "default_next_screen": "ChangePinConfirmScreen"
+    },
+
+    "ChangePinConfirmScreen": {
+      "text": "Confirm new PIN (enter again):",
+      "screen_type": "Input",
+      "input_identifier": "confirm_pin",
+      "validation_regex": "^[0-9]{4}$",
+      "max_retries": 3,
+      "timeout_screen": "PinMaxRetriesScreen",
+      "default_next_screen": "ChangePinFunctionScreen"
+    },
+
+    "ChangePinFunctionScreen": {
+      "text": "Updating PIN...",
+      "screen_type": "Function",
+      "function": "get_account",
+      "default_next_screen": "ChangePinRouterScreen"
+    },
+
+    "ChangePinRouterScreen": {
+      "text": "Routing...",
+      "screen_type": "Router",
+      "router_options": [
+        { "router_option": "{{account.status == 'success'}}", "next_screen": "PinChangedScreen" }
+      ],
+      "default_next_screen": "PinChangeErrorScreen"
+    },
+
+    "PinChangedScreen": {
+      "text": "PIN changed successfully. Please use your new PIN next time.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "PinChangeErrorScreen": {
+      "text": "PIN change failed. Please try again later or call support.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    },
+
+    "PinMaxRetriesScreen": {
+      "text": "Too many failed PIN attempts. Your session has been locked for security.",
+      "screen_type": "Quit",
+      "default_next_screen": "MainMenu"
+    }
+
+  },
+
+  "services": {
+    "buy_airtime": {
+      "function_name": "buy_airtime",
+      "function_url": "http://localhost:3000/buy_airtime",
+      "data_key": "airtime"
+    },
+    "get_balance": {
+      "function_name": "get_balance",
+      "function_url": "http://localhost:3000/get_balance",
+      "data_key": "balance"
+    },
+    "get_account": {
+      "function_name": "get_account",
+      "function_url": "http://localhost:3000/get_account",
+      "data_key": "account"
+    }
+  }
 }

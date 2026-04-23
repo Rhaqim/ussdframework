@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS router_options;
+DROP TABLE IF EXISTS menu_items;
+DROP TABLE IF EXISTS screens;
+DROP TABLE IF EXISTS services;

@@ -48,22 +48,37 @@ impl Service {
     }
 }
 
-impl
-    diesel::Queryable<
-        (
-            diesel::sql_types::Integer,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-            diesel::sql_types::Nullable<diesel::sql_types::Text>,
-            diesel::sql_types::Text,
-            diesel::sql_types::Nullable<diesel::sql_types::Text>,
-        ),
-        diesel::sqlite::Sqlite,
-    > for Service
-{
-    type Row = (i32, String, String, Option<String>, String, Option<String>);
+type ServiceSqlTypes = (
+    diesel::sql_types::Integer,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+    diesel::sql_types::Nullable<diesel::sql_types::Text>,
+    diesel::sql_types::Text,
+    diesel::sql_types::Nullable<diesel::sql_types::Text>,
+);
 
-    fn build(row: Self::Row) -> Result<Service, Box<(dyn StdError + Send + Sync + 'static)>> {
+type ServiceRow = (i32, String, String, Option<String>, String, Option<String>);
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+impl diesel::Queryable<ServiceSqlTypes, diesel::sqlite::Sqlite> for Service {
+    type Row = ServiceRow;
+
+    fn build(row: Self::Row) -> Result<Service, Box<dyn StdError + Send + Sync + 'static>> {
+        Ok(Service {
+            name: row.1,
+            function_name: row.2,
+            function_url: row.3,
+            data_key: row.4,
+            service_code: row.5,
+        })
+    }
+}
+
+#[cfg(feature = "db-postgres")]
+impl diesel::Queryable<ServiceSqlTypes, diesel::pg::Pg> for Service {
+    type Row = ServiceRow;
+
+    fn build(row: Self::Row) -> Result<Service, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(Service {
             name: row.1,
             function_name: row.2,

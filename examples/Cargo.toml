@@ -4,11 +4,24 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Rhaqim <anusiemj@gmail.com>"]
 
+# ── menubuilder example ────────────────────────────────────────────────────────
+# Starts an Actix server with the admin frontend and /ussd endpoint.
+# Menus are stored in SQLite and managed via the admin portal.
 [[bin]]
 name = "basic_usage"
 path = "basic_usage.rs"
 
+# ── standalone example ─────────────────────────────────────────────────────────
+# No server, no database. The developer provides the USSDMenu directly and calls
+# UssdApp::run() for each request.
+[[bin]]
+name = "standalone"
+path = "standalone.rs"
+
 [dependencies]
-ussdframework = { path = "../", features = ["menubuilder"] }  # Link to the local ussdframework directory
-# Redis client library
-# redis = "0.24.0"
+# menubuilder feature is only needed by the basic_usage binary; standalone does
+# not require it.  Cargo compiles both with the same dep entry — the feature flag
+# controls which code paths are compiled inside the library.
+ussdframework = { path = "../", features = ["menubuilder"] }
+actix-web = "4.0"
+serde_json = "1"

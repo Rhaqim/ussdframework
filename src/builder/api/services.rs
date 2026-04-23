@@ -83,7 +83,7 @@ pub async fn get(path: web::Path<PathInfo>) -> impl Responder {
         async move {
             match result {
                 Ok(screen) => HttpResponse::Ok().json(screen),
-                Err(_) => HttpResponse::InternalServerError().body("Error getting screen"),
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error getting service: {e}")),
             }
         }
     })
@@ -91,20 +91,32 @@ pub async fn get(path: web::Path<PathInfo>) -> impl Responder {
 }
 
 // Get multiple operation
-pub async fn get_multiple(query: web::Json<QueryEnum>) -> impl Responder {
+pub async fn get_multiple(query: web::Query<super::MultipleQuery>) -> impl Responder {
     with_database(move |_manager| {
-        // Get the screen from the database
-        let query = query.into_inner();
+        let q = query.into_inner();
+        let query_enum = if let Some(screen_name) = q.screen_name {
+            QueryEnum::ScreenName(screen_name)
+        } else if let Some(name) = q.name {
+            QueryEnum::Name(name)
+        } else if let Some(id) = q.id {
+            QueryEnum::ID(id)
+        } else if let Some(service_code) = q.service_code {
+            QueryEnum::ServiceCode(service_code)
+        } else {
+            return futures_util::future::Either::Right(async {
+                HttpResponse::BadRequest().body("No query parameter provided")
+            });
+        };
 
         let result =
-            <DatabaseManager as Database<ServiceModel>>::get_by_query_enum(_manager, query.clone());
+            <DatabaseManager as Database<ServiceModel>>::get_by_query_enum(_manager, query_enum);
 
-        async move {
+        futures_util::future::Either::Left(async move {
             match result {
                 Ok(screens) => HttpResponse::Ok().json(screens),
-                Err(_) => HttpResponse::InternalServerError().body("Error getting screens"),
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error getting services: {e}")),
             }
-        }
+        })
     })
     .await
 }

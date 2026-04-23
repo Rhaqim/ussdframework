@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix_web::HttpResponse;
 use actix_web::{web, App, HttpRequest, HttpServer, Result};
 use awc::Client;
@@ -7,12 +9,46 @@ use crate::builder::api::menu_items;
 use crate::builder::api::router_options;
 use crate::builder::api::screens;
 use crate::builder::api::services;
+use crate::builder::file::build;
+use crate::core::{process_request, InMemorySessionStore, SessionCache, USSDRequest};
+use crate::types::FunctionMap;
 
 use crate::error;
 
-pub async fn start_server(port: u16) -> std::io::Result<()> {
-    HttpServer::new(|| {
+async fn handle_ussd(
+    req: web::Json<USSDRequest>,
+    session_cache: web::Data<Arc<Box<dyn SessionCache>>>,
+    function_map: web::Data<FunctionMap>,
+    json_seed: web::Data<Option<String>>,
+) -> HttpResponse {
+    let menus = build(json_seed.as_deref());
+    let response = process_request(&req.into_inner(), session_cache.as_ref(), &menus, &function_map);
+    HttpResponse::Ok().json(response)
+}
+
+pub async fn start_server(
+    port: u16,
+    function_map: FunctionMap,
+    json_seed: Option<String>,
+    database_url: Option<String>,
+) -> std::io::Result<()> {
+    // Set the database URL env var before any DatabaseManager is created.
+    // All internal calls to establish_connection() / establish_pool() pick this up.
+    if let Some(ref url) = database_url {
+        std::env::set_var("USSD_DATABASE_URL", url);
+    }
+
+    let session_store: Arc<Box<dyn SessionCache>> =
+        Arc::new(Box::new(InMemorySessionStore::new()));
+    let session_data = web::Data::new(session_store);
+    let function_data = web::Data::new(function_map);
+    let seed_data = web::Data::new(json_seed);
+
+    HttpServer::new(move || {
         App::new()
+            .app_data(session_data.clone())
+            .app_data(function_data.clone())
+            .app_data(seed_data.clone())
             // Services
             .service(
                 web::resource("/api/services")
@@ -21,13 +57,13 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(services::get_all)),
             )
             .service(
+                web::resource("/api/services/multiple")
+                    .route(web::get().to(services::get_multiple)),
+            )
+            .service(
                 web::resource("/api/services/{name}")
                     .route(web::get().to(services::get))
                     .route(web::delete().to(services::delete)),
-            )
-            .service(
-                web::resource("/api/services/multiple/")
-                    .route(web::post().to(services::get_multiple)),
             )
             // Screens
             .service(
@@ -37,12 +73,12 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(screens::get_all)),
             )
             .service(
+                web::resource("/api/screens/multiple").route(web::get().to(screens::get_multiple)),
+            )
+            .service(
                 web::resource("/api/screens/{name}")
                     .route(web::get().to(screens::get))
                     .route(web::delete().to(screens::delete)),
-            )
-            .service(
-                web::resource("/api/screens/multiple/").route(web::post().to(screens::get_multiple)),
             )
             // MenuItems
             .service(
@@ -52,13 +88,13 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(menu_items::get_all)),
             )
             .service(
+                web::resource("/api/menu_items/multiple")
+                    .route(web::get().to(menu_items::get_multiple)),
+            )
+            .service(
                 web::resource("/api/menu_items/{name}")
                     .route(web::get().to(menu_items::get))
                     .route(web::delete().to(menu_items::delete)),
-            )
-            .service(
-                web::resource("/api/menu_items/multiple/")
-                    .route(web::post().to(menu_items::get_multiple)),
             )
             // Router Options
             .service(
@@ -68,22 +104,20 @@ pub async fn start_server(port: u16) -> std::io::Result<()> {
                     .route(web::get().to(router_options::get_all)),
             )
             .service(
+                web::resource("/api/router_options/multiple")
+                    .route(web::get().to(router_options::get_multiple)),
+            )
+            .service(
                 web::resource("/api/router_options/{name}")
                     .route(web::get().to(router_options::get))
                     .route(web::delete().to(router_options::delete)),
-            )
-            .service(
-                web::resource("/api/router_options/multiple/")
-                    .route(web::post().to(router_options::get_multiple)),
             )
             // File Upload
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Download
             .service(web::resource("/api/download").route(web::get().to(file::download_json_file)))
-            // Serve static files
-            // .service(Files::new("/_next", STATIC_DIR).index_file(format!("{}/index.html", APP_DIR)))
-            // Route for other pages
-            // .route("/{filename:.*}", web::get().to(index))
+            // USSD request handler
+            .service(web::resource("/ussd").route(web::post().to(handle_ussd)))
             // Proxy all other requests to Next.js
             .default_service(web::route().to(proxy_to_next_server))
     })

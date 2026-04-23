@@ -1,10 +1,18 @@
 use std::error::Error;
 
 use diesel::prelude::*;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::sql_types::Text;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::sqlite::{Sqlite, SqliteValue};
 
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::deserialize::FromSql;
+
+#[cfg(feature = "db-postgres")]
+use diesel::pg::Pg;
 
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
@@ -48,6 +56,7 @@ impl MenuItem {
     }
 }
 
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 impl FromSql<Text, Sqlite> for MenuItem {
     fn from_sql(bytes: SqliteValue<'_, '_, '_>) -> diesel::deserialize::Result<Self> {
         let s = <String as diesel::deserialize::FromSql<Text, Sqlite>>::from_sql(bytes)?;
@@ -73,22 +82,35 @@ table! {
     }
 }
 
-impl
-    diesel::Queryable<
-        (
-            diesel::sql_types::Integer,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-        ),
-        Sqlite,
-    > for MenuItem
-{
+type MenuItemSqlTypes = (
+    diesel::sql_types::Integer,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+);
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+impl diesel::Queryable<MenuItemSqlTypes, Sqlite> for MenuItem {
     type Row = (i32, String, String, String, String, String);
 
-    fn build(row: Self::Row) -> Result<MenuItem, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<MenuItem, Box<dyn StdError + Send + Sync + 'static>> {
+        Ok(MenuItem {
+            screen_name: row.1,
+            name: row.2,
+            option: row.3,
+            display_name: row.4,
+            next_screen: row.5,
+        })
+    }
+}
+
+#[cfg(feature = "db-postgres")]
+impl diesel::Queryable<MenuItemSqlTypes, Pg> for MenuItem {
+    type Row = (i32, String, String, String, String, String);
+
+    fn build(row: Self::Row) -> Result<MenuItem, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(MenuItem {
             screen_name: row.1,
             name: row.2,

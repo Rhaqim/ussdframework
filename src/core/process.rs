@@ -1,39 +1,49 @@
-use crate::{debug, error, info, USSDMenu};
+use crate::{debug, error, info, types::FunctionMap, USSDMenu};
+
+use std::time::Duration;
 
 use super::{ScreenType, SessionCache, USSDAction, USSDRequest, USSDResponse, USSDSession};
 
+/// Sessions idle longer than this are treated as expired and restarted.
+const SESSION_TIMEOUT: Duration = Duration::from_secs(5 * 60);
+
 /// Entry point for processing USSD requests.
-///
-/// # Arguments
-///
-/// * `request` - The USSD request.
-/// * `functions_path` - The path to the functions used by the USSD application.
-/// * `session_cache` - The session cache implementation used by the USSD application.
-/// * `screens` - The USSD menu screens.
-///
-/// # Returns
-///
-/// The USSD response.
 pub fn process_request(
     request: &USSDRequest,
     session_cache: &Box<dyn SessionCache>,
     screens: &USSDMenu,
+    function_map: &FunctionMap,
 ) -> USSDResponse {
-    // Get the initial screen
-    let (initial_screen, _) = screens.get_initial_screen();
-
-    // Generate or retrieve the session
-    let mut session = USSDSession::get_or_create_session(request, &initial_screen, session_cache);
-
-    // Create a response object
-    let mut response: USSDResponse = USSDResponse {
+    // Build a generic error response for catastrophic failures.
+    let mut response = USSDResponse {
         msisdn: request.msisdn.clone(),
         session_id: request.session_id.clone(),
-        end_session: session.end_session,
-        message: "Something went wrong, please try again later".to_string(),
+        end_session: true,
+        message: "Service unavailable. Please try again later.".to_string(),
     };
 
-    // Display screen history
+    // Resolve the initial screen — return an error response instead of panicking.
+    let initial_screen = match screens.get_initial_screen() {
+        Some((name, _)) => name,
+        None => {
+            error!("No Initial screen found in the loaded menu — check your configuration");
+            return response;
+        }
+    };
+
+    // Generate or retrieve the session.
+    let mut session =
+        USSDSession::get_or_create_session(request, &initial_screen, session_cache);
+
+    // Restart timed-out sessions.
+    if session.has_timed_out(SESSION_TIMEOUT) {
+        info!("Session {} timed out — restarting", session.session_id);
+        session.restart(&initial_screen);
+    }
+
+    response.end_session = session.end_session;
+    response.message = "Something went wrong, please try again later".to_string();
+
     session.display_screen_history();
 
     let mut current_screen = session.current_screen.clone();
@@ -45,20 +55,19 @@ pub fn process_request(
                 current_screen, screen.screen_type, request
             );
 
-            // Execute the screen action for Function, Router, and Initial screen types
-            // They contain no display message
-            // They are used to execute a function, route to another screen, or set the initial screen
-            // The next screen is set based on the action
             match screen.screen_type {
-                ScreenType::Function | ScreenType::Router | ScreenType::Initial => {
-                    screen.execute(&mut session, request, &screens.services);
+                ScreenType::Initial => {
+                    // The initial screen is a pass-through: always advance to
+                    // default_next_screen regardless of input.  It is never
+                    // interactive and has no display output, so back/home input
+                    // handling does not apply here.
+                    session.current_screen = screen.default_next_screen.clone();
                 }
 
-                // Display the screen message and execute the screen action for Menu and Input screen types
-                // They contain a display message
-                // The next screen is set based on the action
-                // It checks if the current screen has been displayed
-                // If not, it displays the message and sets the current screen as displayed and also routes back to the current screen
+                ScreenType::Function | ScreenType::Router => {
+                    screen.execute(&mut session, request, &screens.services, function_map);
+                }
+
                 _ => {
                     let current_screen_displayed = session
                         .displayed
@@ -69,7 +78,10 @@ pub fn process_request(
                         debug!("Displaying message for screen: {}", current_screen);
 
                         response.message = screen.display(&mut session).unwrap_or_else(|| {
-                            error!("Failed to display message for screen: {} please ensure the screen has a message", current_screen);
+                            error!(
+                                "Failed to display message for screen: {}",
+                                current_screen
+                            );
                             "Something went wrong, please stop".to_string()
                         });
 
@@ -83,14 +95,13 @@ pub fn process_request(
                     } else {
                         debug!("Executing action for screen: {}", current_screen);
 
-                        screen.execute(&mut session, request, &screens.services);
+                        screen.execute(&mut session, request, &screens.services, function_map);
 
-                        // remove from displayed
                         session.displayed.remove(&current_screen);
                     }
                 }
             }
-            // request.session_data = session.data.clone();
+
             current_screen = session.current_screen.clone();
             continue;
         } else {
@@ -98,5 +109,6 @@ pub fn process_request(
         }
     }
 
-    return response;
+    response
 }
+

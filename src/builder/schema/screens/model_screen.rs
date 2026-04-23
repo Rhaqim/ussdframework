@@ -3,13 +3,18 @@ use std::error::Error;
 use diesel::deserialize::FromSqlRow;
 use diesel::prelude::*;
 use diesel::sql_types::Text;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::sqlite::{Sqlite, SqliteValue};
+
+#[cfg(feature = "db-postgres")]
+use diesel::pg::Pg;
 
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
 
 use crate::builder::{Database, DatabaseManager, QueryEnum};
-use crate::core::ussd_screens::USSDScreen;
+use crate::core::ussd_screens::{ScreenText, USSDScreen};
 use crate::core::ScreenType;
 
 use super::menu_items::MenuItem;
@@ -26,6 +31,10 @@ pub struct Screen {
     pub function: Option<String>,
     pub input_identifier: Option<String>,
     pub input_type: Option<String>,
+    pub validation_regex: Option<String>,
+    pub max_length: Option<i32>,
+    pub max_retries: Option<i32>,
+    pub timeout_screen: Option<String>,
 }
 
 impl Screen {
@@ -58,29 +67,40 @@ impl Screen {
             router_options_vec.push(router_option.to_ussd_router_option());
         }
 
+        let mut text_map = std::collections::HashMap::new();
+        text_map.insert("default".to_string(), self.text.clone());
+
         USSDScreen {
-            text: self.text.clone(),
+            text: ScreenText(text_map),
             screen_type: ScreenType::from_string(&self.screen_type),
             default_next_screen: self.default_next_screen.clone(),
             service_code: self.service_code.clone(),
             function: self.function.clone(),
             input_identifier: self.input_identifier.clone(),
             input_type: self.input_type.clone(),
-            menu_items: Some(menu_items_map),
-            router_options: Some(router_options_vec),
+            menu_items: if menu_items_map.is_empty() { None } else { Some(menu_items_map) },
+            router_options: if router_options_vec.is_empty() { None } else { Some(router_options_vec) },
+            validation_regex: self.validation_regex.clone(),
+            max_length: self.max_length.map(|v| v as usize),
+            max_retries: self.max_retries.map(|v| v as u8),
+            timeout_screen: self.timeout_screen.clone(),
         }
     }
 
     pub fn from_ussd_menu(name: String, screen: USSDScreen) -> Self {
         Screen {
             name,
-            text: screen.text.clone(),
+            text: screen.text.get("default").to_owned(),
             screen_type: screen.screen_type.to_string(),
             default_next_screen: screen.default_next_screen.clone(),
             service_code: screen.service_code.clone(),
             function: screen.function.clone(),
             input_identifier: screen.input_identifier.clone(),
             input_type: screen.input_type.clone(),
+            validation_regex: screen.validation_regex.clone(),
+            max_length: screen.max_length.map(|v| v as i32),
+            max_retries: screen.max_retries.map(|v| v as i32),
+            timeout_screen: screen.timeout_screen.clone(),
         }
     }
 }
@@ -96,25 +116,31 @@ table! {
         function -> Nullable<Text>,
         input_identifier -> Nullable<Text>,
         input_type -> Nullable<Text>,
+        validation_regex -> Nullable<Text>,
+        max_length -> Nullable<Integer>,
+        max_retries -> Nullable<Integer>,
+        timeout_screen -> Nullable<Text>,
     }
 }
 
-impl
-    diesel::Queryable<
-        (
-            diesel::sql_types::Integer,
-            Text,
-            Text,
-            Text,
-            Text,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-            diesel::sql_types::Nullable<Text>,
-        ),
-        Sqlite,
-    > for Screen
-{
+type ScreenSqlTypes = (
+    diesel::sql_types::Integer,
+    Text,
+    Text,
+    Text,
+    Text,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<Text>,
+    diesel::sql_types::Nullable<diesel::sql_types::Integer>,
+    diesel::sql_types::Nullable<diesel::sql_types::Integer>,
+    diesel::sql_types::Nullable<Text>,
+);
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+impl diesel::Queryable<ScreenSqlTypes, Sqlite> for Screen {
     type Row = (
         i32,
         String,
@@ -125,9 +151,13 @@ impl
         Option<String>,
         Option<String>,
         Option<String>,
+        Option<String>,
+        Option<i32>,
+        Option<i32>,
+        Option<String>,
     );
 
-    fn build(row: Self::Row) -> Result<Screen, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<Screen, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(Self {
             name: row.1,
             text: row.2,
@@ -137,10 +167,51 @@ impl
             function: row.6,
             input_identifier: row.7,
             input_type: row.8,
+            validation_regex: row.9,
+            max_length: row.10,
+            max_retries: row.11,
+            timeout_screen: row.12,
         })
     }
 }
 
+#[cfg(feature = "db-postgres")]
+impl diesel::Queryable<ScreenSqlTypes, Pg> for Screen {
+    type Row = (
+        i32,
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<i32>,
+        Option<i32>,
+        Option<String>,
+    );
+
+    fn build(row: Self::Row) -> Result<Screen, Box<dyn StdError + Send + Sync + 'static>> {
+        Ok(Self {
+            name: row.1,
+            text: row.2,
+            screen_type: row.3,
+            default_next_screen: row.4,
+            service_code: row.5,
+            function: row.6,
+            input_identifier: row.7,
+            input_type: row.8,
+            validation_regex: row.9,
+            max_length: row.10,
+            max_retries: row.11,
+            timeout_screen: row.12,
+        })
+    }
+}
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 impl diesel::deserialize::FromSql<Text, Sqlite> for Screen {
     fn from_sql(
         bytes: SqliteValue<'_, '_, '_>,
@@ -156,6 +227,10 @@ impl diesel::deserialize::FromSql<Text, Sqlite> for Screen {
             function: Some(parts[5].to_string()),
             input_identifier: Some(parts[6].to_string()),
             input_type: Some(parts[7].to_string()),
+            validation_regex: None,
+            max_length: None,
+            max_retries: None,
+            timeout_screen: None,
         })
     }
 }

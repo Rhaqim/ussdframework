@@ -88,23 +88,52 @@ impl USSDMenu {
 
     /// Retrieves the initial screen from the USSD menu.
     ///
-    /// This method iterates through the menu's screens and returns the first screen marked as the initial screen.
-    ///
-    /// # Returns
-    ///
-    /// A tuple containing the name of the initial screen and a reference to the initial `Screen`.
-    ///
-    /// # Panics
-    ///
-    /// This method panics if no initial screen is found in the menu.
-    ///
-    pub fn get_initial_screen(&self) -> (String, &USSDScreen) {
-        for (screen_name, screen) in self.menus.iter() {
+    /// Returns `None` if no screen with type `Initial` exists.
+    pub fn get_initial_screen(&self) -> Option<(String, &USSDScreen)> {
+        self.menus.iter().find_map(|(name, screen)| {
             if let ScreenType::Initial = screen.screen_type {
-                return (screen_name.clone(), screen);
+                Some((name.clone(), screen))
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Validates all router-screen expressions at menu-load time.
+    ///
+    /// Returns `Ok(())` if every expression is parseable, or `Err(errors)` with
+    /// a list of human-readable problem descriptions.
+    pub fn validate_router_expressions(&self) -> Result<(), Vec<String>> {
+        let pattern_str = r"\{\{([\w.]+)(?:\s*(==|>|>=|<|<=)\s*\'?([\w]+)\'?)?\}\}";
+        let pattern = match regex::Regex::new(pattern_str) {
+            Ok(p) => p,
+            Err(e) => return Err(vec![format!("Internal regex error: {}", e)]),
+        };
+
+        let mut errors: Vec<String> = Vec::new();
+
+        for (screen_name, screen) in &self.menus {
+            if screen.screen_type != ScreenType::Router {
+                continue;
+            }
+            let Some(router_options) = &screen.router_options else {
+                continue;
+            };
+            for option in router_options {
+                if pattern.captures(&option.router_option).is_none() {
+                    errors.push(format!(
+                        "Screen '{}': router_option '{}' does not match pattern {{{{field op value}}}}",
+                        screen_name, option.router_option
+                    ));
+                }
             }
         }
-        panic!("No initial screen found!");
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors)
+        }
     }
 
     /// Filters and retrieves screens and services belonging to a specific service code.

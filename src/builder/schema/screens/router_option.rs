@@ -1,7 +1,12 @@
 use std::error::Error;
 
 use diesel::prelude::*;
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
 use diesel::sqlite::Sqlite;
+
+#[cfg(feature = "db-postgres")]
+use diesel::pg::Pg;
 
 use serde::ser::StdError;
 use serde::{Deserialize, Serialize};
@@ -45,20 +50,31 @@ impl RouterOption {
     }
 }
 
-impl
-    diesel::Queryable<
-        (
-            diesel::sql_types::Integer,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-            diesel::sql_types::Text,
-        ),
-        Sqlite,
-    > for RouterOption
-{
+type RouterOptionSqlTypes = (
+    diesel::sql_types::Integer,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+    diesel::sql_types::Text,
+);
+
+#[cfg(all(feature = "db-sqlite", not(feature = "db-postgres")))]
+impl diesel::Queryable<RouterOptionSqlTypes, Sqlite> for RouterOption {
     type Row = (i32, String, String, String);
 
-    fn build(row: Self::Row) -> Result<RouterOption, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<RouterOption, Box<dyn StdError + Send + Sync + 'static>> {
+        Ok(RouterOption {
+            screen_name: row.1,
+            router_option: row.2,
+            next_screen: row.3,
+        })
+    }
+}
+
+#[cfg(feature = "db-postgres")]
+impl diesel::Queryable<RouterOptionSqlTypes, Pg> for RouterOption {
+    type Row = (i32, String, String, String);
+
+    fn build(row: Self::Row) -> Result<RouterOption, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(RouterOption {
             screen_name: row.1,
             router_option: row.2,

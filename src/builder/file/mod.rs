@@ -5,34 +5,35 @@ use std::collections::HashMap;
 pub use json::{from_json, to_json};
 
 use crate::core::USSDMenu;
+use crate::info;
 
 use super::{Database, DatabaseManager, ScreenModel, ServiceModel};
 
-/// Builds and returns a `USSDMenu` by fetching and converting screen and service data.
+/// Builds and returns a `USSDMenu` by fetching screen and service data from the database.
 ///
-/// This function initializes a new `DatabaseManager` and uses it to retrieve screen and service
-/// data. The retrieved data is then converted into USSD-compatible formats and stored in
-/// hash maps. These hash maps are used to construct a `USSDMenu` object which is then returned.
+/// If the database is empty and `json_seed` is provided, the JSON file at that path is
+/// loaded into the database first. This lets callers bootstrap from a JSON definition
+/// without a separate import step.
 ///
-/// # Panics
+/// # Arguments
 ///
-/// This function will panic if it fails to retrieve screens or services from the database.
-///
-/// # Examples
-///
-/// ```
-/// let ussd_menu = build();
-/// // `ussd_menu` now contains the USSD screens and services.
-/// ```
-///
-/// # Returns
-///
-/// A `USSDMenu` containing the converted screens and services.
-pub fn build() -> USSDMenu {
+/// * `json_seed` — Optional path to a JSON file used to seed the database when empty.
+pub fn build(json_seed: Option<&str>) -> USSDMenu {
     let mut db = DatabaseManager::new();
 
     let mut menus = HashMap::new();
     let mut services = HashMap::new();
+
+    let screens: Vec<ScreenModel> = db.get_many().unwrap_or_default();
+
+    if screens.is_empty() {
+        if let Some(path) = json_seed {
+            info!("Database is empty — seeding from '{}'", path);
+            from_json(Some(path));
+            // Re-open so we pick up the newly inserted rows.
+            db = DatabaseManager::new();
+        }
+    }
 
     let menu: Vec<ScreenModel> = db.get_many().expect("Failed to get screens");
 

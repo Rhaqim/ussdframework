@@ -18,7 +18,12 @@ pub async fn process_json_file(mut payload: Multipart) -> Result<HttpResponse, E
 
         // Ensure the field is a file and has a name
         let content_disposition = field.content_disposition();
-        let filename = content_disposition.get_filename().unwrap().to_string();
+        let filename = match content_disposition
+            .and_then(|cd| cd.get_filename())
+        {
+            Some(name) => name.to_string(),
+            None => return Ok(HttpResponse::BadRequest().body("Missing filename in content disposition")),
+        };
 
         // Check if the file is JSON
         if !filename.ends_with(".json") {

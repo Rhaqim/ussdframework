@@ -4,26 +4,15 @@ import React from "react";
 import Header from "./Header";
 import SideBar from "./SideBar";
 
-import { useNav } from "@/context/navigation.context";
-
-type LayoutProps = {
-	children: React.ReactNode;
-};
+type LayoutProps = { children: React.ReactNode };
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-	const { setSelectedScreen } = useNav();
-
-	const handleScreenSelect = (screen: string) => {
-		setSelectedScreen(screen);
-	};
 	return (
-		<div className="flex h-screen">
-			<SideBar onSelect={handleScreenSelect} />
-			<div className="flex flex-col ml-40 overflow-auto w-full">
+		<div className="flex h-screen bg-slate-950">
+			<SideBar />
+			<div className="flex flex-col ml-60 flex-1 overflow-hidden">
 				<Header />
-				<main className="flex-1 bg-gray-100 overflow-y-auto">
-					{children}
-				</main>
+				<main className="flex-1 overflow-y-auto">{children}</main>
 			</div>
 		</div>
 	);

@@ -3,11 +3,12 @@ pub mod menubuilder {
     use crate::builder::database::run_migration;
     use crate::builder::file::{build, from_json, to_json};
     use crate::builder::server::actix::start_server;
+    use crate::types::FunctionMap;
 
     pub trait MenuBuilderTrait {
         fn to_json(&self, path: Option<&str>) -> ();
         fn from_json(&self, path: Option<&str>) -> ();
-        fn server(port: u16) -> std::io::Result<()>;
+        fn server(port: u16, function_map: FunctionMap, json_seed: Option<&str>) -> std::io::Result<()>;
 
         // TODO: Implement the following methods
         fn initial(&self, name: &str, text: &str) -> ();
@@ -23,7 +24,7 @@ pub mod menubuilder {
     impl MenuBuilder {
         /// Converts the menu to JSON and writes it to a file.
         pub fn to_json(file_path: Option<&str>) {
-            let menu = build();
+            let menu = build(None);
 
             to_json(file_path, menu)
         }
@@ -33,11 +34,28 @@ pub mod menubuilder {
             from_json(file_path)
         }
 
-        /// Starts the server on the specified port.
-        pub async fn server(port: u16) -> std::io::Result<()> {
+        /// Starts the server on the specified port, with the given function map
+        /// used to handle USSD function-type screens via the `/ussd` endpoint.
+        ///
+        /// * `json_seed` — optional path to a JSON file used to seed the database
+        ///   on first run when it contains no screens yet.
+        /// * `database_url` — optional SQLite database URL; defaults to `menu.sqlite3`
+        ///   in the current directory. Set this to use a different file path.
+        ///   Can also be set via the `USSD_DATABASE_URL` environment variable.
+        pub async fn server(
+            port: u16,
+            function_map: FunctionMap,
+            json_seed: Option<&str>,
+            database_url: Option<&str>,
+        ) -> std::io::Result<()> {
             run_migration();
 
-            start_server(port).await
+            start_server(
+                port,
+                function_map,
+                json_seed.map(str::to_owned),
+                database_url.map(str::to_owned),
+            ).await
         }
     }
 }
