@@ -58,7 +58,7 @@ impl
 {
     type Row = (i32, String, String, String);
 
-    fn build(row: Self::Row) -> Result<RouterOption, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<RouterOption, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(RouterOption {
             screen_name: row.1,
             router_option: row.2,

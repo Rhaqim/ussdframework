@@ -63,7 +63,7 @@ impl
 {
     type Row = (i32, String, String, Option<String>, String, Option<String>);
 
-    fn build(row: Self::Row) -> Result<Service, Box<(dyn StdError + Send + Sync + 'static)>> {
+    fn build(row: Self::Row) -> Result<Service, Box<dyn StdError + Send + Sync + 'static>> {
         Ok(Service {
             name: row.1,
             function_name: row.2,

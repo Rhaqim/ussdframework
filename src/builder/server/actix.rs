@@ -19,22 +19,25 @@ async fn handle_ussd(
     req: web::Json<USSDRequest>,
     session_cache: web::Data<Arc<Box<dyn SessionCache>>>,
     function_map: web::Data<FunctionMap>,
+    json_seed: web::Data<Option<String>>,
 ) -> HttpResponse {
-    let menus = build();
+    let menus = build(json_seed.as_deref());
     let response = process_request(&req.into_inner(), session_cache.as_ref(), &menus, &function_map);
     HttpResponse::Ok().json(response)
 }
 
-pub async fn start_server(port: u16, function_map: FunctionMap) -> std::io::Result<()> {
+pub async fn start_server(port: u16, function_map: FunctionMap, json_seed: Option<String>) -> std::io::Result<()> {
     let session_store: Arc<Box<dyn SessionCache>> =
         Arc::new(Box::new(InMemorySessionStore::new()));
     let session_data = web::Data::new(session_store);
     let function_data = web::Data::new(function_map);
+    let seed_data = web::Data::new(json_seed);
 
     HttpServer::new(move || {
         App::new()
             .app_data(session_data.clone())
             .app_data(function_data.clone())
+            .app_data(seed_data.clone())
             // Services
             .service(
                 web::resource("/api/services")

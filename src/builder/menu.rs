@@ -8,7 +8,7 @@ pub mod menubuilder {
     pub trait MenuBuilderTrait {
         fn to_json(&self, path: Option<&str>) -> ();
         fn from_json(&self, path: Option<&str>) -> ();
-        fn server(port: u16, function_map: FunctionMap) -> std::io::Result<()>;
+        fn server(port: u16, function_map: FunctionMap, json_seed: Option<&str>) -> std::io::Result<()>;
 
         // TODO: Implement the following methods
         fn initial(&self, name: &str, text: &str) -> ();
@@ -24,7 +24,7 @@ pub mod menubuilder {
     impl MenuBuilder {
         /// Converts the menu to JSON and writes it to a file.
         pub fn to_json(file_path: Option<&str>) {
-            let menu = build();
+            let menu = build(None);
 
             to_json(file_path, menu)
         }
@@ -36,10 +36,13 @@ pub mod menubuilder {
 
         /// Starts the server on the specified port, with the given function map
         /// used to handle USSD function-type screens via the `/ussd` endpoint.
-        pub async fn server(port: u16, function_map: FunctionMap) -> std::io::Result<()> {
+        ///
+        /// * `json_seed` — optional path to a JSON file used to seed the database
+        ///   on first run when it contains no screens yet.
+        pub async fn server(port: u16, function_map: FunctionMap, json_seed: Option<&str>) -> std::io::Result<()> {
             run_migration();
 
-            start_server(port, function_map).await
+            start_server(port, function_map, json_seed.map(str::to_owned)).await
         }
     }
 }

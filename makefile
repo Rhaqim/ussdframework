@@ -28,6 +28,12 @@ start-frontend:
 
 # Run the MenuBuilder server (port 8080) and Next.js dev server (port 3000) together.
 # The MenuBuilder server proxies all non-API requests to Next.js.
-run-all:
+run-all: stop-all
 	cd frontend && npm run dev &
 	cargo run --features menubuilder --example basic_usage
+
+# Kill any stale Next.js dev server or example processes from a previous run.
+stop-all:
+	@-pkill -f "next dev" 2>/dev/null; true
+	@-pkill -f "target/debug/examples/basic_usage" 2>/dev/null; true
+	@sleep 1
