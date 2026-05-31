@@ -3,7 +3,8 @@
 	run-all stop-all \
 	frontend frontend-dev frontend-build frontend-start \
 	migrate \
-	clean
+	docker-build docker-build-postgres docker-run docker-up docker-down \
+	clean clean-db
 
 # ── default ────────────────────────────────────────────────────────────────────
 
@@ -23,8 +24,16 @@ help:
 	@echo "    make migrate        run pending Diesel migrations against menu.sqlite3"
 	@echo ""
 	@echo "  Housekeeping"
-	@echo "    make stop-all       kill any stale example / Next.js processes"
-	@echo "    make clean          remove frontend build artefacts"
+	@echo "    make stop-all             kill any stale example / Next.js processes"
+	@echo "    make clean                remove frontend build artefacts"
+	@echo "    make clean-db             remove local SQLite database files"
+	@echo ""
+	@echo "  Docker"
+	@echo "    make docker-build         build Docker image (SQLite)"
+	@echo "    make docker-build-postgres build Docker image (PostgreSQL)"
+	@echo "    make docker-run           run the container locally on port 8080"
+	@echo "    make docker-up            start the full Compose stack"
+	@echo "    make docker-down          stop the Compose stack"
 	@echo ""
 
 # ── examples ───────────────────────────────────────────────────────────────────
@@ -68,3 +77,23 @@ clean:
 
 clean-db:
 	rm -f menu.sqlite3 examples/menu.sqlite3
+
+# ── Docker ─────────────────────────────────────────────────────────────────────
+
+docker-build:
+	docker build -t ussdframework:latest .
+
+docker-build-postgres:
+	docker build --build-arg DB_FEATURE=db-postgres -t ussdframework:postgres .
+
+docker-run:
+	docker run --rm -p 8080:8080 \
+	  -v "$(PWD)/examples/data/menu.json:/app/menu.json:ro" \
+	  -e USSD_JSON_SEED=/app/menu.json \
+	  ussdframework:latest
+
+docker-up:
+	docker compose up --build
+
+docker-down:
+	docker compose down

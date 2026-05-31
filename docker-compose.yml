@@ -1,0 +1,114 @@
+# ussdframework — example Docker Compose setup
+#
+# This file shows how to run the USSD framework as a service alongside your own
+# application in any language.  Your app registers "functions" by exposing HTTP
+# endpoints.  The framework calls those endpoints (webhooks) whenever a USSD
+# session hits a Function screen.
+#
+# Webhook contract
+# ───────────────
+# The framework sends:
+#   POST <function_url>
+#   Content-Type: application/json
+#   Body: the full USSDSession object
+#
+#   {
+#     "session_id": "abc123",
+#     "msisdn": "+254700000000",
+#     "language": "en",
+#     "current_screen": "CheckBalance",
+#     "data": { "account_number": {"Str": "1234567"} },
+#     ...
+#   }
+#
+# Your handler returns any JSON value, which is stored in session.data[data_key]:
+#   HTTP 200  {"balance": "KES 1,234.56", "currency": "KES"}
+#
+# In your menu JSON, wire it up like this:
+#   {
+#     "services": {
+#       "check_balance": {
+#         "function_name": "check_balance",
+#         "function_url": "http://my-app:3000/ussd/check_balance",
+#         "data_key": "balance_result"
+#       }
+#     }
+#   }
+#
+# Then in a screen's text you can reference {{ balance_result.balance }}.
+
+services:
+
+  # ── USSD Framework ────────────────────────────────────────────────────────
+  ussd:
+    build:
+      context: .
+      args:
+        DB_FEATURE: db-sqlite       # or db-postgres
+    image: ussdframework:latest
+    ports:
+      - "8080:8080"                 # USSD endpoint + admin API
+    environment:
+      USSD_PORT: 8080
+      USSD_DATABASE_URL: /app/data/menu.sqlite3
+      # Uncomment to seed the DB from a JSON file on first run:
+      # USSD_JSON_SEED: /app/menu.json
+    volumes:
+      - ussd-data:/app/data         # persist the SQLite database
+      # - ./menu.json:/app/menu.json:ro   # optional seed file
+    healthcheck:
+      # TCP check — no curl/wget needed in the minimal runtime image.
+      # Succeeds as soon as the port is open and accepting connections.
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  # ── Your application ──────────────────────────────────────────────────────
+  # Replace this with your own service.  The only requirement is that it
+  # exposes HTTP endpoints matching the function_url values in your menus.
+  #
+  # Python / FastAPI example — see examples/webhook_handler/ for a starter.
+  my-app:
+    image: python:3.12-slim
+    working_dir: /app
+    command: >
+      sh -c "pip install fastapi uvicorn httpx --quiet &&
+             uvicorn main:app --host 0.0.0.0 --port 3000"
+    volumes:
+      - ./examples/webhook_handler:/app:ro
+    ports:
+      - "3000:3000"
+    environment:
+      # The framework's base URL so your app can call back if needed
+      USSD_BASE_URL: http://ussd:8080
+    depends_on:
+      ussd:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── (Optional) PostgreSQL ─────────────────────────────────────────────────
+  # Uncomment this block and rebuild with --build-arg DB_FEATURE=db-postgres
+  # if you prefer Postgres over the default SQLite.
+  #
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_DB: ussd
+  #     POSTGRES_USER: ussd
+  #     POSTGRES_PASSWORD: ussd
+  #   volumes:
+  #     - pg-data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ussd"]
+  #     interval: 5s
+  #     retries: 5
+  #
+  # Then set on the ussd service:
+  #   USSD_DATABASE_URL: postgres://ussd:ussd@db:5432/ussd
+
+volumes:
+  ussd-data:
+  # pg-data:

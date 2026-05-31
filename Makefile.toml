@@ -9,13 +9,51 @@ script = [
 ]
 
 [tasks.run]
-description = "Runs the example"
+description = "Runs the menubuilder example (admin portal + /ussd endpoint on port 8080)"
 script = [
-    "cargo run --example basic_usage",
+    "cargo run --manifest-path examples/Cargo.toml --bin basic_usage",
+]
+
+[tasks.run-standalone]
+description = "Runs the standalone example (plain /ussd endpoint on port 8081, no admin portal)"
+script = [
+    "cargo run --manifest-path examples/Cargo.toml --bin standalone",
 ]
 
 [tasks.clean]
 description = "Cleans the frontend build"
 script = [
     "rm -rf src/builder/static/*",
+]
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+
+[tasks.docker-build]
+description = "Builds the Docker image with the default SQLite backend"
+script = [
+    "docker build -t ussdframework:latest .",
+]
+
+[tasks.docker-build-postgres]
+description = "Builds the Docker image with the PostgreSQL backend"
+script = [
+    "docker build --build-arg DB_FEATURE=db-postgres -t ussdframework:postgres .",
+]
+
+[tasks.docker-run]
+description = "Runs the framework as a standalone Docker container on port 8080"
+script = [
+    "docker run --rm -p 8080:8080 -v \"$(pwd)/examples/data/menu.json:/app/menu.json:ro\" -e USSD_JSON_SEED=/app/menu.json ussdframework:latest",
+]
+
+[tasks.docker-up]
+description = "Starts the full stack (framework + example webhook app) via Docker Compose"
+script = [
+    "docker compose up --build",
+]
+
+[tasks.docker-down]
+description = "Stops and removes the Docker Compose stack"
+script = [
+    "docker compose down",
 ]

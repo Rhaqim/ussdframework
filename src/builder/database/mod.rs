@@ -2,10 +2,7 @@ pub mod migrations;
 
 pub use migrations::run_migration;
 
-use diesel::{
-    prelude::*,
-    r2d2::{ConnectionManager, Pool},
-};
+use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
@@ -34,15 +31,6 @@ pub fn establish_connection() -> DbConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn establish_pool() -> Pool<ConnectionManager<DbConnection>> {
-    let database_url = std::env::var("USSD_DATABASE_URL")
-        .unwrap_or_else(|_| default_db_url());
-    let manager = ConnectionManager::<DbConnection>::new(database_url);
-    Pool::builder()
-        .build(manager)
-        .expect("Failed to create pool")
-}
-
 pub trait Database<T> {
     fn create(&mut self, model: T) -> Result<(), Box<dyn Error>>;
     fn update(&mut self, id: i32, model: T) -> Result<(), Box<dyn Error>>;
@@ -56,14 +44,12 @@ pub trait Database<T> {
 
 pub struct DatabaseManager {
     pub connection: DbConnection,
-    pub pool: Pool<ConnectionManager<DbConnection>>,
 }
 
 impl DatabaseManager {
     pub fn new() -> DatabaseManager {
         let connection = establish_connection();
-        let pool = establish_pool();
-        DatabaseManager { connection, pool }
+        DatabaseManager { connection }
     }
 }
 

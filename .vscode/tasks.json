@@ -1,0 +1,52 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run: basic_usage (menubuilder)",
+            "type": "shell",
+            "command": "cargo run --manifest-path examples/Cargo.toml --bin basic_usage",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "Run: standalone",
+            "type": "shell",
+            "command": "cargo run --manifest-path examples/Cargo.toml --bin standalone",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": ["$rustc"]
+        },
+        {
+            "label": "Run: Docker (SQLite)",
+            "type": "shell",
+            "command": "make docker-run",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Check (all features)",
+            "type": "shell",
+            "command": "cargo check --features menubuilder,db-sqlite",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": ["$rustc"]
+        }
+    ]
+}

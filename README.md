@@ -22,6 +22,7 @@ An optional **Menu Builder** module adds a full-stack admin portal and REST API 
 - [Menu Configuration](#menu-configuration)
 - [Session Management](#session-management)
 - [Functions](#functions)
+  - [Webhook Functions (Polyglot)](#webhook-functions-polyglot)
 - [Multi-Language Support](#multi-language-support)
 - [Input Validation & Max Retries](#input-validation--max-retries)
 - [Routing](#routing)
@@ -32,6 +33,7 @@ An optional **Menu Builder** module adds a full-stack admin portal and REST API 
   - [Visual Editor](#visual-editor)
   - [REST API](#rest-api)
   - [Utility Methods](#utility-methods)
+- [Docker / Self-Hosting](#docker--self-hosting)
 - [Example](#example)
 - [License](#license)
 
@@ -254,8 +256,8 @@ The top-level JSON object has two keys:
 
 | Field | Description |
 |---|---|
-| `function_name` | Must match a key registered via `app.register_functions()` |
-| `function_url` | Passed as `url: &str` to your function — use it for HTTP calls |
+| `function_name` | Must match a key registered via `app.register_functions()`. If no Rust function is found, `function_url` is tried instead. |
+| `function_url` | HTTP endpoint the framework POSTs the session to when no Rust function is registered — enables any language to implement USSD functions. |
 | `data_key` | The result is stored in `session.data` under this key; use `{{data_key.field}}` in text and router expressions |
 
 A full annotated example lives at [examples/data/menu.json](examples/data/menu.json).
@@ -337,6 +339,48 @@ fn main() {
 ```
 
 The return value is stored in `session.data` under the service's `data_key`. You can then reference it as `{{data_key.field}}` in screen text and router expressions.
+
+### Webhook Functions (Polyglot)
+
+When a service's `function_name` is **not** registered in the Rust `FunctionMap`, the framework falls back to calling `function_url` as an HTTP webhook. This lets you implement USSD function handlers in any language — Python, Go, TypeScript, etc. — without any Rust code.
+
+**Request** — the framework sends:
+```
+POST <function_url>
+Content-Type: application/json
+
+<full USSDSession object as JSON>
+```
+
+**Response** — return any JSON value; it is stored at `session.data[data_key]`:
+```json
+{ "balance": "KES 1,234.56", "account": "123456" }
+```
+
+Menu JSON wiring:
+```json
+"services": {
+  "check_balance": {
+    "function_name": "check_balance",
+    "function_url":  "http://my-app:3000/ussd/check_balance",
+    "data_key":      "balance_result"
+  }
+}
+```
+
+Python handler example:
+```python
+# FastAPI
+@app.post("/ussd/check_balance")
+async def check_balance(request: Request):
+    session = await request.json()
+    # session["data"] contains all previously collected inputs
+    return {"balance": "KES 1,234.56"}
+```
+
+A ready-to-run starter handler lives in [examples/webhook_handler/main.py](examples/webhook_handler/main.py).
+
+> **Priority:** if a Rust function IS registered for `function_name`, it is always used. The webhook is only called when no Rust function is found. Both modes can coexist in the same menu.
 
 ---
 
@@ -572,6 +616,71 @@ If `None` is passed, both methods default to `menu.json` in the current director
 
 ---
 
+## Docker / Self-Hosting
+
+You can run `ussdframework` as a self-contained Docker service. Other applications call it over HTTP — no Rust required in your main project.
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `USSD_PORT` | `8080` | Port the server binds to |
+| `USSD_DATABASE_URL` | `/app/data/menu.sqlite3` | SQLite path or Postgres connection string |
+| `USSD_JSON_SEED` | *(unset)* | Path to a JSON seed file loaded once on first run |
+
+### Build the image
+
+```bash
+# SQLite (default)
+make docker-build
+
+# PostgreSQL
+make docker-build-postgres
+```
+
+### Run standalone
+
+```bash
+make docker-run
+# Equivalent:
+docker run --rm -p 8080:8080 \
+  -v "$(pwd)/examples/data/menu.json:/app/menu.json:ro" \
+  -e USSD_JSON_SEED=/app/menu.json \
+  ussdframework:latest
+```
+
+### Run with Docker Compose
+
+The included [docker-compose.yml](docker-compose.yml) starts the framework alongside an example Python webhook handler:
+
+```bash
+make docker-up    # start
+make docker-down  # stop
+```
+
+Your app and the framework communicate on the Docker network — the framework calls your service's webhook endpoints for `Function` screens, and the telecom gateway calls the framework's `/ussd` endpoint.
+
+```
+Telco gateway  ──POST /ussd──►  ussdframework container
+                                        │
+                           webhook POST │ (Function screen)
+                                        ▼
+                               your-app container
+                               (Python / Go / Node.js)
+```
+
+### Makefile targets
+
+```bash
+make docker-build           # build image (SQLite)
+make docker-build-postgres  # build image (PostgreSQL)
+make docker-run             # run container on port 8080
+make docker-up              # start full Compose stack
+make docker-down            # stop Compose stack
+```
+
+---
+
 ## Example
 
 A complete working example lives in [examples/](examples/). It covers:
@@ -585,11 +694,13 @@ A complete working example lives in [examples/](examples/). It covers:
 - Error screens, network-error fallbacks, and session lockout
 
 ```bash
-# Run the example (starts Menu Builder server on port 8080)
-cargo run --manifest-path examples/Cargo.toml --bin basic_usage
-
-# Or using make
+# Menu Builder example — admin portal + /ussd on port 8080
 make run
+# or: cargo run --manifest-path examples/Cargo.toml --bin basic_usage
+
+# Standalone example — plain /ussd on port 8081, no DB or admin portal
+make run-standalone
+# or: cargo run --manifest-path examples/Cargo.toml --bin standalone
 ```
 
 The USSD endpoint listens at `http://127.0.0.1:8080/ussd` and accepts `POST` requests:

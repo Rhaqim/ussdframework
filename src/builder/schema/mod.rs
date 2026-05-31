@@ -1,4 +1,3 @@
-pub mod base;
 pub mod screens;
 pub mod services;
 
