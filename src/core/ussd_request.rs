@@ -29,3 +29,47 @@ pub struct USSDRequest {
     pub service_code: String,
     pub language: String,
 }
+
+// ── Gateway-specific adapters ─────────────────────────────────────────────────
+
+/// Africa's Talking USSD gateway request format.
+///
+/// AT sends `Content-Type: application/x-www-form-urlencoded` with these fields.
+/// The `text` field is **cumulative** — it contains the full `*`-delimited input
+/// chain for the session (e.g. `"1*2*3"` after three interactions). Only the last
+/// segment is the user's most recent input.
+///
+/// Reference: <https://developers.africastalking.com/docs/ussd/handle_sessions>
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AfricasTalkingRequest {
+    pub session_id: String,
+    pub phone_number: String,
+    pub network_code: String,
+    pub service_code: String,
+    /// Full input chain, e.g. `""`, `"1"`, `"1*2"`, `"1*2*3"`
+    pub text: String,
+}
+
+impl AfricasTalkingRequest {
+    /// Convert into the framework's internal `USSDRequest`.
+    ///
+    /// Extracts only the **last** `*`-delimited segment of `text` as the current
+    /// user input, matching the framework's expectation of one input per request.
+    pub fn into_ussd_request(self) -> USSDRequest {
+        let input = self
+            .text
+            .split('*')
+            .last()
+            .unwrap_or("")
+            .to_string();
+
+        USSDRequest {
+            msisdn: self.phone_number,
+            input,
+            session_id: self.session_id,
+            service_code: self.service_code,
+            language: "en".to_string(), // AT does not send a language field
+        }
+    }
+}
