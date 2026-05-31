@@ -1,0 +1,113 @@
+{
+  "menus": {
+
+    "InitialScreen": {
+      "text": "",
+      "screen_type": "Initial",
+      "default_next_screen": "TopicMenu"
+    },
+
+    "TopicMenu": {
+      "text": "AI Assistant\nChoose a topic:\n1. Agriculture\n2. Finance\n3. Economy\n0. Exit",
+      "screen_type": "Menu",
+      "default_next_screen": "ExitScreen",
+      "menu_items": {
+        "AgricultureOption": { "option": "1", "display_name": "Agriculture", "next_screen": "AgricultureQuestionInput" },
+        "FinanceOption":     { "option": "2", "display_name": "Finance",     "next_screen": "FinanceQuestionInput"     },
+        "EconomyOption":     { "option": "3", "display_name": "Economy",     "next_screen": "EconomyQuestionInput"     },
+        "ExitOption":        { "option": "0", "display_name": "Exit",        "next_screen": "ExitScreen"               }
+      }
+    },
+
+    "AgricultureQuestionInput": {
+      "text": "Agriculture\nType your question (max 100 chars):",
+      "screen_type": "Input",
+      "input_identifier": "question",
+      "max_length": 100,
+      "validation_regex": "^.{3,100}$",
+      "max_retries": 2,
+      "timeout_screen": "InputErrorScreen",
+      "default_next_screen": "AgricultureFunctionScreen"
+    },
+
+    "AgricultureFunctionScreen": {
+      "text": "Thinking...",
+      "screen_type": "Function",
+      "function": "ask_agriculture",
+      "default_next_screen": "AIResponseScreen"
+    },
+
+    "FinanceQuestionInput": {
+      "text": "Finance\nType your question (max 100 chars):",
+      "screen_type": "Input",
+      "input_identifier": "question",
+      "max_length": 100,
+      "validation_regex": "^.{3,100}$",
+      "max_retries": 2,
+      "timeout_screen": "InputErrorScreen",
+      "default_next_screen": "FinanceFunctionScreen"
+    },
+
+    "FinanceFunctionScreen": {
+      "text": "Thinking...",
+      "screen_type": "Function",
+      "function": "ask_finance",
+      "default_next_screen": "AIResponseScreen"
+    },
+
+    "EconomyQuestionInput": {
+      "text": "Economy\nType your question (max 100 chars):",
+      "screen_type": "Input",
+      "input_identifier": "question",
+      "max_length": 100,
+      "validation_regex": "^.{3,100}$",
+      "max_retries": 2,
+      "timeout_screen": "InputErrorScreen",
+      "default_next_screen": "EconomyFunctionScreen"
+    },
+
+    "EconomyFunctionScreen": {
+      "text": "Thinking...",
+      "screen_type": "Function",
+      "function": "ask_economy",
+      "default_next_screen": "AIResponseScreen"
+    },
+
+    "AIResponseScreen": {
+      "text": "{{ai_response.answer}}",
+      "screen_type": "Quit",
+      "default_next_screen": "TopicMenu"
+    },
+
+    "InputErrorScreen": {
+      "text": "Please enter a question between 3 and 100 characters.",
+      "screen_type": "Quit",
+      "default_next_screen": "TopicMenu"
+    },
+
+    "ExitScreen": {
+      "text": "Thank you for using AI Assistant. Goodbye!",
+      "screen_type": "Quit",
+      "default_next_screen": "TopicMenu"
+    }
+
+  },
+
+  "services": {
+    "ask_agriculture": {
+      "function_name": "ask_agriculture",
+      "function_url": "http://localhost:3000/ai/ask/agriculture",
+      "data_key": "ai_response"
+    },
+    "ask_finance": {
+      "function_name": "ask_finance",
+      "function_url": "http://localhost:3000/ai/ask/finance",
+      "data_key": "ai_response"
+    },
+    "ask_economy": {
+      "function_name": "ask_economy",
+      "function_url": "http://localhost:3000/ai/ask/economy",
+      "data_key": "ai_response"
+    }
+  }
+}
