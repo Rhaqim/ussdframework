@@ -19,11 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Cache dependency compilation separately from application source.
+# Cache dependency resolution/download separately from application source.
 # Copy only the manifest files first so Docker can cache the cargo fetch layer.
 COPY Cargo.toml Cargo.lock ./
 
-# Create a dummy lib and main so `cargo build` can resolve all dependencies
+# Create a dummy lib and main so `cargo build` can resolve the dependency graph
 # without copying the full source tree.
 RUN mkdir -p src && \
     echo 'fn main() {}' > src/main.rs && \
