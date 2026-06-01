@@ -179,3 +179,89 @@ impl USSDMenu {
     //     MenuBuilder::new(service_code, connection)
     // }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::ussd_screens::{ScreenType, USSDScreen};
+
+    fn initial_screen() -> USSDScreen {
+        USSDScreen {
+            screen_type: ScreenType::Initial,
+            default_next_screen: "MainMenu".to_string(),
+            ..Default::default()
+        }
+    }
+
+    fn menu_screen() -> USSDScreen {
+        USSDScreen {
+            screen_type: ScreenType::Menu,
+            default_next_screen: "ExitScreen".to_string(),
+            ..Default::default()
+        }
+    }
+
+    fn menu_with_initial() -> USSDMenu {
+        let mut m = USSDMenu::new();
+        m.menus.insert("InitialScreen".to_string(), initial_screen());
+        m.menus.insert("MainMenu".to_string(), menu_screen());
+        m
+    }
+
+    #[test]
+    fn new_menu_is_empty() {
+        let m = USSDMenu::new();
+        assert!(m.menus.is_empty());
+        assert!(m.services.is_empty());
+    }
+
+    #[test]
+    fn get_initial_screen_finds_initial_type() {
+        let m = menu_with_initial();
+        let result = m.get_initial_screen();
+        assert!(result.is_some());
+        let (name, screen) = result.unwrap();
+        assert_eq!(name, "InitialScreen");
+        assert_eq!(screen.screen_type, ScreenType::Initial);
+    }
+
+    #[test]
+    fn get_initial_screen_returns_none_when_absent() {
+        let mut m = USSDMenu::new();
+        m.menus.insert("MainMenu".to_string(), menu_screen());
+        assert!(m.get_initial_screen().is_none());
+    }
+
+    #[test]
+    fn validate_router_expressions_ok_when_no_router_screens() {
+        let m = menu_with_initial();
+        assert!(m.validate_router_expressions().is_ok());
+    }
+
+    #[test]
+    fn validate_router_expressions_err_on_malformed_expression() {
+        use crate::core::ussd_screens::USSDRouterOption;
+        let mut m = USSDMenu::new();
+        m.menus.insert("RouterScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Router,
+            default_next_screen: "ExitScreen".to_string(),
+            router_options: Some(vec![
+                USSDRouterOption {
+                    router_option: "NOT_VALID_EXPRESSION".to_string(),
+                    next_screen: "SomeScreen".to_string(),
+                }
+            ]),
+            ..Default::default()
+        });
+        assert!(m.validate_router_expressions().is_err());
+    }
+
+    #[test]
+    fn load_from_json_parses_example_menu() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/examples/data/menu.json");
+        let menu = USSDMenu::load_from_json(path).expect("should parse menu.json");
+        assert!(!menu.menus.is_empty());
+        assert!(!menu.services.is_empty());
+        assert!(menu.get_initial_screen().is_some());
+    }
+}

@@ -10,11 +10,12 @@ use crate::builder::api::router_options;
 use crate::builder::api::screens;
 use crate::builder::api::services;
 use crate::builder::file::build;
-use crate::core::{process_request, InMemorySessionStore, SessionCache, USSDRequest};
+use crate::core::{AfricasTalkingRequest, process_request, InMemorySessionStore, SessionCache, USSDRequest};
 use crate::types::FunctionMap;
 
 use crate::error;
 
+/// Standard JSON endpoint — accepts the framework's own `USSDRequest` JSON format.
 async fn handle_ussd(
     req: web::Json<USSDRequest>,
     session_cache: web::Data<Arc<Box<dyn SessionCache>>>,
@@ -24,6 +25,29 @@ async fn handle_ussd(
     let menus = build(json_seed.as_deref());
     let response = process_request(&req.into_inner(), session_cache.as_ref(), &menus, &function_map);
     HttpResponse::Ok().json(response)
+}
+
+/// Africa's Talking gateway endpoint.
+///
+/// Accepts `application/x-www-form-urlencoded` with AT's field names
+/// (`sessionId`, `phoneNumber`, `text`, `serviceCode`, `networkCode`) and
+/// returns a plain-text `CON <message>` / `END <message>` response as the
+/// AT gateway expects.
+///
+/// Register your callback URL in the AT dashboard as:
+///   `http://<your-server>/ussd/africastalking`
+async fn handle_ussd_africastalking(
+    req: web::Form<AfricasTalkingRequest>,
+    session_cache: web::Data<Arc<Box<dyn SessionCache>>>,
+    function_map: web::Data<FunctionMap>,
+    json_seed: web::Data<Option<String>>,
+) -> HttpResponse {
+    let menus = build(json_seed.as_deref());
+    let ussd_req = req.into_inner().into_ussd_request();
+    let response = process_request(&ussd_req, session_cache.as_ref(), &menus, &function_map);
+    HttpResponse::Ok()
+        .content_type("text/plain")
+        .body(response.to_gateway_string())
 }
 
 pub async fn start_server(
@@ -116,8 +140,10 @@ pub async fn start_server(
             .service(web::resource("/api/upload").route(web::post().to(file::process_json_file)))
             // Download
             .service(web::resource("/api/download").route(web::get().to(file::download_json_file)))
-            // USSD request handler
+            // USSD request handlers
             .service(web::resource("/ussd").route(web::post().to(handle_ussd)))
+            // Africa's Talking gateway: form-urlencoded in, plain-text CON/END out
+            .service(web::resource("/ussd/africastalking").route(web::post().to(handle_ussd_africastalking)))
             // Proxy all other requests to Next.js
             .default_service(web::route().to(proxy_to_next_server))
     })

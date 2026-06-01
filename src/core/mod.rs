@@ -8,7 +8,7 @@ pub mod ussd_session;
 
 pub use process::process_request;
 pub use ussd_menu::USSDMenu;
-pub use ussd_request::USSDRequest;
+pub use ussd_request::{AfricasTalkingRequest, USSDRequest};
 pub use ussd_response::USSDResponse;
 pub use ussd_screens::{ScreenType, USSDAction};
 pub use ussd_service::USSDService;

@@ -260,3 +260,105 @@ impl SessionCache for InMemorySessionStore {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    fn make_session(id: &str) -> USSDSession {
+        USSDSession::new(
+            id.to_string(),
+            "MainMenu".to_string(),
+            "en".to_string(),
+            "+1234567890".to_string(),
+        )
+    }
+
+    // ── USSDSession ───────────────────────────────────────────────────────────
+
+    #[test]
+    fn new_session_starts_clean() {
+        let s = make_session("s1");
+        assert!(s.data.is_empty());
+        assert!(s.visited_screens.is_empty());
+        assert!(!s.end_session);
+        assert_eq!(s.current_screen, "MainMenu");
+    }
+
+    #[test]
+    fn has_timed_out_false_for_fresh_session() {
+        let s = make_session("s2");
+        assert!(!s.has_timed_out(Duration::from_secs(60)));
+    }
+
+    #[test]
+    fn has_timed_out_true_for_zero_duration() {
+        let s = make_session("s3");
+        // A duration of 0 means any elapsed time — always times out.
+        assert!(s.has_timed_out(Duration::from_nanos(0)));
+    }
+
+    #[test]
+    fn restart_clears_navigation_state() {
+        let mut s = make_session("s4");
+        s.visited_screens.push("ScreenA".to_string());
+        s.displayed.insert("ScreenA".to_string(), true);
+        s.screen_attempts.insert("ScreenA".to_string(), 2);
+        s.error_message = Some("oops".to_string());
+
+        s.restart("InitialScreen");
+
+        assert!(s.visited_screens.is_empty());
+        assert!(s.displayed.is_empty());
+        assert!(s.screen_attempts.is_empty());
+        assert!(s.error_message.is_none());
+        assert_eq!(s.current_screen, "InitialScreen");
+    }
+
+    #[test]
+    fn fetch_session_data_returns_inserted_value() {
+        let mut s = make_session("s5");
+        s.data.insert("phone".to_string(), USSDData::Str("0712345678".to_string()));
+        let val = s.fetch_session_data("phone");
+        assert!(matches!(val, Some(USSDData::Str(v)) if v == "0712345678"));
+    }
+
+    #[test]
+    fn fetch_session_data_returns_none_for_missing_key() {
+        let s = make_session("s6");
+        assert!(s.fetch_session_data("nonexistent").is_none());
+    }
+
+    // ── InMemorySessionStore ──────────────────────────────────────────────────
+
+    #[test]
+    fn store_and_retrieve_round_trip() {
+        let cache: Box<dyn SessionCache> = Box::new(InMemorySessionStore::new());
+        let session = make_session("store-1");
+        cache.store_session(&session).unwrap();
+        let retrieved = cache.retrieve_session("store-1").unwrap().unwrap();
+        assert_eq!(retrieved.session_id, "store-1");
+        assert_eq!(retrieved.current_screen, "MainMenu");
+    }
+
+    #[test]
+    fn retrieve_returns_none_for_unknown_session() {
+        let cache: Box<dyn SessionCache> = Box::new(InMemorySessionStore::new());
+        let result = cache.retrieve_session("ghost").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn store_overwrites_existing_session() {
+        let cache: Box<dyn SessionCache> = Box::new(InMemorySessionStore::new());
+        let mut session = make_session("overwrite-1");
+        cache.store_session(&session).unwrap();
+
+        session.current_screen = "AnotherScreen".to_string();
+        cache.store_session(&session).unwrap();
+
+        let retrieved = cache.retrieve_session("overwrite-1").unwrap().unwrap();
+        assert_eq!(retrieved.current_screen, "AnotherScreen");
+    }
+}

@@ -24,4 +24,4 @@ path = "standalone.rs"
 # controls which code paths are compiled inside the library.
 ussdframework = { path = "../", features = ["menubuilder"] }
 actix-web = "4.0"
-serde_json = "1"
+serde_json = "1.0.150"
