@@ -73,3 +73,56 @@ impl AfricasTalkingRequest {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn at_request(text: &str) -> AfricasTalkingRequest {
+        AfricasTalkingRequest {
+            session_id: "sess-1".to_string(),
+            phone_number: "+254700000000".to_string(),
+            network_code: "63902".to_string(),
+            service_code: "*123#".to_string(),
+            text: text.to_string(),
+        }
+    }
+
+    #[test]
+    fn at_empty_text_gives_empty_input() {
+        let req = at_request("").into_ussd_request();
+        assert_eq!(req.input, "");
+    }
+
+    #[test]
+    fn at_single_segment_is_the_input() {
+        let req = at_request("1").into_ussd_request();
+        assert_eq!(req.input, "1");
+    }
+
+    #[test]
+    fn at_multi_segment_extracts_last() {
+        let req = at_request("1*2*3").into_ussd_request();
+        assert_eq!(req.input, "3");
+    }
+
+    #[test]
+    fn at_maps_phone_to_msisdn() {
+        let req = at_request("").into_ussd_request();
+        assert_eq!(req.msisdn, "+254700000000");
+    }
+
+    #[test]
+    fn at_defaults_language_to_en() {
+        let req = at_request("").into_ussd_request();
+        assert_eq!(req.language, "en");
+    }
+
+    #[test]
+    fn ussd_request_default_is_empty() {
+        let req = USSDRequest::default();
+        assert!(req.msisdn.is_empty());
+        assert!(req.input.is_empty());
+        assert!(req.session_id.is_empty());
+    }
+}

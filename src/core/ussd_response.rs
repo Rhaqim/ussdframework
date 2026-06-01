@@ -21,3 +21,35 @@ impl USSDResponse {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn response(end_session: bool, message: &str) -> USSDResponse {
+        USSDResponse {
+            msisdn: "+254700000000".to_string(),
+            session_id: "sess-1".to_string(),
+            end_session,
+            message: message.to_string(),
+        }
+    }
+
+    #[test]
+    fn to_gateway_string_con_when_session_continues() {
+        let r = response(false, "Choose option:");
+        assert_eq!(r.to_gateway_string(), "CON Choose option:");
+    }
+
+    #[test]
+    fn to_gateway_string_end_when_session_ends() {
+        let r = response(true, "Goodbye!");
+        assert_eq!(r.to_gateway_string(), "END Goodbye!");
+    }
+
+    #[test]
+    fn default_response_is_not_end_session() {
+        let r = USSDResponse::default();
+        assert!(!r.end_session);
+    }
+}

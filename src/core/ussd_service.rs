@@ -49,11 +49,12 @@ impl USSDServiceTrait for USSDService {
             info!("No Rust function '{}' registered — calling webhook: {}", self.function_name, url);
             call_webhook(url, session)
         } else {
-            error!(
+            let mut result = std::collections::HashMap::new();
+            result.insert("error".to_string(), USSDData::Str(format!(
                 "Service '{}': no Rust function registered and no function_url configured",
                 self.function_name
-            );
-            USSDData::None
+            )));
+            USSDData::Dict(result)
         };
 
         session.data.insert(self.data_key.clone(), result);
@@ -83,6 +84,7 @@ fn call_webhook(url: &str, session: &USSDSession) -> USSDData {
     // Spawn a plain OS thread so `reqwest::blocking` never conflicts with
     // whatever Tokio runtime (if any) is running on the calling thread.
     let (tx, rx) = std::sync::mpsc::channel();
+    let url_for_error = url.clone();
     std::thread::spawn(move || {
         let result = reqwest::blocking::Client::builder()
             .timeout(std::time::Duration::from_secs(10))
@@ -98,16 +100,114 @@ fn call_webhook(url: &str, session: &USSDSession) -> USSDData {
         let _ = tx.send(result);
     });
 
-    match rx.recv() {
+    // `recv_timeout` provides a hard deadline that covers pre-request hangs
+    // (DNS stalls, connection queuing) that occur before the reqwest timeout
+    // can apply.  We add a small buffer on top of the reqwest timeout (10 s)
+    // to avoid racing with it under normal slow-but-succeeding requests.
+    match rx.recv_timeout(std::time::Duration::from_secs(12)) {
         Ok(Ok(val)) => USSDData::new(Some(val)),
         Ok(Err(e)) => {
             error!("Webhook call failed: {}", e);
             USSDData::None
         }
-        Err(_) => {
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            error!("Webhook '{}' timed out after 12 s — thread may be stuck in DNS/IO", url_for_error);
+            USSDData::None
+        }
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
             error!("Webhook thread disconnected unexpectedly");
             USSDData::None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::USSDData;
+    use std::collections::HashMap;
+
+    fn make_session() -> USSDSession {
+        USSDSession::new(
+            "sess-svc-1".to_string(),
+            "MainMenu".to_string(),
+            "en".to_string(),
+            "+254700000000".to_string(),
+        )
+    }
+
+    fn make_service(fn_name: &str, data_key: &str) -> USSDService {
+        USSDService {
+            function_name: fn_name.to_string(),
+            function_url: None,
+            data_key: data_key.to_string(),
+            service_code: None,
+        }
+    }
+
+    // ── Registered Rust function path ─────────────────────────────────────────
+
+    #[test]
+    fn call_uses_registered_rust_function() {
+        let svc = make_service("echo_fn", "result");
+        let mut function_map: HashMap<String, crate::types::USSDFunction> = HashMap::new();
+        function_map.insert(
+            "echo_fn".to_string(),
+            |_session, _url| USSDData::Str("hello from rust".to_string()),
+        );
+
+        let mut session = make_session();
+        svc.call(&mut session, &function_map);
+
+        assert!(
+            matches!(session.data.get("result"), Some(USSDData::Str(v)) if v == "hello from rust")
+        );
+    }
+
+    #[test]
+    fn registered_function_receives_function_url_as_arg() {
+        let mut svc = make_service("url_echo", "url_result");
+        svc.function_url = Some("http://example.com/webhook".to_string());
+
+        let mut function_map: HashMap<String, crate::types::USSDFunction> = HashMap::new();
+        function_map.insert(
+            "url_echo".to_string(),
+            |_session, url| USSDData::Str(url.to_string()),
+        );
+
+        let mut session = make_session();
+        svc.call(&mut session, &function_map);
+
+        assert!(
+            matches!(
+                session.data.get("url_result"),
+                Some(USSDData::Str(v)) if v == "http://example.com/webhook"
+            )
+        );
+    }
+
+    // ── No function registered, no function_url ────────────────────────────────
+
+    #[test]
+    fn no_function_no_url_stores_error_dict() {
+        let svc = make_service("missing_fn", "result");
+        let function_map: HashMap<String, crate::types::USSDFunction> = HashMap::new();
+
+        let mut session = make_session();
+        svc.call(&mut session, &function_map);
+
+        // An error dict should be inserted, not None.
+        assert!(matches!(session.data.get("result"), Some(USSDData::Dict(_))));
+    }
+
+    // ── USSDService struct ─────────────────────────────────────────────────────
+
+    #[test]
+    fn service_default_has_empty_fields() {
+        let svc = USSDService::default();
+        assert!(svc.function_name.is_empty());
+        assert!(svc.function_url.is_none());
+        assert!(svc.data_key.is_empty());
     }
 }
 

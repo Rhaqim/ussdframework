@@ -112,3 +112,176 @@ pub fn process_request(
     response
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::{
+        ussd_menu::USSDMenu,
+        ussd_screens::{ScreenType, USSDMenuItems, USSDScreen},
+        ussd_service::USSDService,
+        ussd_session::InMemorySessionStore,
+    };
+    use crate::types::{FunctionMap, USSDData};
+    use std::collections::HashMap;
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    fn cache() -> Box<dyn SessionCache> {
+        Box::new(InMemorySessionStore::new())
+    }
+
+    fn request(session_id: &str, input: &str) -> USSDRequest {
+        USSDRequest {
+            msisdn: "+254700000000".to_string(),
+            input: input.to_string(),
+            session_id: session_id.to_string(),
+            service_code: "*123#".to_string(),
+            language: "en".to_string(),
+        }
+    }
+
+    /// Minimal two-screen menu: Initial → Menu.
+    fn simple_menu() -> USSDMenu {
+        let mut menus: HashMap<String, USSDScreen> = HashMap::new();
+        let services: HashMap<String, USSDService> = HashMap::new();
+
+        menus.insert("InitialScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Initial,
+            default_next_screen: "MainMenu".to_string(),
+            ..Default::default()
+        });
+
+        let mut items = HashMap::new();
+        items.insert("ExitOpt".to_string(), USSDMenuItems {
+            option: "1".to_string(),
+            display_name: "Exit".to_string(),
+            next_screen: "ExitScreen".to_string(),
+        });
+        menus.insert("MainMenu".to_string(), USSDScreen {
+            screen_type: ScreenType::Menu,
+            text: {
+                let mut m = HashMap::new();
+                m.insert("default".to_string(), "Main Menu\n1. Exit".to_string());
+                crate::core::ussd_screens::ScreenText(m)
+            },
+            default_next_screen: "ExitScreen".to_string(),
+            menu_items: Some(items),
+            ..Default::default()
+        });
+        menus.insert("ExitScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Quit,
+            text: {
+                let mut m = HashMap::new();
+                m.insert("default".to_string(), "Goodbye!".to_string());
+                crate::core::ussd_screens::ScreenText(m)
+            },
+            default_next_screen: "MainMenu".to_string(),
+            ..Default::default()
+        });
+
+        USSDMenu { menus, services }
+    }
+
+    // ── Tests ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn first_request_shows_main_menu() {
+        let menu = simple_menu();
+        let req = request("proc-1", "");
+        let function_map = FunctionMap::new();
+        let cache = cache();
+
+        let resp = process_request(&req, &cache, &menu, &function_map);
+
+        assert!(!resp.end_session);
+        assert!(resp.message.contains("Main Menu"), "got: {}", resp.message);
+    }
+
+    #[test]
+    fn selecting_exit_ends_session() {
+        let menu = simple_menu();
+        let cache = cache();
+        let function_map = FunctionMap::new();
+
+        // First call — display menu
+        let req1 = request("proc-2", "");
+        process_request(&req1, &cache, &menu, &function_map);
+
+        // Second call — select option 1 (Exit)
+        let req2 = request("proc-2", "1");
+        let resp = process_request(&req2, &cache, &menu, &function_map);
+
+        assert!(resp.end_session);
+        assert!(resp.message.contains("Goodbye!"), "got: {}", resp.message);
+    }
+
+    #[test]
+    fn missing_initial_screen_returns_error_response() {
+        let mut menu = USSDMenu::new();
+        // Deliberately omit an Initial screen.
+        menu.menus.insert("MainMenu".to_string(), USSDScreen {
+            screen_type: ScreenType::Menu,
+            ..Default::default()
+        });
+        let cache = cache();
+        let function_map = FunctionMap::new();
+        let req = request("proc-3", "");
+
+        let resp = process_request(&req, &cache, &menu, &function_map);
+
+        assert!(resp.end_session);
+        assert!(resp.message.contains("unavailable") || resp.message.contains("wrong"),
+            "got: {}", resp.message);
+    }
+
+    #[test]
+    fn function_screen_stores_result_in_session() {
+        // Build a menu with a Function screen backed by a Rust function.
+        let mut menu = USSDMenu::new();
+        let mut services: HashMap<String, USSDService> = HashMap::new();
+        services.insert("greet".to_string(), USSDService {
+            function_name: "greet".to_string(),
+            function_url: None,
+            data_key: "greeting".to_string(),
+            service_code: None,
+        });
+
+        menu.menus.insert("InitialScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Initial,
+            default_next_screen: "FnScreen".to_string(),
+            ..Default::default()
+        });
+        menu.menus.insert("FnScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Function,
+            function: Some("greet".to_string()),
+            default_next_screen: "ResultScreen".to_string(),
+            ..Default::default()
+        });
+        menu.menus.insert("ResultScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Quit,
+            text: {
+                let mut m = HashMap::new();
+                m.insert("default".to_string(), "{{greeting}}".to_string());
+                crate::core::ussd_screens::ScreenText(m)
+            },
+            default_next_screen: "InitialScreen".to_string(),
+            ..Default::default()
+        });
+        menu.services = services;
+
+        let mut function_map = FunctionMap::new();
+        function_map.insert(
+            "greet".to_string(),
+            |_session, _url| USSDData::Str("Hello, world!".to_string()),
+        );
+
+        let cache = cache();
+
+        // First call: Initial → FnScreen (executes function) → ResultScreen (displays)
+        let req = request("proc-fn-1", "");
+        let resp = process_request(&req, &cache, &menu, &function_map);
+
+        assert!(resp.end_session);
+        assert!(resp.message.contains("Hello, world!"), "got: {}", resp.message);
+    }
+}
