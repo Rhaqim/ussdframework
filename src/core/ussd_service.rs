@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{error, info, types::{FunctionMap, USSDData}};
+use crate::{debug, error, types::{FunctionMap, USSDData}};
 
 use super::USSDSession;
 
@@ -41,12 +41,12 @@ impl USSDServiceTrait for USSDService {
     fn call(&self, session: &mut USSDSession, function_map: &FunctionMap) {
         let result = if let Some(f) = function_map.get(&self.function_name).cloned() {
             // ── Rust function registered — use it directly (original behaviour) ──
-            info!("Calling registered Rust function: {}", self.function_name);
+            debug!("Calling registered Rust function: {}", self.function_name);
             let url_arg = self.function_url.as_deref().unwrap_or("");
             f(session, url_arg)
         } else if let Some(url) = &self.function_url {
             // ── No Rust function registered — call the webhook URL ──
-            info!("No Rust function '{}' registered — calling webhook: {}", self.function_name, url);
+            debug!("No Rust function '{}' registered — calling webhook: {}", self.function_name, url);
             call_webhook(url, session)
         } else {
             let mut result = std::collections::HashMap::new();

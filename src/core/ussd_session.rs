@@ -6,7 +6,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
-use crate::{info, types::USSDData};
+use crate::{debug, types::USSDData};
 
 use super::USSDRequest;
 
@@ -95,11 +95,13 @@ impl USSDSession {
         self.update_last_interaction_time();
     }
 
-    // Display screen history with an arrow pointing to the current screen
+    /// Log the screen history (screen names only) at trace level.
     pub fn display_screen_history(&self) {
-        for screen in self.visited_screens.iter() {
-            print!("{} \u{25B6} ", screen);
-        }
+        crate::trace!(
+            "Session {} history: {}",
+            self.session_id,
+            self.visited_screens.join(" \u{25B6} ")
+        );
     }
 
     // Store session
@@ -132,7 +134,7 @@ impl USSDSession {
         match retrieved_session {
             Ok(sesh) => {
                 // Update last interaction time for existing session
-                info!("Retrieved session {:?}", sesh);
+                debug!("Retrieved session {} (screen: {})", sesh.session_id, sesh.current_screen);
 
                 let mut session = sesh;
                 session.update_last_interaction_time();
@@ -154,7 +156,7 @@ impl USSDSession {
                     msisdn: request.msisdn.clone(),
                 };
 
-                info!("New session {:?}", new_session);
+                debug!("New session {}", new_session.session_id);
 
                 new_session.store_session(&cache).unwrap();
                 new_session
@@ -294,8 +296,9 @@ mod tests {
 
     #[test]
     fn has_timed_out_true_for_zero_duration() {
-        let s = make_session("s3");
-        // A duration of 0 means any elapsed time — always times out.
+        let mut s = make_session("s3");
+        // Backdate the session so the result doesn't depend on clock resolution.
+        s.last_interaction_time = SystemTime::now() - Duration::from_secs(1);
         assert!(s.has_timed_out(Duration::from_nanos(0)));
     }
 

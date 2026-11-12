@@ -1,6 +1,6 @@
 use crate::core::USSDSession;
 use crate::types::USSDData;
-use crate::{debug, info};
+use crate::trace;
 
 fn get_nested_value(data: &USSDData, field: &[&str]) -> Option<String> {
     match data {
@@ -64,10 +64,7 @@ pub fn evaluate_expression(text: &str, session: &USSDSession) -> String {
 
         let fields = &_field_parts[1..]; // Extract the field name if exists
 
-        info!(
-            "Evaluating expression: field: {} object: {} nested fields: {:?}",
-            _field, object, fields
-        );
+        trace!("Evaluating expression field: {}", _field);
 
         if let Some(data_object) = session.data.get(object) {
             match data_object {
@@ -144,21 +141,13 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
         let operator = caps.get(2).map_or("", |m| m.as_str());
         let value = caps.get(3).map_or("", |m| m.as_str());
 
-        debug!(
-            "Field: {}, object: {}, fields: {:?}, operator: {}, value: {}",
-            field, object, fields, operator, value
-        );
-
-        info!(
-            "Evaluating expression: object: {}, field: {}, operator: {}, value: {}",
-            object, field, operator, value
-        );
+        trace!("Evaluating condition on field: {} (operator: {})", field, operator);
 
         if let Some(data_object) = session.data.get(object) {
             match data_object {
                 USSDData::Dict(inner_data) => {
                     if fields.is_empty() {
-                        debug!("Field is empty");
+                        trace!("Field is empty");
                         if let Some(inner_value) = inner_data.get(object) {
                             let val = get_nested_value(inner_value, &[object]);
                             if let Some(val) = val {
@@ -166,7 +155,7 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
                             }
                         }
                     } else {
-                        debug!("Field is not empty");
+                        trace!("Field is not empty");
                         let val = get_nested_value(data_object, fields);
                         if let Some(val) = val {
                             return compare_strings(operator, &val, value);
@@ -198,10 +187,6 @@ pub fn evaluate_expression_op(session: &USSDSession, text: &str) -> bool {
 /// assert_eq!(result, true);
 /// ```
 fn compare_strings(operator: &str, left: &str, right: &str) -> bool {
-    info!(
-        "Comparing strings: left: {}, right: {}, operator: {}",
-        left, right, operator
-    );
     match operator {
         "==" => left == right,
         ">" => left > right,

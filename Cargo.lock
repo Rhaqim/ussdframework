@@ -4147,6 +4147,7 @@ dependencies = [
  "dotenv",
  "futures-util",
  "lazy_static",
+ "log",
  "openssl",
  "regex",
  "reqwest",

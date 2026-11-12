@@ -196,8 +196,10 @@ impl USSDAction for USSDScreen {
         let lang = session.language.clone();
         let mut message = String::new();
 
-        if let Some(error_message) = &session.error_message {
-            message.push_str(error_message);
+        // The error belongs to the attempt that just failed: show it once, then drop
+        // it so it doesn't carry over to whatever screen is displayed next.
+        if let Some(error_message) = session.error_message.take() {
+            message.push_str(&error_message);
             message.push_str("\n\n");
         }
 
@@ -255,8 +257,6 @@ impl USSDAction for USSDScreen {
                     ScreenType::Initial => self.default_next_screen.clone(),
 
                     ScreenType::Menu => {
-                        // Only interactive screens go into the back-stack.
-                        session.visited_screens.push(screen_name.clone());
                         match input.parse::<usize>() {
                             Ok(selected_option) if selected_option > 0 => {
                                 if let Some(items) = self.menu_items.as_ref() {
@@ -264,8 +264,11 @@ impl USSDAction for USSDScreen {
                                         .values()
                                         .find(|i| i.option == selected_option.to_string())
                                     {
-                                        // Successful selection — clear attempt counter.
+                                        // Successful selection — clear attempt counter and
+                                        // record the screen in the back-stack.
                                         session.screen_attempts.remove(&screen_name);
+                                        session.error_message = None;
+                                        session.visited_screens.push(screen_name.clone());
                                         session.current_screen = selected.next_screen.clone();
                                         return;
                                     } else {
@@ -284,12 +287,12 @@ impl USSDAction for USSDScreen {
                                 return;
                             }
                         }
+                        session.error_message = None;
+                        session.visited_screens.push(screen_name.clone());
                         self.default_next_screen.clone()
                     }
 
                     ScreenType::Input => {
-                        // Only interactive screens go into the back-stack.
-                        session.visited_screens.push(screen_name.clone());
                         // Max-length check.
                         if let Some(max) = self.max_length {
                             if input.len() > max {
@@ -317,9 +320,11 @@ impl USSDAction for USSDScreen {
                                 }
                             }
                         }
-                        // Successful input — clear attempt counter and error.
+                        // Successful input — clear attempt counter and error, and
+                        // record the screen in the back-stack (only valid entries).
                         session.screen_attempts.remove(&screen_name);
                         session.error_message = None;
+                        session.visited_screens.push(screen_name.clone());
                         if let Some(id) = &self.input_identifier {
                             session
                                 .data

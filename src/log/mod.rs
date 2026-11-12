@@ -1,33 +1,29 @@
-// colorise log output
-fn log_info(message: &str) {
-    println!("\x1b[1;32m{}\x1b[0m", message);
-}
+//! Internal logging.
+//!
+//! All framework logging goes through the standard [`log`](https://docs.rs/log) facade
+//! under the target `"ussdframework"`. Nothing is written anywhere unless the host
+//! application installs a logger (e.g. `env_logger`, `tracing-log`), and the host
+//! controls verbosity, e.g. `RUST_LOG=ussdframework=warn` or `=off`.
+//!
+//! Never pass user input or session data to these macros: Input screens may
+//! collect PINs and other secrets.
 
-fn log_error(message: &str) {
-    println!("\x1b[1;31m{}\x1b[0m", message)
-}
+#[doc(hidden)]
+pub use ::log as __log;
 
-fn log_warning(message: &str) {
-    println!("\x1b[1;33m{}\x1b[0m", message)
-}
+/// Log target used for every message emitted by the framework.
+pub const TARGET: &str = "ussdframework";
 
-fn log_debug(message: &str) {
-    println!("\x1b[1;34m{}\x1b[0m", message)
-}
-
-fn log_trace(message: &str) {
-    println!("\x1b[1;35m{}\x1b[0m", message)
-}
-
+#[allow(dead_code)]
 pub fn logger(level: &str, message: &str) {
-    match level {
-        "info" => log_info(message),
-        "error" => log_error(message),
-        "warning" => log_warning(message),
-        "debug" => log_debug(message),
-        "trace" => log_trace(message),
-        _ => log_info(message),
-    }
+    let level = match level {
+        "error" => ::log::Level::Error,
+        "warning" => ::log::Level::Warn,
+        "debug" => ::log::Level::Debug,
+        "trace" => ::log::Level::Trace,
+        _ => ::log::Level::Info,
+    };
+    ::log::log!(target: TARGET, level, "{}", message);
 }
 
 #[macro_export]
@@ -43,7 +39,7 @@ pub fn logger(level: &str, message: &str) {
 /// ```
 macro_rules! info {
     ($($arg:tt)*) => ({
-        $crate::log::logger("info", &format!($($arg)*));
+        $crate::log::__log::info!(target: $crate::log::TARGET, $($arg)*);
     })
 }
 
@@ -60,7 +56,7 @@ macro_rules! info {
 /// ```
 macro_rules! error {
     ($($arg:tt)*) => ({
-        $crate::log::logger("error", &format!($($arg)*));
+        $crate::log::__log::error!(target: $crate::log::TARGET, $($arg)*);
     })
 }
 
@@ -77,7 +73,7 @@ macro_rules! error {
 /// ```
 macro_rules! warning {
     ($($arg:tt)*) => ({
-        $crate::log::logger("warning", &format!($($arg)*));
+        $crate::log::__log::warn!(target: $crate::log::TARGET, $($arg)*);
     })
 }
 
@@ -94,7 +90,7 @@ macro_rules! warning {
 /// ```
 macro_rules! debug {
     ($($arg:tt)*) => ({
-        $crate::log::logger("debug", &format!($($arg)*));
+        $crate::log::__log::debug!(target: $crate::log::TARGET, $($arg)*);
     })
 }
 
@@ -111,7 +107,7 @@ macro_rules! debug {
 /// ```
 macro_rules! trace {
     ($($arg:tt)*) => ({
-        $crate::log::logger("trace", &format!($($arg)*));
+        $crate::log::__log::trace!(target: $crate::log::TARGET, $($arg)*);
     })
 }
 
