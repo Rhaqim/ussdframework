@@ -50,9 +50,9 @@ pub fn process_request(
 
     loop {
         if let Some(screen) = screens.menus.get(&current_screen) {
-            info!(
-                "\nRunning for {}\nScreen Type: {:?}\nRequest : {:?}\n",
-                current_screen, screen.screen_type, request
+            debug!(
+                "Session {}: running screen {} ({:?})",
+                session.session_id, current_screen, screen.screen_type
             );
 
             match screen.screen_type {
@@ -283,5 +283,113 @@ mod tests {
 
         assert!(resp.end_session);
         assert!(resp.message.contains("Hello, world!"), "got: {}", resp.message);
+    }
+
+    /// Initial → MainMenu (1: Pin) → PinScreen (Input) → Done (Quit)
+    fn pin_menu() -> USSDMenu {
+        let mut menu = simple_menu();
+        let main = menu.menus.get_mut("MainMenu").unwrap();
+        main.menu_items.as_mut().unwrap().insert("PinOpt".to_string(), USSDMenuItems {
+            option: "2".to_string(),
+            display_name: "Enter PIN".to_string(),
+            next_screen: "PinScreen".to_string(),
+        });
+        menu.menus.insert("PinScreen".to_string(), USSDScreen {
+            screen_type: ScreenType::Input,
+            text: {
+                let mut m = HashMap::new();
+                m.insert("default".to_string(), "Enter PIN".to_string());
+                crate::core::ussd_screens::ScreenText(m)
+            },
+            input_identifier: Some("pin".to_string()),
+            validation_regex: Some(r"^\d{4}$".to_string()),
+            default_next_screen: "ExitScreen".to_string(),
+            ..Default::default()
+        });
+        menu
+    }
+
+    #[test]
+    fn invalid_option_error_does_not_carry_over_to_next_screen() {
+        let menu = pin_menu();
+        let cache = cache();
+        let fm = FunctionMap::new();
+
+        process_request(&request("carry-1", ""), &cache, &menu, &fm);
+
+        let resp = process_request(&request("carry-1", "9"), &cache, &menu, &fm);
+        assert!(resp.message.contains("Invalid menu option"), "got: {}", resp.message);
+        assert!(resp.message.contains("Main Menu"), "got: {}", resp.message);
+
+        let resp = process_request(&request("carry-1", "2"), &cache, &menu, &fm);
+        assert!(resp.message.contains("Enter PIN"), "got: {}", resp.message);
+        assert!(!resp.message.contains("Invalid"), "error carried over: {}", resp.message);
+    }
+
+    #[test]
+    fn invalid_input_error_shown_once() {
+        let menu = pin_menu();
+        let cache = cache();
+        let fm = FunctionMap::new();
+
+        process_request(&request("carry-2", ""), &cache, &menu, &fm);
+        process_request(&request("carry-2", "2"), &cache, &menu, &fm);
+
+        let resp = process_request(&request("carry-2", "abc"), &cache, &menu, &fm);
+        assert!(resp.message.contains("Invalid input"), "got: {}", resp.message);
+
+        let resp = process_request(&request("carry-2", "1234"), &cache, &menu, &fm);
+        assert!(resp.message.contains("Goodbye!"), "got: {}", resp.message);
+        assert!(!resp.message.contains("Invalid"), "error carried over: {}", resp.message);
+    }
+
+    #[test]
+    fn back_after_invalid_option_goes_to_previous_screen() {
+        let menu = pin_menu();
+        let cache = cache();
+        let fm = FunctionMap::new();
+
+        process_request(&request("back-1", ""), &cache, &menu, &fm);
+        process_request(&request("back-1", "2"), &cache, &menu, &fm); // → PinScreen
+        process_request(&request("back-1", "x"), &cache, &menu, &fm); // invalid, stay
+
+        let resp = process_request(&request("back-1", "0"), &cache, &menu, &fm);
+        assert!(resp.message.contains("Main Menu"), "got: {}", resp.message);
+    }
+
+    // ── Logging must never expose user input ──────────────────────────────────
+
+    use std::sync::{Mutex as StdMutex, OnceLock};
+
+    static CAPTURED: OnceLock<StdMutex<Vec<String>>> = OnceLock::new();
+
+    struct CaptureLogger;
+    impl ::log::Log for CaptureLogger {
+        fn enabled(&self, _: &::log::Metadata) -> bool { true }
+        fn log(&self, record: &::log::Record) {
+            CAPTURED.get_or_init(Default::default).lock().unwrap()
+                .push(format!("{}", record.args()));
+        }
+        fn flush(&self) {}
+    }
+
+    #[test]
+    fn typed_pin_never_appears_in_logs() {
+        static LOGGER: CaptureLogger = CaptureLogger;
+        let _ = ::log::set_logger(&LOGGER);
+        ::log::set_max_level(::log::LevelFilter::Trace);
+
+        let menu = pin_menu();
+        let cache = cache();
+        let fm = FunctionMap::new();
+        process_request(&request("log-1", ""), &cache, &menu, &fm);
+        process_request(&request("log-1", "2"), &cache, &menu, &fm);
+        process_request(&request("log-1", "4827"), &cache, &menu, &fm);
+        process_request(&request("log-1", ""), &cache, &menu, &fm);
+
+        let logs = CAPTURED.get_or_init(Default::default).lock().unwrap();
+        assert!(logs.iter().any(|l| l.contains("log-1")), "logger captured nothing");
+        let leaks: Vec<_> = logs.iter().filter(|l| l.contains("4827")).collect();
+        assert!(leaks.is_empty(), "PIN leaked into logs: {:?}", leaks);
     }
 }

@@ -26,6 +26,7 @@ An optional **Menu Builder** module adds a full-stack admin portal and REST API 
 - [Multi-Language Support](#multi-language-support)
 - [Input Validation & Max Retries](#input-validation--max-retries)
 - [Routing](#routing)
+- [Logging](#logging)
 - [Menu Builder](#menu-builder)
   - [Feature Flags](#feature-flags)
   - [Starting the Server](#starting-the-server)
@@ -443,6 +444,24 @@ Expression syntax: `{{<session_key> <op> '<value>'}}`
 | `<=` | `{{pin.attempts <= 5}}` |
 
 Router expressions that do not match the pattern are logged as warnings at menu-load time (via `validate_router_expressions`).
+
+---
+
+## Logging
+
+The framework logs through the standard [`log`](https://docs.rs/log) facade under the target `ussdframework`. It never writes to stdout itself: nothing is emitted unless your application installs a logger, and you choose the verbosity.
+
+```rust
+// e.g. with env_logger
+env_logger::init();
+```
+
+```sh
+RUST_LOG=ussdframework=warn ./my-app   # errors and warnings only
+RUST_LOG=ussdframework=off  ./my-app   # silence the framework entirely
+```
+
+Framework log messages contain session IDs and screen names only. User input and session data (which may include PINs) are never logged.
 
 ---
 
